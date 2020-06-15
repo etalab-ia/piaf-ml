@@ -11,9 +11,9 @@ Arguments:
 '''
 import logging
 import os
-import subprocess
 from glob import glob
 from pathlib import Path
+import xml.etree.ElementTree as ET
 
 from argopt import argopt
 from joblib import Parallel, delayed
@@ -21,15 +21,27 @@ from tqdm import tqdm
 
 
 def run(doc_path):
+    tree = ET.parse(doc_path)
+    root = tree.getroot()
+
+    text_list = []
+    for neighbor in root.iter('Paragraphe'):
+        text = " ".join(list(neighbor.itertext())).strip("\n")
+        text_list.append(text)
+
+    for text in text_list:
+        print(text + "\n")
+
+    # with doc_path
+
     return 1
 
 
 def main(doc_files_path: Path, optional_1, n_jobs: int):
-    doc_paths = []
-    if not os.path.isdir(doc_files_path) and os.path.isfile(doc_files_path):
+    if not doc_files_path.is_dir() and doc_files_path.is_file():
         doc_paths = [doc_files_path]
     else:
-        doc_paths = glob(doc_files_path + "/**/*.doc", recursive=True)
+        doc_paths = glob(doc_files_path.as_posix() + "/**/*.xml", recursive=True)
     if not doc_paths:
         raise Exception(f"Path {doc_paths} not found")
 
@@ -50,7 +62,7 @@ def main(doc_files_path: Path, optional_1, n_jobs: int):
 
 if __name__ == '__main__':
     parser = argopt(__doc__).parse_args()
-    doc_files_path = parser.file_path
+    doc_files_path = Path(parser.file_path)
     optional_1 = parser.optional_1
     n_jobs = parser.cores
     main(doc_files_path=doc_files_path, optional_1=optional_1, n_jobs=n_jobs)
