@@ -21,6 +21,7 @@ from tqdm import tqdm
 
 def run(doc_path: Path):
     try:
+        tqdm.write(f"Extracting info from {doc_path}")
         tree = ET.parse(doc_path)
         root = tree.getroot()
 
