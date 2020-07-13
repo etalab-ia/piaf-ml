@@ -21,7 +21,7 @@ from tqdm import tqdm
 from src.util.files import slugify
 
 TYPE_FICHES = ["associations", "particuliers", "entreprise"]
-
+ERROR_COUNT = 0
 
 def save_subfiche(doc_path: Path, situation_title: str, chapitre_title: str, cas_title: str,
                   output_path: Path, cas_text: List[str]):
@@ -36,6 +36,7 @@ def save_subfiche(doc_path: Path, situation_title: str, chapitre_title: str, cas
                          f"{slugify(cas_title)[:15]}.txt"
 
     new_fiche_path = new_dir_subfiche_path / subfiche_file_name
+    tqdm.write(f"\tSaving sub-fiche to {new_fiche_path}")
     with open(new_fiche_path.as_posix(), "w") as subfiche:
         subfiche.write(situation_title + "\n\n")
         subfiche.write(chapitre_title + "\n\n")
@@ -44,18 +45,37 @@ def save_subfiche(doc_path: Path, situation_title: str, chapitre_title: str, cas
 
     pass
 
+def try_get_text(root, tag):
+    existing_tags = list(root.iter(tag))
+    if not existing_tags:
+        return ""
+    else:
+        text = list(existing_tags[0].itertext())
+        return text
 
 def run(doc_path: Path, output_path: Path):
+    global ERROR_COUNT
     try:
         tqdm.write(f"Extracting info from {doc_path}")
         tree = ET.parse(doc_path)
         root = tree.getroot()
 
-        for situation in root.iter("Situation"):
+        introduction_text = try_get_text(root, "Introduction")
+        situations = list(root.iter("Situation"))
+
+
+        if not situations:
+            tqdm.write(f"\tCould not treat file {doc_path}. It has no situations !")
+            return 0
+        for situation in situations:
+            situation_text = try_get_text(root, "Situation")
             situation_title = situation.find("Titre").text  # kinda hacky :/
             for chapitre in situation.iter("Chapitre"):
                 chapitre_title = list(chapitre.iter("Titre"))[0].find("Paragraphe").text
-                for cas in chapitre.iter("Cas"):
+                cass = list(chapitre.iter("Cas"))
+                if not cass:
+                    continue  #  This is wrong. Even if we dont have cases we have text
+                for cas in cass:
                     # cas_title = cas.find("Titre").find("Paragraphe").text
                     cas_title = list(cas.iter("Titre"))[0].find("Paragraphe").text
                     cas_text = []
@@ -64,10 +84,12 @@ def run(doc_path: Path, output_path: Path):
                     cas_text = [" ".join(t) for t in cas_text]
                     save_subfiche(doc_path=doc_path, situation_title=situation_title, chapitre_title=chapitre_title,
                                   cas_title=cas_title, output_path=output_path, cas_text=cas_text)
+
         return 1
     except Exception as e:
         tqdm.write(f"Could not treat file {doc_path}. Error: {str(e)}")
         # raise
+        ERROR_COUNT += 1
         return 0
 
 
@@ -88,9 +110,9 @@ def main(doc_files_path: Path, output_path: Path, n_jobs: int):
     else:
         job_output = Parallel(n_jobs=n_jobs)(delayed(run)(doc_path, output_path) for doc_path in tqdm(doc_paths))
     tqdm.write(
-        f"{sum(job_output)} DOC files were converted to TXT. {len(job_output) - sum(job_output)} files "
+        f"{sum(job_output)} XML fiche files were extracted to TXT. {len(job_output) - sum(job_output)} files "
         f"had some error.")
-
+    tqdm.write(f"Error count {ERROR_COUNT}")
     return doc_paths
 
 
