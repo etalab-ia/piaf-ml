@@ -55,9 +55,9 @@ def save_subfiche(doc_path: Path,
         new_fiche_path = output_path / subfiche_file_name
 
     tqdm.write(f"\tSaving sub-fiche to {new_fiche_path}")
-    subfiche_string = f"{fiche_title}"
+    subfiche_string = f"{fiche_title} : "
     if fiche_intro_text:
-        subfiche_string += f": {fiche_intro_text}"
+        subfiche_string += f"{fiche_intro_text}"
         subfiche_string += "\n\n"
 
     if situation_title:
@@ -161,16 +161,7 @@ def try_get_title_fiche(child):
 
 
 def treat_no_situation_fiches(root: Element):
-    # text = root.find("Texte")  # it is a fiche without situations and a Texte label
-    # introduction = root.find("Introduction")  # or it is a fiche "glossaire" p. ex: F34377
-    # content = text or introduction
-    # fiche_text = ""
-    # if content:
-    #     fiche_text_list = []
-    #     for paragraph in content.iter("Paragraphe"):
-    #         fiche_text_list.append(list(paragraph.itertext()))
-    #     fiche_text_list = [" ".join(t) for t in fiche_text_list]
-    #     fiche_text = "\n".join(fiche_text_list)
+    # it is a fiche without situations
 
     fiche_text = ""
     fiche_text_list = []
@@ -181,7 +172,7 @@ def treat_no_situation_fiches(root: Element):
         fiche_text = "\n".join(fiche_text_list)
 
     if fiche_text:
-        return fiche_text
+        return "\n" + fiche_text
     else:
         raise Exception("Fiche without situation. We could not extract anything")
 
