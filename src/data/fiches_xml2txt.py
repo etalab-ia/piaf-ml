@@ -33,8 +33,8 @@ def save_subfiche(doc_path: Path,
                   cas_title: str = None, cas_text: str = None,
                   create_folders=False):
 
-    fiche_type = [t for t in TYPE_FICHES if t in doc_path.as_posix()][0]
-    output_path = output_path / fiche_type
+    # fiche_type = [t for t in TYPE_FICHES if t in doc_path.as_posix()][0]
+    # output_path = output_path / fiche_type
 
     file_name = doc_path.stem
     subfiche_file_name = f"{file_name}"
@@ -160,7 +160,7 @@ def try_get_title_fiche(child):
         return ""
 
 
-def treat_no_situation_fiches(root: Element):
+def treat_no_situation_fiche(root: Element):
     # it is a fiche without situations
 
     fiche_text = ""
@@ -174,8 +174,8 @@ def treat_no_situation_fiches(root: Element):
     if fiche_text:
         return "\n" + fiche_text
     else:
-        raise Exception("Fiche without situation. We could not extract anything")
-
+        # raise Exception("Fiche without situation. We could not extract anything")
+        return
 
 def run(doc_path: Path, output_path: Path):
     global ERROR_COUNT
@@ -189,10 +189,14 @@ def run(doc_path: Path, output_path: Path):
 
         if not situations:
             tqdm.write(f"\tFile {doc_path} has no situations !")
-            subfiche_text = treat_no_situation_fiches(root)
-            save_subfiche(doc_path=doc_path, output_path=output_path, fiche_title=fiche_title,
-                          cas_text=subfiche_text)
-            return 1
+            subfiche_text = treat_no_situation_fiche(root)
+            if subfiche_text:
+                save_subfiche(doc_path=doc_path, output_path=output_path, fiche_title=fiche_title,
+                              cas_text=subfiche_text)
+
+                return 1
+            else:
+                return 0
         for situation in situations:
             situation_text = try_get_situation_text(situation)
             situation_title = situation.find("Titre").text  # kinda hacky :/
