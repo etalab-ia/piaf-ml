@@ -32,7 +32,6 @@ def save_subfiche(doc_path: Path,
                   chapitre_title: str = None, chapitre_text: str = None,
                   cas_title: str = None, cas_text: str = None,
                   create_folders=False):
-
     # fiche_type = [t for t in TYPE_FICHES if t in doc_path.as_posix()][0]
     # output_path = output_path / fiche_type
 
@@ -58,24 +57,25 @@ def save_subfiche(doc_path: Path,
     subfiche_string = f"{fiche_title} : "
     if fiche_intro_text:
         subfiche_string += f"{fiche_intro_text}"
-        subfiche_string += "\n\n"
+
+    subfiche_string += "\n\n"
 
     if situation_title:
-        subfiche_string += f"{situation_title}"
-        if situation_text:
-            subfiche_string += f": {situation_text}"
-
+        subfiche_string += f"{situation_title}: "
+    if situation_text:
+        if not (cas_text in situation_text):
+            subfiche_string += f"{situation_text}"
         subfiche_string += "\n\n"
 
     if chapitre_title:
-        subfiche_string += f"{chapitre_title}"
-        if chapitre_text:
-            subfiche_string += f": {chapitre_text}"
-
+        subfiche_string += f"{chapitre_title}: "
+    if chapitre_text:
+        subfiche_string += f"{chapitre_text}"
         subfiche_string += "\n\n"
 
     if cas_text:
-        subfiche_string += f"{cas_text.lstrip(chapitre_title)}"
+        if not (cas_text in subfiche_string):
+            subfiche_string += f"{cas_text.lstrip(chapitre_title)}"
 
     with open(new_fiche_path.as_posix(), "w") as subfiche:
         subfiche.write(subfiche_string)
@@ -91,16 +91,46 @@ def try_get_text(root: Element, tag: str) -> str:
         return text
 
 
-def try_get_situation_text(child: Element) -> str:
-    text_child = list(child.find("Texte"))
-    tags = [t.tag for t in text_child]
-    if "Paragraphe" in tags:
-        first_paragraph = tags.index("Paragraphe")
-        if first_paragraph < tags.index("Chapitre"):
-            # There is a paragraph before the Chapitres so we assume is the text of the situation
-            text_situation = text_child[first_paragraph].text
-            return text_situation
-    return ""
+def try_get_situation_text(child: Element,
+                           list_tags_to_remove: List[str] = ["Titre", "BlocCas", "SousChapitre"]) -> str:
+    """
+    The chapitres text are apparently in the first children level of the Chapitre as a Paragraphe(s).
+    So the idea here is to grab all the paragraphs that occur before anything else (a BlocCas p. ex) and consider it as
+    the chapitre text (all the text that comes before the Cases)
+    Given that all text (apparently) appears in Paragraphe tags even if they are within Lists, so we remove the
+    Titre and BlocCas to avoid these texts
+    :param list_tags_to_remove: we want to keep all the paragraphs except those inside Titre and BlocCas, so we pop them
+
+    :param child:
+    :return:
+    """
+    situation_children = list([t for t in child])
+    tags = [t.tag for t in situation_children]
+    filtered_chapitre_children = [situation_children[i] for i, t in enumerate(tags) if t not in list_tags_to_remove]
+
+    chapitre_text_list = []
+    for child in filtered_chapitre_children:
+        for cas_paragraph in child.iter("Paragraphe"):
+            chapitre_text_list.append(list(cas_paragraph.itertext()))
+
+    chapitre_text_list = [" ".join(t) for t in chapitre_text_list]
+    if chapitre_text_list:
+        chapitre_text = " ".join(chapitre_text_list).replace("\n", " ")
+        return chapitre_text
+    else:
+        return ""
+
+
+
+def try_get_situation_title(child: Element) -> str:
+    situation_title = ""
+    titre = [t for t in list(child) if t.tag == "Titre"]
+    if titre:
+        titre = titre[0]
+        if hasattr(titre, "text"):
+            situation_title = titre.text
+            return situation_title
+    return situation_title
 
 
 def try_get_chapitre_title(child: Element) -> str:
@@ -115,20 +145,20 @@ def try_get_chapitre_title(child: Element) -> str:
     return chapitre_title
 
 
-def try_get_chapitre_text(child: Element) -> str:
+def try_get_chapitre_text(child: Element, list_tags_to_remove: List[str] = ["Titre", "BlocCas", "SousChapitre"]) -> str:
     """
     The chapitres text are apparently in the first children level of the Chapitre as a Paragraphe(s).
     So the idea here is to grab all the paragraphs that occur before anything else (a BlocCas p. ex) and consider it as
     the chapitre text (all the text that comes before the Cases)
     Given that all text (apparently) appears in Paragraphe tags even if they are within Lists, so we remove the
     Titre and BlocCas to avoid these texts
+    :param list_tags_to_remove:
     :param child:
     :return:
     """
     chapitre_children = list([t for t in child])
     tags = [t.tag for t in chapitre_children]
     # we want to keep all the paragraphs except those inside Titre and BlocCas, so we pop them
-    list_tags_to_remove = ["Titre", "BlocCas", "SousChapitre"]
     filtered_chapitre_children = [chapitre_children[i] for i, t in enumerate(tags) if t not in list_tags_to_remove]
 
     chapitre_text_list = []
@@ -177,8 +207,25 @@ def treat_no_situation_fiche(root: Element):
         # raise Exception("Fiche without situation. We could not extract anything")
         return
 
+
+def clean_elements(root: Element):
+    """
+    Keep the interesting bits of the XML (and hence the essential text of the fiche)
+    :param root:
+    :return:
+    """
+    tags = [t for t in list(root)]
+    tag_names = [t.tag for t in tags]
+    interesting_tags = ["ListeSituations"]
+    # 1. First remove the http namespaced elements
+    tags = [tags[i] for i, t in enumerate(tag_names) if "http" not in t]
+
+
 def run(doc_path: Path, output_path: Path):
     global ERROR_COUNT
+    has_situations = True
+    has_chapitres = True
+    has_cases = True
     try:
         tqdm.write(f"Extracting info from {doc_path}")
         tree = ET.parse(doc_path)
@@ -188,28 +235,40 @@ def run(doc_path: Path, output_path: Path):
         situations = list(root.iter("Situation"))
 
         if not situations:
-            tqdm.write(f"\tFile {doc_path} has no situations !")
-            subfiche_text = treat_no_situation_fiche(root)
-            if subfiche_text:
-                save_subfiche(doc_path=doc_path, output_path=output_path, fiche_title=fiche_title,
-                              cas_text=subfiche_text)
-
-                return 1
-            else:
-                return 0
+            #     tqdm.write(f"\tFile {doc_path} has no situations !")
+            #     subfiche_text = treat_no_situation_fiche(root)
+            #     if subfiche_text:
+            #         save_subfiche(doc_path=doc_path, output_path=output_path, fiche_title=fiche_title,
+            #                       cas_text=subfiche_text)
+            #
+            #         return 1
+            #     else:
+            #         return 0
+            alternative_tags = ["Texte", "Introduction"]
+            for alt in alternative_tags:
+                found_tag = root.find(alt)
+                if root.find(alt):
+                    situations = [found_tag]
+                    break
+            has_situations = False
         for situation in situations:
             situation_text = try_get_situation_text(situation)
-            situation_title = situation.find("Titre").text  # kinda hacky :/
-            for chapitre in situation.iter("Chapitre"):
+            situation_title = try_get_situation_title(situation)  # kinda hacky :/
+            chapitres = list(situation.iter("Chapitre"))
+            if not chapitres:
+                chapitres = [situation]
+                has_chapitres = False
+            for chapitre in chapitres:
                 # chapitre_title = list(chapitre.iter("Titre"))[0].find("Paragraphe").text
-                chapitre_title = try_get_chapitre_title(chapitre)
-                chapitre_text = try_get_chapitre_text(chapitre)
+                chapitre_text, chapitre_title = "", ""
+                if has_chapitres:
+                    chapitre_title = try_get_chapitre_title(chapitre)
+                    chapitre_text = try_get_chapitre_text(chapitre)
                 cases = list(chapitre.iter("Cas"))
-
                 if not cases:
                     #  There aren't any cases, so we treat the chapitre element as the single case. This is hacky
                     cases = [chapitre]
-
+                    has_cases = False
                 for cas in cases:
                     # cas_title = cas.find("Titre").find("Paragraphe").text
                     if len(cases) == 1:
