@@ -1,0 +1,542 @@
+[
+    [
+        "F34355",
+        "Qu'est-ce que la médiation familiale ?",
+        "une autre voie dans le règlement de conflits  comme les ruptures, séparations et divorces, succession,"
+    ],
+    [
+        "F18960",
+        "Un hôtel doit-il remettre une facture à ses clients ?",
+        "À partir d'un certain montant facturé au client ( 25 €  TTC), l'hôtelier a l'obligation de lui remettre  une facture"
+    ],
+    [
+        "F10506",
+        "Peut-on changer le nom d'un enfant mineur ?",
+        "possible uniquement si l'autre parent reconnaît l'enfant (de manière différée) et sous certaines conditions"
+    ],
+    [
+        "F10424",
+        "Tutelle, curatelle, sauvegarde de justice : quelles différences ?",
+        "se situe dans le degré de contrainte appliqué aux actions du majeur qui en fait l'objet"
+    ],
+    [
+        "F14102",
+        "Qu'est-ce qu'une période de mise en situation en milieu professionnel ?",
+        "permet à un salarié de passer du temps chez un autre employeur, afin d'y développer son expérience et ses compétences"
+    ],
+    [
+        "F34377",
+        "Véhicule en leasing : que faire quand le contrat de crédit-bail se termine ?",
+        "vous pouvez choisir de conserver le véhicule ou de le rendre à son propriétaire"
+    ],
+    [
+        "F20237",
+        "Le RSA donne t-il droit à d'autres aides (complémentaire santé, transports...) ?",
+        "vous disposez de plusieurs autres droits"
+    ],
+    [
+        "F34645",
+        "Amende ou peine d'emprisonnement : quel délai pour appliquer la peine ?",
+        "déterminé en fonction de la nature de  l'infraction"
+    ],
+    [
+        "F1844",
+        "Recensement militaire : comment prouver la régularité de sa situation ?",
+        "vous devez avoir l'attestation de recensement qui vous a été remise"
+    ],
+    [
+        "F1216",
+        "Dans quels cas saisir la commission départementale de conciliation ?",
+        "aide propriétaire (bailleur) et  locataire à trouver une solution amiable à leur litige"
+    ],
+    [
+        "F3122",
+        "Impôt sur le revenu : peut-on payer par prélèvements mensuels (mensualisation) ?",
+        "le paiement par prélèvement mensuel de l'impôt sur le revenu n'est plus possible."
+    ],
+    [
+        "F34026",
+        "À quoi sert le fonds de travaux mis en place dans les copropriétés ?",
+        "pour anticiper les dépenses de travaux à venir"
+    ],
+    [
+        "F20849",
+        "Conciliateur de l'assurance maladie : comment y recourir ?",
+        "écrire au conciliateur et adresser le courrier à votre caisse d'assurance maladie"
+    ],
+    [
+        "F10528",
+        "Peut-on franciser son nom et son prénom en devenant Français ?",
+        "Oui"
+    ],
+    [
+        "F31592",
+        "Comment sont remboursées les sommes versées à tort par Pôle emploi?",
+        "Pôle emploi peut procéder à des retenues sur vos allocations à venir"
+    ],
+    [
+        "F2574",
+        "S'occuper d'un enfant ou d'un proche : quels effets sur la retraite (AVPF) ?",
+        "peuvent être prises en compte pour la retraite"
+    ],
+    [
+        "F1673",
+        "Que devient la vente lorsque le crédit immobilier est refusé ?",
+        "la vente n'a pas lieu"
+    ],
+    [
+        "F1701",
+        "Que devient le crédit immobilier lorsque la vente est annulée ?",
+        "vous devrez rembourser votre crédit"
+    ],
+    [
+        "F13609",
+        "Comment payer le permis de conduire : permis à un euro, apprenti, chômeur... ?",
+        "Plusieurs types d'aides financières existent"
+    ],
+    [
+        "F1441",
+        "Qu'est-ce qu'un programme personnalisé de réussite éducative (PPRE) ?",
+        "un plan d'actions individualisées mis en place pour chaque élève qui rencontre des difficultés dans sa scolarité"
+    ],
+    [
+        "F2632",
+        "Comment fonctionne l'assurance en cas de prêt d'un véhicule entre particuliers ?",
+        "le prêt du véhicule à un tiers peut être interdit ou autorisé sous conditions par le contrat"
+    ],
+    [
+        "F2706",
+        "Comment fonctionne la franchise d'assurance auto ?",
+        "Le contrat doit préciser, pour chaque situation, la façon dont la franchise se calcule"
+    ],
+    [
+        "F2272",
+        "Comment se faire rembourser une somme en sollicitant une société de recouvrement ?",
+        "le  créancier  et  la société de recouvrement doivent conclure une convention"
+    ],
+    [
+        "F31038",
+        "Que deviennent les heures acquises au titre du Dif dans la fonction publique ?",
+        "Le compte personnel de formation (CPF) a remplacé le droit individuel à la formation (Dif)"
+    ],
+    [
+        "F89",
+        "Peut-on percevoir l'allocation chômage en cas de démission ?",
+        "vous ne bénéficiez pas de l'allocation de retour à l'emploi (ARE) si vous démissionnez"
+    ],
+    [
+        "F15763",
+        "Qu'est-ce qu'un récépissé de demande de titre de séjour ?",
+        "permet de  séjourner régulièrement  en France durant l'examen de votre dossier par la préfecture"
+    ],
+    [
+        "F15246",
+        "Adoption simple et adoption plénière : quelles différences ?",
+        "liens avec la famille d'origine, autorité parentale, nom de la personne adoptée, héritage..."
+    ],
+    [
+        "F10415",
+        "Qu'est-ce qu'un achat à distance ?",
+        "consiste à acheter un bien ou une prestation de services sur internet"
+    ],
+    [
+        "F2009",
+        "Est-on obligé d'aider ses parents ou beaux-parents dans le besoin ?",
+        "obligation d'aider un parent qui  n'est pas en mesure d'assurer sa subsistance"
+    ],
+    [
+        "F34640",
+        "Qu'est-ce qu'un CDD sans terme précis ?",
+        "La date de fin du  CDD  n'est pas fixée"
+    ],
+    [
+        "F1334",
+        "Quelle aide apporte le fonds de solidarité pour le logement (FSL) ?",
+        "des aides financières aux personnes qui rencontrent des difficultés pour payer  les dépenses liées à  leur logement"
+    ],
+    [
+        "F1453",
+        "Peut-on vivre dans un autre pays d'Europe avec un titre de séjour français ?",
+        "Oui, si vous avez une carte de  résident de longue durée"
+    ],
+    [
+        "F1219",
+        "Qu'est-ce qu'un logement soumis au régime de la loi de 1948 ?",
+        "des logements  construits avant le 1 er  septembre 1948 et  situés sur certaines communes de plus de 10 000 habitants"
+    ],
+    [
+        "F31982",
+        "Justice pénale : quels délais de prescription ?",
+        "varie selon le type d'infraction et l'âge de la victime au moment des faits"
+    ],
+    [
+        "F2694",
+        "Est-on couvert par l'assurance auto lors d'un voyage à l'étranger ?",
+        "Oui, votre  assurance auto peut vous couvrir lors d'un voyage à l'étranger"
+    ],
+    [
+        "F15009",
+        "À quoi sert le fichier central des dispositions de dernières volontés (FCDDV) ?",
+        "centralise en un lieu unique pour toute la France les informations relatives aux testaments"
+    ],
+    [
+        "F10431",
+        "Comment bénéficier d'un congé sans solde ?",
+        "Le salarié peut  demander à bénéficier, s'il en remplit les conditions, d'un congé légal tel que le   congé sabbatique  ou le  congé pour création ou reprise d'entreprise"
+    ],
+    [
+        "F35254",
+        "Que faire quand des squatteurs occupent un logement ?",
+        "Les démarches à faire pour  obtenir l'expulsion de squatteurs  sont différentes, selon que le logement squatté est une résidence principale (domicile) ou une résidence secondaire"
+    ],
+    [
+        "F12216",
+        "DSE (dossier social étudiant) : comment demander une bourse et/ou un logement ?",
+        "réalisée sur internet au moyen du dossier social étudiant (DSE)"
+    ],
+    [
+        "F35063",
+        "Combien de trimestres faut-il avoir cotisé pour avoir sa retraite à taux plein ?",
+        "varie selon votre année de naissance et si vous êtes fonctionnaire, selon que vous êtes  de catégorie  sédentaire  ou  active"
+    ],
+    [
+        "F1807",
+        "Qu'est-ce qu'un témoin assisté ?",
+        "une personne mise en cause dans une affaire pénale sans être  mise en examen"
+    ],
+    [
+        "F23488",
+        "Qu'est-ce que le socle commun de connaissances, de compétences et de culture ?",
+        "l'ensemble des connaissances, compétences, valeurs et attitudes que l'élève doit acquérir pour  réussir sa scolarité"
+    ],
+    [
+        "F2123",
+        "Assurance habitation : qu'est-ce que la garantie responsabilité civile ?",
+        "l'obligation de réparer les dommages corporels et matériels causés à autrui"
+    ],
+    [
+        "F34780",
+        "S'inscrire sur une liste électorale consulaire : quel justificatif de domicile ?",
+        "la preuve de sa résidence habituelle dans la circonscription consulaire"
+    ],
+    [
+        "F34917",
+        "Consultation d'un psy : quelles sont les règles de prise en charge ?",
+        "Psychologue et psychiatre ne sont pas remboursés de la même manière"
+    ],
+    [
+        "F13879",
+        "Embauche à la fin d'un stage : quelles conséquences sur la période d'essai ?",
+        "le stagiaire embauché peut bénéficier d'une réduction de sa période d'essai"
+    ],
+    [
+        "F3079",
+        "Qu'est-ce que l'aide médicale de l'État (AME) ?",
+        "un dispositif permettant aux étrangers en situation irrégulière de bénéficier d'un accès aux soins"
+    ],
+    [
+        "F32849",
+        "Peut-on filmer ou prendre des photos depuis le ciel ?",
+        "interdit de prendre des photos ou de filmer depuis certaines zones de l'espace aérien"
+    ],
+    [
+        "F1454",
+        "Procès pénal : qu'est-ce qu'une partie civile ?",
+        "la personne qui s'estime victime d'une  infraction  pénale"
+    ],
+    [
+        "F1354",
+        "Qu'est-ce que le prêt sur gage ?",
+        "un prêt garanti par le dépôt d'un objet de valeur"
+    ],
+    [
+        "F33227",
+        "Appel d'un jugement : comment acheter un timbre fiscal ?",
+        "en ligne ou auprès des bureaux de tabac équipés pour le vendre"
+    ],
+    [
+        "F479",
+        "Quel est le délai de prescription d'une dette locative (charges et loyer) ?",
+        "3  ans, y compris après le départ du locataire"
+    ],
+    [
+        "F31686",
+        "Comment payer ses impôts locaux ?",
+        "lorsque le montant de votre impôt dépasse  300 € , vous devez payer directement en ligne ou par prélèvements automatiques"
+    ],
+    [
+        "F542",
+        "Un ancien contrat aidé reste-t-il valable (contrat-insertion, emploi-jeune...) ?",
+        "restent valables jusqu'à leur terme"
+    ],
+    [
+        "F34670",
+        "Inaptitude physique d'un contractuel : quelles conséquences ?",
+        "la procédure de licenciement est mise en œuvre"
+    ],
+    [
+        "F3024",
+        "Un intérimaire a-t-il droit au projet de transition professionnelle (PTP) ?",
+        "peut bénéficier, sous conditions, d'un congé pour transition professionnelle (PTP)"
+    ],
+    [
+        "F34030",
+        "Qu'est-ce que le compte engagement citoyen (CEC) ?",
+        "recense vos activités de bénévole, de volontaire ou de maître d'apprentissage"
+    ],
+    [
+        "F34669",
+        "Qu'est-ce qu'une commission de réforme dans la fonction publique ?",
+        "une instance médicale consultative (ministérielle ou départementale) de la fonction publique"
+    ],
+    [
+        "F780",
+        "Qu'est-ce qu'une grâce présidentielle ?",
+        "permet au  Président de la République de supprimer ou de réduire la  peine d'un condamné"
+    ],
+    [
+        "F34809",
+        "Refus d'inscription, radiation de la liste électorale par le maire : que faire ?",
+        "des recours existent"
+    ],
+    [
+        "F31249",
+        "Les périodes de chômage sont-elles prises en compte pour la retraite ?",
+        "Chaque période comportant 50 jours de chômage est considérée comme un trimestre d'assurance"
+    ],
+    [
+        "F34062",
+        "Médecine du travail : qu'est-ce que le suivi individuel renforcé ?",
+        "concerne les salariés exposés à des risques particuliers (amiante, plomb, etc.)"
+    ],
+    [
+        "F576",
+        "Un jugement civil étranger (divorce, dette...) peut-il être exécuté en France ?",
+        "peut être exécuté en France"
+    ],
+    [
+        "F113",
+        "A t-on droit plusieurs fois au prêt à taux zéro (PTZ) ?",
+        "Oui"
+    ],
+    [
+        "F32888",
+        "Un électeur peut-il demander sa radiation des listes électorales ?",
+        "pas possible de demander à être  radié(e) des listes  électorales d'une mairie"
+    ],
+    [
+        "F21105",
+        "Qui est responsable des dégradations d'un logement en cours de location ?",
+        "soit le locataire, soit le propriétaire en porte la responsabilité"
+    ],
+    [
+        "F32233",
+        "Carte grise : que faire si vous rachetez le véhicule avant la fin du leasing ?",
+        "racheter le véhicule avant la fin du contrat de crédit-bail à condition d'avoir l'accord de votre prêteur"
+    ],
+    [
+        "F15837",
+        "Peut-on forcer un propriétaire à faire insonoriser son logement ?",
+        "Non"
+    ],
+    [
+        "F12521",
+        "Peut-on conserver l'usage du nom de son époux(se) décédé(e) ?",
+        "Oui"
+    ],
+    [
+        "F31451",
+        "Quelles sanctions en cas de fraude fiscale ?",
+        "punie par des sanctions fiscales et pénales"
+    ],
+    [
+        "F15963",
+        "Un Français peut-il être expulsé d'un pays européen ?",
+        "Oui"
+    ],
+    [
+        "F1529",
+        "A t-on droit au PTZ quand on est déjà propriétaire d'un logement ?",
+        "Tout dépend de la nature du logement"
+    ],
+    [
+        "F16868",
+        "Que faire si la carte grise comporte une erreur ?",
+        "vous devez la signaler via le téléservice de l'Agence nationale des titres sécurisés"
+    ],
+    [
+        "F24023",
+        "À quoi sert un centre de formalités des entreprises (CFE) ?",
+        "votre interlocuteur  pour effectuer vos premières démarches"
+    ],
+    [
+        "F13743",
+        "Comment consulter un accord d'entreprise ?",
+        "sur internet, sur le lieu de travail et à l'Unité départementale de la  Direccte"
+    ],
+    [
+        "F1925",
+        "Comment obtenir une carte grise \"véhicule de collection\" ?",
+        "s'effectue en ligne en utilisant le téléservice suivant"
+    ],
+    [
+        "F3048",
+        "Qu'est-ce que la garantie accidents de la vie ?",
+        "sert à protéger l'assuré, et éventuellement sa famille, des conséquences des accidents de la vie quotidienne"
+    ],
+    [
+        "F1535",
+        "Comment changer de régime matrimonial ?",
+        "s'adresser à un notaire"
+    ],
+    [
+        "F10435",
+        "Doit-on encore verser une pension alimentaire à un enfant devenu majeur ?",
+        "obligation de fournir une aide matérielle à leur enfant majeur"
+    ],
+    [
+        "F2787",
+        "Un étranger peut-il percevoir des prestations familiales en France ?",
+        "pouvez bénéficier de prestations familiales"
+    ],
+    [
+        "F33071",
+        "Étranger en France : comment acheter un timbre fiscal ?",
+        "en ligne, dans un bureau de tabac ou sur les bornes"
+    ],
+    [
+        "F33278",
+        "Quels sont les tarifs des numéros spéciaux (vert, gris, violet) ?",
+        "peut être gratuit ou avoir un coût identique à celui d'un appel classique"
+    ],
+    [
+        "F637",
+        "Un étudiant peut-il faire un stage dans la fonction publique ?",
+        "Oui"
+    ],
+    [
+        "F100",
+        "De quels moyens dispose le comité social et économique (CSE) ?",
+        "moyens matériels et financiers"
+    ],
+    [
+        "F2064",
+        "Allocations chômage : comment est calculé le salaire journalier de référence ?",
+        "en fonction d'un salaire annuel de référence"
+    ],
+    [
+        "F21517",
+        "Peut-on avoir deux passeports ?",
+        "vous ne pouvez pas avoir plusieurs passeports"
+    ],
+    [
+        "F31644",
+        "Peut-on créer un syndicat secondaire dans un groupe d'immeubles en copropriété ?",
+        "Oui"
+    ],
+    [
+        "F33793",
+        "Crit'Air professionnel : quelle vignette pour un véhicule d'entreprise ?",
+        "Tous les véhicules sont concernés"
+    ],
+    [
+        "F32124",
+        "Qu'est-ce qu'une audition libre lors d'une enquête ?",
+        "permet  d'interroger une personne soupçonnée d'avoir commis  une  infraction"
+    ],
+    [
+        "F879",
+        "Un salarié peut-il s'absenter pour participer à une campagne électorale ?",
+        "s'il est lui-même candidat"
+    ],
+    [
+        "F31463",
+        "Une lettre recommandée électronique a-t-elle une valeur légale ?",
+        "la même que celle d'une lettre recommandée avec accusé de réception classique"
+    ],
+    [
+        "F1265",
+        "Quelles sont les démarches fiscales à effectuer en cas de don manuel ?",
+        "déclarer à l'administration fiscale et payer les droits"
+    ],
+    [
+        "F35124",
+        "Les primes sont-elles prises en compte pour la retraite des agents publics ?",
+        "Oui"
+    ],
+    [
+        "F31622",
+        "Dans quels cas peut-on demander le déblocage anticipé de l'épargne salariale ?",
+        "certaines situations exceptionnelles"
+    ],
+    [
+        "F2831",
+        "Comment sont choisis les salariés touchés par un licenciement économique ?",
+        "en se basant sur des critères qui fixent l'ordre des licenciements"
+    ],
+    [
+        "F2767",
+        "Comment faire une donation au dernier vivant ?",
+        "faire appel à un notaire"
+    ],
+    [
+        "F10519",
+        "Un étranger qui s'installe en France doit-il y faire immatriculer son véhicule ?",
+        "Oui"
+    ],
+    [
+        "F34547",
+        "Qu'est-ce qu'un emploi franc ?",
+        "permet à un employeur de bénéficier d'une aide lorsqu'il embauche un habitant résidant dans un quartier prioritaire"
+    ],
+    [
+        "F33924",
+        "Qui peut effectuer un vaccin ?",
+        "médecins, les sages-femmes, les infirmiers ou infirmières, les pharmaciens et certains centres médicaux"
+    ],
+    [
+        "F2252",
+        "Peut-on porter et transporter une arme ?",
+        "si vous êtes chasseur, tireur sportif ou collectionneur"
+    ],
+    [
+        "F33267",
+        "Démarchage téléphonique abusif, spam vocal ou par SMS : que faire ?",
+        "inscrivant sur la liste Bloctel"
+    ],
+    [
+        "F20706",
+        "Comment consulter gratuitement un avocat ?",
+        "lors de permanences"
+    ],
+    [
+        "F33833",
+        "Le salarié et l'employeur peuvent-ils régler un conflit à l'amiable ?",
+        "Oui"
+    ],
+    [
+        "F3013",
+        "Un salarié en formation en dehors du temps de travail est-il rémunéré ?",
+        "Non"
+    ],
+    [
+        "F1537",
+        "Que faire en cas de réception d'un chèque sans provision ? ",
+        "vous adressant à l'émetteur du chèque"
+    ],
+    [
+        "F33352",
+        "Comment suivre la fabrication de son permis de conduire ?",
+        "depuis votre compte"
+    ],
+    [
+        "F33639",
+        "En cas de risque professionnel, peut-on avoir une arme pour se défendre ?",
+        "vous pouvez être autorisé à acheter et détenir une arme"
+    ],
+    [
+        "F21035",
+        "Un mineur peut-il avoir un compte bancaire ou un livret d'épargne ?",
+        "Oui"
+    ]
+]
