@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 ##############################################
 LAUNCH_ELASTICSEARCH = True
 
-eval_retriever_only = False
-eval_reader_only = False
-eval_both = True
+eval_retriever_only = True
+eval_reader_only = True
+eval_both = False
 
 ##############################################
 # Code
@@ -53,15 +53,14 @@ else:
 retriever = ElasticsearchRetriever(document_store=document_store)
 
 # Initialize Reader
-reader = TransformersReader(model="etalab-ia/camembert-base-squadFR-fquad-piaf",
-                            tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf", use_gpu=-1)
+reader = FARMReader("etalab-ia/camembert-base-squadFR-fquad-piaf", use_gpu=True)
 
 # Initialize Finder which sticks together Reader and Retriever
 finder = Finder(reader, retriever)
 
 # Evaluate Retriever on its own
 if eval_retriever_only:
-    retriever_eval_results = retriever.eval()
+    retriever_eval_results = retriever.eval(top_k=10)
     # Retriever Recall is the proportion of questions for which the correct document containing the answer is
     # among the correct documents
     print("Retriever Recall:", retriever_eval_results["recall"])
