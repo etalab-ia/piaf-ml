@@ -19,7 +19,7 @@ from argopt import argopt
 from pathlib import Path
 
 
-def format_as_squad(fiche_id, context, question, answer_start, answer_text):
+def format_qas_as_squad(fiche_id, context, question, answer_start, answer_text):
     """
     Once all parameters are found, formats in SQuAD-like output.
     """
@@ -45,13 +45,27 @@ def format_as_squad(fiche_id, context, question, answer_start, answer_text):
     return res
 
 
+def format_context_as_squad(fiche_id, context):
+    """
+    For fiches which have no question, add them without qas.
+    """
+    res = {
+        'title': fiche_id,
+        'paragraphs': [
+            {
+                'context': context,
+            }
+        ]
+    }
+    return res
+
+
 def list2squad(qas_path, context_path, output_path):
     """
     Doing conversion very inefficiently by loading both QAS and context in memory, then iterating over both.
-    Will be improved if needed.
     """
 
-    missed = 0
+    missed = count = 0
     data = []
 
     with open(qas_path, encoding='utf-8') as f:
@@ -59,23 +73,30 @@ def list2squad(qas_path, context_path, output_path):
     with open(context_path, encoding='utf-8') as f:
         fiches = json.load(f)
 
-    for qa in qas:
-        fiche_id, question, answer = qa
-        for fiche in fiches:
-            if fiche[0] == fiche_id:
+    for fiche in fiches:
+        fiche_id, fiche_title, context = fiche
+        has_no_qas = True
+        for qa in qas:
+            qa_fiche_id, question, answer = qa
+            if qa_fiche_id == fiche_id:
+                has_no_qas = False
                 start = fiche[2].find(answer)
                 if start == -1:
                     missed += 1
                 else:
-                    data.append(format_as_squad(fiche_id=fiche_id,
-                                                context=fiche[2],
-                                                question=question,
-                                                answer_start=start,
-                                                answer_text=answer))
+                    count += 1
+                    data.append(format_qas_as_squad(fiche_id=fiche_id,
+                                                    context=context,
+                                                    question=question,
+                                                    answer_start=start,
+                                                    answer_text=answer))
+        if has_no_qas:
+            data.append(format_context_as_squad(fiche_id=fiche_id, context=context))
 
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump({'data': data}, f, indent=4, ensure_ascii=False)
-    print(f"Transformation done. Could not parse {missed} out of {len(qas)} questions.")
+    print(f"Transformation done. Added {len(fiches)} fiches, including {count} with QAs.",
+          f"Could not parse {missed} out of {len(qas)} QAs.")
 
 
 if __name__ == '__main__':
