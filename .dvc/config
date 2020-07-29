@@ -1,0 +1,6 @@
+[core]
+    remote = ssh-storage
+['remote "ssh-storage"']
+    url = ssh://datascience.etalab.studio/
+    user = pavel
+    port = 22
