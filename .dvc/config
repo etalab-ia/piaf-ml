@@ -1,6 +1,6 @@
 [core]
     remote = ssh-storage
 ['remote "ssh-storage"']
-    url = ssh://datascience.etalab.studio/
+    url = ssh://datascience.etalab.studio/dvc/piaf-ml
     user = pavel
     port = 22
