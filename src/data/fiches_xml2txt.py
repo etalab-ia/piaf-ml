@@ -19,10 +19,27 @@ from argopt import argopt
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-from src.util.files import slugify
+import unicodedata
+import re
 
 TYPE_FICHES = ["associations", "particuliers", "entreprise"]
 ERROR_COUNT = 0
+
+
+def slugify(value, allow_unicode=False):
+    """
+    Convert to ASCII if 'allow_unicode' is False. Convert spaces or repeated
+    dashes to single dashes. Remove characters that aren't alphanumerics,
+    underscores, or hyphens. Convert to lowercase. Also strip leading and
+    trailing whitespace, dashes, and underscores.
+    """
+    value = str(value)
+    if allow_unicode:
+        value = unicodedata.normalize('NFKC', value)
+    else:
+        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    value = re.sub(r'[^\w\s-]', '', value.lower())
+    return re.sub(r'[-\s]+', '-', value).strip('-_')
 
 
 def save_subfiche(doc_path: Path,
@@ -77,7 +94,7 @@ def save_subfiche(doc_path: Path,
         if not (cas_text in subfiche_string):
             subfiche_string += f"{cas_text.lstrip(chapitre_title)}"
 
-    with open(new_fiche_path.as_posix(), "w") as subfiche:
+    with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as subfiche:
         subfiche.write(subfiche_string)
 
 
@@ -301,6 +318,7 @@ def main(doc_files_path: Path, output_path: Path, n_jobs: int):
         doc_paths = [doc_files_path]
     else:
         doc_paths = glob(doc_files_path.as_posix() + "/**/F*.xml", recursive=True)
+        doc_paths += glob(doc_files_path.as_posix() + "/**/N*.xml", recursive=True)
         doc_paths = [Path(p) for p in doc_paths]
     if not doc_paths:
         raise Exception(f"Path {doc_paths} not found")
