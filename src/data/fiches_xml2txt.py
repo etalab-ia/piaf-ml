@@ -80,7 +80,8 @@ def save_subfiche(doc_path: Path,
     if situation_title:
         subfiche_string += f"{situation_title}: "
     if situation_text:
-        if not (cas_text in situation_text):
+        if not (slugify(cas_text.lower().strip()) in slugify(situation_text.lower().strip())):
+            print('Entered')
             subfiche_string += f"{situation_text}"
         subfiche_string += "\n\n"
 
@@ -91,7 +92,7 @@ def save_subfiche(doc_path: Path,
         subfiche_string += "\n\n"
 
     if cas_text:
-        if not (cas_text in subfiche_string):
+        if not (slugify(cas_text.lower().strip()) in slugify(subfiche_string.lower().strip())):
             subfiche_string += f"{cas_text.lstrip(chapitre_title)}"
 
     with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as subfiche:
