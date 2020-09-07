@@ -8,6 +8,7 @@ Arguments:
     <file_path>             A path of a single XML fiche or a folder with multiple fiches XML
     <output_path>           A path where to store the extracted info
     --cores=<n> CORES       Number of cores to use [default: 1:int]
+    --as_json=<j> AS_JSON      Whether or not output JSON files instead of TXT [default: 0:int]
 '''
 from xml.etree.ElementTree import Element
 from glob import glob
@@ -19,10 +20,28 @@ from argopt import argopt
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-from src.util.files import slugify
+import unicodedata
+import re
+import json
 
 TYPE_FICHES = ["associations", "particuliers", "entreprise"]
 ERROR_COUNT = 0
+
+
+def slugify(value, allow_unicode=False):
+    """
+    Convert to ASCII if 'allow_unicode' is False. Convert spaces or repeated
+    dashes to single dashes. Remove characters that aren't alphanumerics,
+    underscores, or hyphens. Convert to lowercase. Also strip leading and
+    trailing whitespace, dashes, and underscores.
+    """
+    value = str(value)
+    if allow_unicode:
+        value = unicodedata.normalize('NFKC', value)
+    else:
+        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    value = re.sub(r'[^\w\s-]', '', value.lower())
+    return re.sub(r'[-\s]+', '-', value).strip('-_')
 
 
 def save_subfiche(doc_path: Path,
@@ -31,19 +50,20 @@ def save_subfiche(doc_path: Path,
                   situation_title: str = None, situation_text: str = None,
                   chapitre_title: str = None, chapitre_text: str = None,
                   cas_title: str = None, cas_text: str = None,
-                  create_folders=False):
+                  create_folders: bool =False, as_json: bool = False):
     # fiche_type = [t for t in TYPE_FICHES if t in doc_path.as_posix()][0]
     # output_path = output_path / fiche_type
 
     file_name = doc_path.stem
     subfiche_file_name = f"{file_name}"
     if situation_title:
-        subfiche_file_name += f"--{slugify(situation_title)[:15]}"
+        subfiche_file_name += f"--{slugify(situation_title)[:10]}-{slugify(situation_title)[-6:]}-{len(situation_title)}"
     if chapitre_title:
-        subfiche_file_name += f"--{slugify(chapitre_title)[:15]}"
+        subfiche_file_name += f"--{slugify(chapitre_title)[:10]}-{slugify(chapitre_title)[-6:]}-{len(chapitre_title)}"
     if cas_title:
-        subfiche_file_name += f"--{slugify(cas_title)[:15]}"
-    subfiche_file_name += ".txt"
+        subfiche_file_name += f"--{slugify(cas_title)[:10]}-{slugify(cas_title)[-6:]}-{len(cas_title)}"
+
+    subfiche_file_name += ".txt" if not as_json else ".json"
 
     if create_folders:
         new_dir_subfiche_path = output_path / file_name
@@ -63,7 +83,8 @@ def save_subfiche(doc_path: Path,
     if situation_title:
         subfiche_string += f"{situation_title}: "
     if situation_text:
-        if not (cas_text in situation_text):
+        if not (slugify(cas_text.lower().strip()) in slugify(situation_text.lower().strip())):
+            print('Entered')
             subfiche_string += f"{situation_text}"
         subfiche_string += "\n\n"
 
@@ -74,11 +95,17 @@ def save_subfiche(doc_path: Path,
         subfiche_string += "\n\n"
 
     if cas_text:
-        if not (cas_text in subfiche_string):
+        if not (slugify(cas_text.lower().strip()) in slugify(subfiche_string.lower().strip())):
             subfiche_string += f"{cas_text.lstrip(chapitre_title)}"
 
-    with open(new_fiche_path.as_posix(), "w") as subfiche:
-        subfiche.write(subfiche_string)
+    if not as_json:
+        with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as subfiche:
+            subfiche.write(subfiche_string)
+    else:
+        with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as subfiche:
+            content = {'text': subfiche_string,
+                       'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}'}
+            json.dump(content, subfiche, indent=4, ensure_ascii=False)
 
 
 def try_get_text(root: Element, tag: str) -> str:
@@ -221,7 +248,7 @@ def clean_elements(root: Element):
     tags = [tags[i] for i, t in enumerate(tag_names) if "http" not in t]
 
 
-def run(doc_path: Path, output_path: Path):
+def run(doc_path: Path, output_path: Path, as_json: bool):
     global ERROR_COUNT
     has_situations = True
     has_chapitres = True
@@ -286,6 +313,7 @@ def run(doc_path: Path, output_path: Path):
                                   chapitre_title=chapitre_title, chapitre_text=chapitre_text,
                                   cas_title=cas_title, cas_text=cas_text,
                                   output_path=output_path,
+                                  as_json=as_json,
                                   )
 
         return 1
@@ -296,11 +324,12 @@ def run(doc_path: Path, output_path: Path):
         return 0
 
 
-def main(doc_files_path: Path, output_path: Path, n_jobs: int):
+def main(doc_files_path: Path, output_path: Path, as_json: bool, n_jobs: int):
     if not doc_files_path.is_dir() and doc_files_path.is_file():
         doc_paths = [doc_files_path]
     else:
         doc_paths = glob(doc_files_path.as_posix() + "/**/F*.xml", recursive=True)
+        doc_paths += glob(doc_files_path.as_posix() + "/**/N*.xml", recursive=True)
         doc_paths = [Path(p) for p in doc_paths]
     if not doc_paths:
         raise Exception(f"Path {doc_paths} not found")
@@ -309,9 +338,10 @@ def main(doc_files_path: Path, output_path: Path, n_jobs: int):
         job_output = []
         for doc_path in tqdm(doc_paths):
             tqdm.write(f"Converting file {doc_path}")
-            job_output.append(run(doc_path, output_path))
+            job_output.append(run(doc_path, output_path, as_json))
     else:
-        job_output = Parallel(n_jobs=n_jobs)(delayed(run)(doc_path, output_path) for doc_path in tqdm(doc_paths))
+        job_output = Parallel(n_jobs=n_jobs)(delayed(run)(doc_path, output_path, as_json)
+                                             for doc_path in tqdm(doc_paths))
     tqdm.write(
         f"{sum(job_output)} XML fiche files were extracted to TXT. {len(job_output) - sum(job_output)} files "
         f"had some error.")
@@ -324,4 +354,5 @@ if __name__ == '__main__':
     doc_files_path = Path(parser.file_path)
     output_path = Path(parser.output_path)
     n_jobs = parser.cores
-    main(doc_files_path=doc_files_path, output_path=output_path, n_jobs=n_jobs)
+    as_json = True if parser.as_json > 0 else False
+    main(doc_files_path=doc_files_path, output_path=output_path, as_json=as_json, n_jobs=n_jobs)
