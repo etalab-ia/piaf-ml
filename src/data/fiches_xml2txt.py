@@ -9,6 +9,7 @@ Arguments:
     <output_path>           A path where to store the extracted info
     --cores=<n> CORES       Number of cores to use [default: 1:int]
     --as_json=<j> AS_JSON      Whether or not output JSON files instead of TXT [default: 0:int]
+    --as_one=<j> AS_ONE     Whether or not output 1 file for 1 TXT, or consider sub-files
 '''
 from xml.etree.ElementTree import Element
 from glob import glob
@@ -106,6 +107,33 @@ def save_subfiche(doc_path: Path,
             content = {'text': subfiche_string,
                        'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}'}
             json.dump(content, subfiche, indent=4, ensure_ascii=False)
+
+
+def save_fiche_as_one(doc_path: Path,
+                  output_path: Path,
+                  fiche_title: str = None, fiche_text: str = None,
+                  create_folders: bool =False, as_json: bool = False):
+
+    new_fiche_path = doc_path.stem
+
+    extension = ".txt" if not as_json else ".json"
+    new_fiche_path += extension
+    new_fiche_path = output_path / new_fiche_path
+
+    tqdm.write(f"\tSaving entire fiche to {new_fiche_path}")
+    fiche_string = f"{fiche_title} : "
+    fiche_string += "\n\n"
+    fiche_string += fiche_text
+
+    if not as_json:
+        with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as newfiche:
+            newfiche.write(fiche_string)
+    else:
+        with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as newfiche:
+            content = {'text': fiche_string,
+                       'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}'}
+            json.dump(content, newfiche, indent=4, ensure_ascii=False)
+
 
 
 def try_get_text(root: Element, tag: str) -> str:
@@ -323,8 +351,32 @@ def run(doc_path: Path, output_path: Path, as_json: bool):
         ERROR_COUNT += 1
         return 0
 
+def run_fiche_as_one(doc_path: Path, output_path: Path, as_json: bool):
+    global ERROR_COUNT
+    fiche_text = ""
 
-def main(doc_files_path: Path, output_path: Path, as_json: bool, n_jobs: int):
+    try:
+        tqdm.write(f"Extracting info from {doc_path}")
+        tree = ET.parse(doc_path)
+        root = tree.getroot()
+        fiche_title = list(list(root.iter("Publication"))[0])[0].text
+        fiche_text += treat_no_situation_fiche(root)
+
+        save_fiche_as_one(doc_path=doc_path,
+                      fiche_title=fiche_title,
+                      fiche_text=fiche_text,
+                      output_path=output_path,
+                      as_json=as_json,
+                      )
+        return 1
+    except Exception as e:
+        tqdm.write(f"Could not treat file {doc_path}. Error: {str(e)}")
+        raise
+        ERROR_COUNT += 1
+        return 0
+
+
+def main(doc_files_path: Path, output_path: Path, as_json: bool, n_jobs: int, as_one: bool):
     if not doc_files_path.is_dir() and doc_files_path.is_file():
         doc_paths = [doc_files_path]
     else:
@@ -338,7 +390,10 @@ def main(doc_files_path: Path, output_path: Path, as_json: bool, n_jobs: int):
         job_output = []
         for doc_path in tqdm(doc_paths):
             tqdm.write(f"Converting file {doc_path}")
-            job_output.append(run(doc_path, output_path, as_json))
+            if as_one:
+                job_output.append(run_fiche_as_one(doc_path, output_path, as_json))
+            else:
+                job_output.append(run(doc_path, output_path, as_json))
     else:
         job_output = Parallel(n_jobs=n_jobs)(delayed(run)(doc_path, output_path, as_json)
                                              for doc_path in tqdm(doc_paths))
@@ -354,5 +409,6 @@ if __name__ == '__main__':
     doc_files_path = Path(parser.file_path)
     output_path = Path(parser.output_path)
     n_jobs = parser.cores
-    as_json = True if parser.as_json > 0 else False
-    main(doc_files_path=doc_files_path, output_path=output_path, as_json=as_json, n_jobs=n_jobs)
+    as_json = True if int(parser.as_json) > 0 else False
+    as_one = True if int(parser.as_one) > 0 else False
+    main(doc_files_path=doc_files_path, output_path=output_path, as_json=as_json, n_jobs=n_jobs, as_one=as_one)
