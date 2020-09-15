@@ -35,7 +35,7 @@ def load_25k_dataset():
     return dict_question_fiche
 
 
-def compute_retriever_precision(true_fiches, retrieved_fiches):
+def compute_retriever_precision(true_fiches, retrieved_fiches, at_k=False):
     """
     Computes an accuracy-like score to determine the fairness of the retriever.
     Takes the k *retrieved* fiches' names and counts how many of them exist in the *true* fiches names
@@ -46,13 +46,18 @@ def compute_retriever_precision(true_fiches, retrieved_fiches):
     :return:
     """
     summed_precision = 0
-    for true_fiche_id in true_fiches:
-        for doc in retrieved_fiches:
+    for fiche_idx, true_fiche_id in enumerate(true_fiches):
+        for doc_idx, doc in enumerate(retrieved_fiches):
             if true_fiche_id in doc:
-                summed_precision += 1
+                if at_k:
+                    summed_precision += (fiche_idx + 1) / (doc_idx + 1)
+                else:
+                    summed_precision += 1
                 break
-
+    if at_k:
+        summed_precision = summed_precision / len(true_fiches)
     return summed_precision
+
 
 if LAUNCH_ELASTICSEARCH:
     logging.info("Starting Elasticsearch ...")
@@ -89,13 +94,17 @@ finder = Finder(reader, retriever)
 test_qr_dataset = load_25k_dataset()
 
 summed_precision = 0
+found_fiche = 0
 results = []
 TOP_K = 10
 for question, true_fiche_urls in tqdm(test_qr_dataset.items()):
     true_fiche_ids = [f.split("/")[-1] for f in true_fiche_urls]
     retrieved_results = retriever.retrieve(query=question, top_k=TOP_K)
     retrieved_doc_names = [f.meta["name"] for f in retrieved_results]
-    summed_precision += compute_retriever_precision(true_fiche_ids, retrieved_doc_names)
+    precision = compute_retriever_precision(true_fiche_ids, retrieved_doc_names, at_k=False)
+    summed_precision += precision
+    if precision:
+        found_fiche += 1
     # first_answer_score = retriever_results[0].query_score
     # true if we found any of the true fiches within the retriever answers
 
@@ -111,7 +120,7 @@ for question, true_fiche_urls in tqdm(test_qr_dataset.items()):
     pass
 mean_precision = summed_precision / len(test_qr_dataset)
 
-tqdm.write(f"The retriever correctly found {summed_precision} fiches among {len(test_qr_dataset)}. Accuracy:{mean_precision}")
+tqdm.write(f"The retriever correctly found {found_fiche} fiches among {len(test_qr_dataset)}. Accuracy:{mean_precision}")
 
 # print_answers(prediction, details="all")
 # json.dump(results, open("./data/evaluation_haystack.json", "w"), indent=4, ensure_ascii=False)
