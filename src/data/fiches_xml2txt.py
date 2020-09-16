@@ -8,8 +8,8 @@ Arguments:
     <file_path>             A path of a single XML fiche or a folder with multiple fiches XML
     <output_path>           A path where to store the extracted info
     --cores=<n> CORES       Number of cores to use [default: 1:int]
-    --as_json=<j> AS_JSON      Whether or not output JSON files instead of TXT [default: False:bool]
-    --as_one=<j> AS_ONE     Whether or not output 1 file for 1 TXT, or consider sub-files
+    --as_json=<j> AS_JSON      Whether or not output JSON files instead of TXT [default: False:int]
+    --as_one=<j> AS_ONE     Whether or not output 1 file for 1 TXT, or consider sub-files [default: False:int]
 '''
 from xml.etree.ElementTree import Element
 from glob import glob
@@ -409,6 +409,6 @@ if __name__ == '__main__':
     doc_files_path = Path(parser.file_path)
     output_path = Path(parser.output_path)
     n_jobs = parser.cores
-    as_json = True if int(parser.as_json) > 0 else False
-    as_one = True if int(parser.as_one) > 0 else False
+    as_json = bool(parser.as_json)
+    as_one = bool(parser.as_one)
     main(doc_files_path=doc_files_path, output_path=output_path, as_json=as_json, n_jobs=n_jobs, as_one=as_one)
