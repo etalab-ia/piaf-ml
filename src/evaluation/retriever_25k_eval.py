@@ -21,6 +21,8 @@ from typing import Dict, List
 from argopt import argopt
 from haystack.retriever.base import BaseRetriever
 
+from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts
+
 seed(42)
 from tqdm import tqdm
 from haystack.database.elasticsearch import ElasticsearchDocumentStore
@@ -122,7 +124,7 @@ def main(test_corpus_path: str, knowledge_base_path: str, retriever_type: str):
         logger.info("Could not prepare the testing framework!! Exiting :(")
         return
 
-    single_run(retriever_top_k=3)
+    single_run(retriever_top_k=1)
     # eval_plot_k_range(3, 10)
 
 
@@ -151,8 +153,7 @@ def prepare_framework(knowledge_base_path: str="/data/service-public-france/extr
 
         # Connect to Elasticsearch
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document")
-        dicts = convert_files_to_dicts(dir_path=knowledge_base_path,
-                                       clean_func=clean_wiki_text, split_paragraphs=True)
+        dicts = convert_json_files_to_dicts(dir_path=knowledge_base_path)
 
         # Now, let's write the docs to our DB.
         if LAUNCH_ELASTICSEARCH:

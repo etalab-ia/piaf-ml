@@ -1,3 +1,8 @@
+import json
+from pathlib import Path
+from typing import List
+
+
 def convert_json_files_to_dicts(dir_path: str) -> List[dict]:
     """
     Convert all Json in the sub-directories of the given path to Python dicts that can be written to a

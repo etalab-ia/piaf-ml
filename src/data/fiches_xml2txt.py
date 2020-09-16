@@ -8,7 +8,7 @@ Arguments:
     <file_path>             A path of a single XML fiche or a folder with multiple fiches XML
     <output_path>           A path where to store the extracted info
     --cores=<n> CORES       Number of cores to use [default: 1:int]
-    --as_json=<j> AS_JSON      Whether or not output JSON files instead of TXT [default: 0:int]
+    --as_json=<j> AS_JSON      Whether or not output JSON files instead of TXT [default: False:bool]
     --as_one=<j> AS_ONE     Whether or not output 1 file for 1 TXT, or consider sub-files
 '''
 from xml.etree.ElementTree import Element
