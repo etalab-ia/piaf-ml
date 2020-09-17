@@ -87,7 +87,7 @@ def compute_retriever_precision(true_fiches, retrieved_fiches, weight_position=F
 
 
 def main(test_corpus_path: str, knowledge_base_path: str, retriever_type: str):
-    def eval_plot_k_range(min_k: int, max_k:int, weight_position: bool):
+    def eval_plot_k_range(min_k: int, max_k: int, weight_position: bool):
         """
         Queries ES max_k - min_k times, saving at each step the results in a list. At the end plots the line
         showing the results obtained. For now we can only vary k.
@@ -101,14 +101,21 @@ def main(test_corpus_path: str, knowledge_base_path: str, retriever_type: str):
         results = []
         for k in tqdm(range(min_k, max_k + 1)):
             tqdm.write(f"Testing k={k}")
+            mean_precision_weighted, avg_time, detailed_results_weighted = compute_score(retriever=retriever,
+                                                                                         retriever_top_k=k,
+                                                                                         test_dataset=test_dataset,
+                                                                                         weight_position=True)
             mean_precision, avg_time, detailed_results = compute_score(retriever=retriever, retriever_top_k=k,
-                                                                       test_dataset=test_dataset, weight_position=weight_position)
-            results.append({"k": k, "mean_precision": mean_precision})
-        df_results = pd.DataFrame(results)
-        sns.lineplot(data=df_results, x="k", y="mean_precision")
-        fig_title = f"kb={knowledge_base_path.split('/')[-2]}--k={min_k},{max_k}--retriever={retriever_type}--weighted={str(weight_position)}"
+                                                                       test_dataset=test_dataset, weight_position=False)
+            results.append({"k": k, "mean_precision_weighted": mean_precision_weighted,
+                            "mean_precision": mean_precision})
+        df_results: pd.DataFrame = pd.DataFrame(results).set_index("k")
+        sns.lineplot(data=df_results[["mean_precision_weighted", "mean_precision"]])
+        fig_title = f"kb={knowledge_base_path.split('/')[-2]}--k={min_k},{max_k}--retriever={retriever_type}--weighted=both"
         plt.title(fig_title)
+
         plt.savefig(f"./results/{fig_title}.png")
+        df_results.to_csv(f"./results/{fig_title}.csv", index=False)
 
     def single_run(retriever_top_k: int):
         """
@@ -127,15 +134,15 @@ def main(test_corpus_path: str, knowledge_base_path: str, retriever_type: str):
         logger.info("Could not prepare the testing framework!! Exiting :(")
         return
 
-    # single_run(retriever_top_k=1)
-    eval_plot_k_range(1, 10, weight_position=True)
+    single_run(retriever_top_k=3)
+    # eval_plot_k_range(1, 10, weight_position=True)
 
 
-LAUNCH_ELASTICSEARCH = False
+LAUNCH_ELASTICSEARCH = True
 
 
-def prepare_framework(knowledge_base_path: str="/data/service-public-france/extracted/",
-                      retriever_type: str="sparse"):
+def prepare_framework(knowledge_base_path: str = "/data/service-public-france/extracted/",
+                      retriever_type: str = "sparse"):
     """
     Loads ES if needed (check LAUNCH_ES var above) and indexes the knowledge_base corpus
     :param knowledge_base_path: PAth of the folder containing the knowledge_base corpus
@@ -156,6 +163,7 @@ def prepare_framework(knowledge_base_path: str="/data/service-public-france/extr
 
         # Connect to Elasticsearch
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document")
+
         dicts = convert_json_files_to_dicts(dir_path=knowledge_base_path)
 
         # Now, let's write the docs to our DB.
@@ -177,7 +185,7 @@ def prepare_framework(knowledge_base_path: str="/data/service-public-france/extr
 
 
 def compute_score(retriever: BaseRetriever, retriever_top_k: int,
-                  test_dataset: Dict[str, List], weight_position: bool=False):
+                  test_dataset: Dict[str, List], weight_position: bool = False):
     """
     Given a Retriever to query and its parameters and a test dataset (couple query->true related doc), computes
     the number of matches found by the Retriever. A match is succesful if the retrieved document is among the
