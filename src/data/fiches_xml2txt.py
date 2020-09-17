@@ -51,7 +51,7 @@ def save_subfiche(doc_path: Path,
                   situation_title: str = None, situation_text: str = None,
                   chapitre_title: str = None, chapitre_text: str = None,
                   cas_title: str = None, cas_text: str = None,
-                  create_folders: bool =False, as_json: bool = False):
+                  create_folders: bool = False, as_json: bool = False):
     # fiche_type = [t for t in TYPE_FICHES if t in doc_path.as_posix()][0]
     # output_path = output_path / fiche_type
 
@@ -110,10 +110,9 @@ def save_subfiche(doc_path: Path,
 
 
 def save_fiche_as_one(doc_path: Path,
-                  output_path: Path,
-                  fiche_title: str = None, fiche_text: str = None,
-                  create_folders: bool =False, as_json: bool = False):
-
+                      output_path: Path,
+                      fiche_title: str = None, fiche_text: str = None,
+                      create_folders: bool = False, as_json: bool = False):
     new_fiche_path = doc_path.stem
 
     extension = ".txt" if not as_json else ".json"
@@ -133,7 +132,6 @@ def save_fiche_as_one(doc_path: Path,
             content = {'text': fiche_string,
                        'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}'}
             json.dump(content, newfiche, indent=4, ensure_ascii=False)
-
 
 
 def try_get_text(root: Element, tag: str) -> str:
@@ -174,7 +172,6 @@ def try_get_situation_text(child: Element,
         return chapitre_text
     else:
         return ""
-
 
 
 def try_get_situation_title(child: Element) -> str:
@@ -351,6 +348,7 @@ def run(doc_path: Path, output_path: Path, as_json: bool):
         ERROR_COUNT += 1
         return 0
 
+
 def run_fiche_as_one(doc_path: Path, output_path: Path, as_json: bool):
     global ERROR_COUNT
     fiche_text = ""
@@ -363,11 +361,11 @@ def run_fiche_as_one(doc_path: Path, output_path: Path, as_json: bool):
         fiche_text += treat_no_situation_fiche(root)
 
         save_fiche_as_one(doc_path=doc_path,
-                      fiche_title=fiche_title,
-                      fiche_text=fiche_text,
-                      output_path=output_path,
-                      as_json=as_json,
-                      )
+                          fiche_title=fiche_title,
+                          fiche_text=fiche_text,
+                          output_path=output_path,
+                          as_json=as_json,
+                          )
         return 1
     except Exception as e:
         tqdm.write(f"Could not treat file {doc_path}. Error: {str(e)}")

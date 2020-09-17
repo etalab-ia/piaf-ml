@@ -87,12 +87,13 @@ def compute_retriever_precision(true_fiches, retrieved_fiches, weight_position=F
 
 
 def main(test_corpus_path: str, knowledge_base_path: str, retriever_type: str):
-    def eval_plot_k_range(min_k: int, max_k:int):
+    def eval_plot_k_range(min_k: int, max_k:int, weight_position: bool):
         """
         Queries ES max_k - min_k times, saving at each step the results in a list. At the end plots the line
         showing the results obtained. For now we can only vary k.
         :param min_k: Minimum retriever-k to test
         :param max_k: Maximum retriever-k to test
+        :param weight_position: Whether to take into account the position of the retrieved result in the accuracy computation
         :return:
         """
         import seaborn as sns
@@ -101,11 +102,13 @@ def main(test_corpus_path: str, knowledge_base_path: str, retriever_type: str):
         for k in tqdm(range(min_k, max_k + 1)):
             tqdm.write(f"Testing k={k}")
             mean_precision, avg_time, detailed_results = compute_score(retriever=retriever, retriever_top_k=k,
-                                                                       test_dataset=test_dataset, weight_position=True)
+                                                                       test_dataset=test_dataset, weight_position=weight_position)
             results.append({"k": k, "mean_precision": mean_precision})
         df_results = pd.DataFrame(results)
         sns.lineplot(data=df_results, x="k", y="mean_precision")
-        plt.savefig(f"./results/min-{min_k}_max-{max_k}.png")
+        fig_title = f"kb={knowledge_base_path.split('/')[-2]}--k={min_k},{max_k}--retriever={retriever_type}--weighted={str(weight_position)}"
+        plt.title(fig_title)
+        plt.savefig(f"./results/{fig_title}.png")
 
     def single_run(retriever_top_k: int):
         """
@@ -124,8 +127,8 @@ def main(test_corpus_path: str, knowledge_base_path: str, retriever_type: str):
         logger.info("Could not prepare the testing framework!! Exiting :(")
         return
 
-    single_run(retriever_top_k=1)
-    # eval_plot_k_range(3, 10)
+    # single_run(retriever_top_k=1)
+    eval_plot_k_range(1, 10, weight_position=True)
 
 
 LAUNCH_ELASTICSEARCH = False
@@ -216,8 +219,8 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
 
     mean_precision = summed_precision / len(test_dataset)
     tqdm.write(
-        f"The retriever correctly found {found_fiche} fiches among {len(test_dataset)}. Accuracy:{mean_precision}. "
-        f"Time per ES query (ms): {avg_time * 100:.3f}")
+        f"The retriever correctly found {found_fiche} fiches among {len(test_dataset)}. Mean_precision {mean_precision}. "
+        f"Time per ES query (ms): {avg_time * 1000:.3f}")
     return mean_precision, avg_time, detailed_results
 
 
@@ -226,5 +229,5 @@ if __name__ == '__main__':
     test_corpus_path = parser.test_corpus_path
     knowledge_base_path = parser.knowledge_base_path
     retriever_type = parser.retriever_type
-
+    # TODO: as as parameters the weighted_computation and k_range
     main(test_corpus_path=test_corpus_path, knowledge_base_path=knowledge_base_path, retriever_type=retriever_type)

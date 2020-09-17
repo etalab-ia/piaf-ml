@@ -28,6 +28,7 @@ def convert_json_files_to_dicts(dir_path: str) -> List[dict]:
         else:
             raise Exception(f"Indexing of {path.suffix} files is not currently supported.")
 
-        documents.append({"text": text, "meta": {"name": path.name, "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}" }})
+        documents.append({"text": text, "meta": {"name": path.name,
+                                                 "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}"}})
 
     return documents
