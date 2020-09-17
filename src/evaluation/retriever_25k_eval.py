@@ -7,7 +7,7 @@ Usage:
 Arguments:
     <test_corpus_path>             A path of a 25k dataset corpus file (the 25k QA from la DILA)
     <knowledge_base_path>          A path of a knowledge-base corpus folder (the SPF uni/multi-fiches)
-    <retriever_type>               Type of retriever to use (sparse (bm25 as usual) or dende (embeddings, SBERT))
+    <retriever_type>               Type of retriever to use (sparse (bm25 as usual) or dense (embeddings, SBERT))
     --cores=<n> CORES       Number of cores to use [default: 1:int]
 '''
 
