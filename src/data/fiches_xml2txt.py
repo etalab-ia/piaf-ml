@@ -257,7 +257,8 @@ def treat_no_situation_fiche(root: Element):
         return "\n" + fiche_text
     else:
         # raise Exception("Fiche without situation. We could not extract anything")
-        return
+        # we have to return a string otherwise the run will fail with a NoneType 
+        return ""
 
 
 def clean_elements(root: Element):
