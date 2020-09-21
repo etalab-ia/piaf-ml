@@ -135,7 +135,7 @@ def main(test_corpus_path: str, knowledge_base_path: str, retriever_type: str):
         return
 
     single_run(retriever_top_k=3)
-    # eval_plot_k_range(1, 10, weight_position=True)
+    eval_plot_k_range(1, 10, weight_position=True)
 
 
 LAUNCH_ELASTICSEARCH = True
@@ -150,16 +150,19 @@ def prepare_framework(knowledge_base_path: str = "/data/service-public-france/ex
     :return: A Retriever object ready to be queried
     """
     try:
-        if LAUNCH_ELASTICSEARCH:
-            logging.info("Starting Elasticsearch ...")
-            status = subprocess.run(
-                ['docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'], shell=True
-            )
-            if status.returncode:
-                raise Exception(
-                    "Failed to launch Elasticsearch. If you want to connect to an existing Elasticsearch instance"
-                    "then set LAUNCH_ELASTICSEARCH in the script to False.")
-            time.sleep(15)
+        # kill ES container if running
+        subprocess.run(['docker stop $(docker ps -aq)'], shell=True)
+        time.sleep(7)
+
+        logging.info("Starting Elasticsearch ...")
+        status = subprocess.run(
+            ['docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'], shell=True
+        )
+        if status.returncode:
+            raise Exception(
+                "Failed to launch Elasticsearch. If you want to connect to an existing Elasticsearch instance"
+                "then set LAUNCH_ELASTICSEARCH in the script to False.")
+        time.sleep(15)
 
         # Connect to Elasticsearch
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document")
