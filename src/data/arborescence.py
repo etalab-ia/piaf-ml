@@ -29,11 +29,37 @@ def extract_arbo(doc_path):
     """
     Extracts arbo from a single fiche
     """
+
     tree = ET.parse(doc_path)
     root = tree.getroot()
-    fil_ariane = list(root.iter("FilDAriane"))[0]
-    arbo = [x.text for x in fil_ariane]
-    return arbo
+    audience = list(root.iter("Audience"))[0].text
+    titre = list(root.findall(".//dc:title", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
+
+    # Le theme n'est vide que quand il s'agit d'une fiche "Comment faire si..."
+    try:
+        theme = list(list(root.iter("Theme"))[0])[0].text
+    except IndexError:
+        theme = ''
+
+    # Cinq cas différents (cas de base + 4 types de fiches spéciaux), on les traite différemment
+    try:
+        dossier = list(list(root.iter("DossierPere"))[0])[0].text
+    except IndexError:
+        dossier = list(root.findall(".//dc:type", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
+        if dossier in ['Question-réponse', 'Comment faire si...']:
+            theme = ''
+        elif dossier == 'Dossier':
+            pass
+        elif dossier == 'Thème':
+            return None
+
+    # Sous-dossiers pas toujours présents
+    try:
+        sous_dossier = list(root.iter("SousDossierPere"))[0].text
+    except IndexError:
+        sous_dossier = ''
+
+    return {'audience': audience, 'theme': theme, 'dossier': dossier, 'sous_dossier': sous_dossier, 'titre': titre}
 
 
 def main(doc_files_path, output_path, n_jobs):
@@ -53,26 +79,19 @@ def main(doc_files_path, output_path, n_jobs):
     for doc_path in tqdm(doc_paths):
 
         arbo = extract_arbo(doc_path)
-
-        for i in range(len(arbo)):
-            if i == 0:
-                categorie = arbo[i]
-                if categorie not in arborescence.keys():
-                    arborescence[categorie] = {}
-            elif i == 1:
-                categorie, theme = arbo[i - 1], arbo[i]
-                if theme not in arborescence[categorie].keys():
-                    arborescence[categorie][theme] = {}
-            elif i == 2:
-                categorie, theme, dossier = arbo[i - 2], arbo[i - 1], arbo[i]
-                if dossier not in arborescence[categorie][theme].keys():
-                    arborescence[categorie][theme][dossier] = []
-            elif i == 3:
-                categorie, theme, dossier, sous_dossier = arbo[i - 3], arbo[i - 2], arbo[i - 1], arbo[i]
-                if sous_dossier not in arborescence[categorie][theme][dossier]:
-                    arborescence[categorie][theme][dossier].append(sous_dossier)
-            else:
-                tddm.print("Fiche arborescence is deeper than 4!")
+        if arbo is not None:
+            audience, theme = arbo['audience'], arbo['theme']
+            dossier, sous_dossier, titre = arbo['dossier'], arbo['sous_dossier'], arbo['titre']
+            if audience not in arborescence.keys():
+                arborescence[audience] = {}
+            if theme not in arborescence[audience].keys():
+                arborescence[audience][theme] = {}
+            if dossier not in arborescence[audience][theme].keys():
+                arborescence[audience][theme][dossier] = {}
+            if sous_dossier not in arborescence[audience][theme][dossier].keys():
+                arborescence[audience][theme][dossier][sous_dossier] = []
+            if titre not in arborescence[audience][theme][dossier][sous_dossier]:
+                arborescence[audience][theme][dossier][sous_dossier].append(titre)
 
     with open(path.as_posix(), "w", encoding='utf-8') as out_file:
         json.dump(arborescence, out_file, indent=4, ensure_ascii=False)

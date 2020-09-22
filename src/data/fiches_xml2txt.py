@@ -100,11 +100,6 @@ def save_subfiche(doc_path: Path,
         if not (slugify(cas_text.lower().strip()) in slugify(subfiche_string.lower().strip())):
             subfiche_string += f"{cas_text.lstrip(chapitre_title)}"
 
-    if arborescence is not None:
-        arborescence = ' | '.join(arborescence)
-    else:
-        arborescence = ''
-
     if not as_json:
         with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as subfiche:
             subfiche.write(subfiche_string)
@@ -131,11 +126,6 @@ def save_fiche_as_one(doc_path: Path,
     fiche_string += "\n\n"
     fiche_string += fiche_text
 
-    if arborescence is not None:
-        arborescence = ' | '.join(arborescence)
-    else:
-        arborescence = ''
-
     if not as_json:
         with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as newfiche:
             newfiche.write(fiche_string)
@@ -146,6 +136,33 @@ def save_fiche_as_one(doc_path: Path,
                        'arborescence': arborescence}
             json.dump(content, newfiche, indent=4, ensure_ascii=False)
 
+
+def get_arborescence(root):
+    audience = list(root.iter("Audience"))[0].text
+    titre = list(root.findall(".//dc:title", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
+    # Le theme n'est vide que quand il s'agit d'une fiche "Comment faire si..."
+    try:
+        theme = list(list(root.iter("Theme"))[0])[0].text
+    except IndexError:
+        theme = ''
+    # Cinq cas différents (cas de base + 4 types de fiches spéciaux), on les traite différemment
+    try:
+        dossier = list(list(root.iter("DossierPere"))[0])[0].text
+    except IndexError:
+        dossier = list(root.findall(".//dc:type", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
+        if dossier in ['Question-réponse', 'Comment faire si...']:
+            theme = ''
+        elif dossier == 'Dossier':
+            pass
+        elif dossier == 'Thème':
+            return None
+    # Sous-dossiers pas toujours présents
+    try:
+        sous_dossier = list(root.iter("SousDossierPere"))[0].text
+    except IndexError:
+        sous_dossier = ''
+
+    return {'audience': audience, 'theme': theme, 'dossier': dossier, 'sous_dossier': sous_dossier, 'titre': titre}
 
 def try_get_text(root: Element, tag: str) -> str:
     existing_tags = list(root.iter(tag))
@@ -299,7 +316,7 @@ def run(doc_path: Path, output_path: Path, as_json: bool):
         fiche_title = list(list(root.iter("Publication"))[0])[0].text
         introduction_text = try_get_text(root, "Introduction")
         situations = list(root.iter("Situation"))
-        arborescence = [x.text for x in list(root.iter("FilDAriane"))[0]]
+        arborescence = get_arborescence(root)
 
         if not situations:
             #     tqdm.write(f"\tFile {doc_path} has no situations !")
@@ -375,7 +392,7 @@ def run_fiche_as_one(doc_path: Path, output_path: Path, as_json: bool):
         root = tree.getroot()
         fiche_title = list(list(root.iter("Publication"))[0])[0].text
         fiche_text += treat_no_situation_fiche(root)
-        arborescence = [x.text for x in list(root.iter("FilDAriane"))[0]]
+        arborescence = get_arborescence(root)
 
         save_fiche_as_one(doc_path=doc_path,
                           fiche_title=fiche_title,
