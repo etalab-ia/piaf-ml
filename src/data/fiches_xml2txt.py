@@ -51,7 +51,8 @@ def save_subfiche(doc_path: Path,
                   situation_title: str = None, situation_text: str = None,
                   chapitre_title: str = None, chapitre_text: str = None,
                   cas_title: str = None, cas_text: str = None,
-                  create_folders: bool = False, as_json: bool = False):
+                  create_folders: bool = False, arborescence: list = None,
+                  as_json: bool = False):
     # fiche_type = [t for t in TYPE_FICHES if t in doc_path.as_posix()][0]
     # output_path = output_path / fiche_type
 
@@ -99,21 +100,27 @@ def save_subfiche(doc_path: Path,
         if not (slugify(cas_text.lower().strip()) in slugify(subfiche_string.lower().strip())):
             subfiche_string += f"{cas_text.lstrip(chapitre_title)}"
 
+    if arborescence is not None:
+        arborescence = ' | '.join(arborescence)
+    else:
+        arborescence = ''
+
     if not as_json:
         with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as subfiche:
             subfiche.write(subfiche_string)
     else:
         with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as subfiche:
             content = {'text': subfiche_string,
-                       'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}'}
+                       'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}',
+                       'arborescence': arborescence}
             json.dump(content, subfiche, indent=4, ensure_ascii=False)
 
 
 def save_fiche_as_one(doc_path: Path,
                       output_path: Path,
-                      fiche_title: str = None, fiche_text: str = None,
+                      fiche_title: str = None, fiche_text: str = None, arborescence: list = None,
                       create_folders: bool = False, as_json: bool = False):
-    new_fiche_path = doc_path.stem
+    new_fiche_path = file_name = doc_path.stem
 
     extension = ".txt" if not as_json else ".json"
     new_fiche_path += extension
@@ -124,13 +131,19 @@ def save_fiche_as_one(doc_path: Path,
     fiche_string += "\n\n"
     fiche_string += fiche_text
 
+    if arborescence is not None:
+        arborescence = ' | '.join(arborescence)
+    else:
+        arborescence = ''
+
     if not as_json:
         with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as newfiche:
             newfiche.write(fiche_string)
     else:
         with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as newfiche:
             content = {'text': fiche_string,
-                       'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}'}
+                       'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}',
+                       'arborescence': arborescence}
             json.dump(content, newfiche, indent=4, ensure_ascii=False)
 
 
@@ -286,6 +299,7 @@ def run(doc_path: Path, output_path: Path, as_json: bool):
         fiche_title = list(list(root.iter("Publication"))[0])[0].text
         introduction_text = try_get_text(root, "Introduction")
         situations = list(root.iter("Situation"))
+        arborescence = [x.text for x in list(root.iter("FilDAriane"))[0]]
 
         if not situations:
             #     tqdm.write(f"\tFile {doc_path} has no situations !")
@@ -338,6 +352,7 @@ def run(doc_path: Path, output_path: Path, as_json: bool):
                                   situation_title=situation_title, situation_text=situation_text,
                                   chapitre_title=chapitre_title, chapitre_text=chapitre_text,
                                   cas_title=cas_title, cas_text=cas_text,
+                                  arborescence=arborescence,
                                   output_path=output_path,
                                   as_json=as_json,
                                   )
@@ -360,11 +375,13 @@ def run_fiche_as_one(doc_path: Path, output_path: Path, as_json: bool):
         root = tree.getroot()
         fiche_title = list(list(root.iter("Publication"))[0])[0].text
         fiche_text += treat_no_situation_fiche(root)
+        arborescence = [x.text for x in list(root.iter("FilDAriane"))[0]]
 
         save_fiche_as_one(doc_path=doc_path,
                           fiche_title=fiche_title,
                           fiche_text=fiche_text,
                           output_path=output_path,
+                          arborescence=arborescence,
                           as_json=as_json,
                           )
         return 1

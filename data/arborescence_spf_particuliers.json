@@ -110,7 +110,7 @@
                 "Carte de retrait ou carte bancaire : quelles différences ?",
                 "Peut-on récupérer une carte bancaire avalée par un distributeur de billets ?",
                 "Perte de sa carte bancaire",
-                "Fraude à la carte bancaire (Perceval)",
+                "Fraude à la carte bancaire",
                 "Interdiction d'émettre des chèques",
                 "Quels sont les moyens de paiement utilisables uniquement par internet ?",
                 "Peut-on encore échanger des francs contre des euros ?"
@@ -226,7 +226,7 @@
                 "Doit-on payer la taxe d'habitation pour sa résidence secondaire ?",
                 "Taxe d'habitation",
                 "Taxe foncière sur les propriétés bâties (TFPB)",
-                "Qu'est-ce que la résidence principale pour les Impôts ?",
+                "Qu'est-ce que la résidence principale pour les impôts ?",
                 "Doit-on déclarer l'achat d'une télévision aux services des impôts ?",
                 "Redevance télé (contribution à l'audiovisuel public)"
             ],
@@ -266,7 +266,7 @@
                 "Assurance du locataire - Risques locatifs",
                 "Assurance du locataire : assurances complémentaires facultatives",
                 "Assurance dégâts des eaux",
-                "Résiliation du contrat d'assurance habitation",
+                "Assurance habitation : résiliation du contrat",
                 "Assurance logement du propriétaire",
                 "Copropriété : quelle assurance pour les parties communes ?",
                 "Assurance habitation : vol et cambriolage",
@@ -283,7 +283,7 @@
                 "Assurance habitation : recours en cas de litiges avec l'assureur",
                 "Assurance habitation : comment se déroule l'expertise ?",
                 "Assurance et catastrophe naturelle (ou technologiques)",
-                "Assurance habitation : sinistre courant",
+                "Accidents de la vie courante : intervention de l'assurance",
                 "Comment fonctionne la franchise d'assurance habitation ?",
                 "Faut-il assurer ses appareils portables (téléphone, tablette, ordinateur...) ?",
                 "L'assureur peut-il résilier un contrat assurance habitation après un sinistre ?",
@@ -398,7 +398,8 @@
                 "Quel est le délai de prescription applicable aux contrats d'assurance vie ?",
                 "Assurance décès : que faut-il déclarer dans un questionnaire médical ?",
                 "Dans quels cas le décès de l'assuré n'entraîne-t-il pas le versement de l'assurance-vie ?",
-                "Peut-on modifier le bénéficiaire d'un contrat d'assurance vie ?"
+                "Peut-on modifier le bénéficiaire d'un contrat d'assurance vie ?",
+                "Assurance vie et assurance décès : comment les distinguer ?"
             ],
             "Fichiers bancaires": [
                 "Fichier des incidents de remboursement des crédits aux particuliers (FICP)",
@@ -438,7 +439,7 @@
             ],
             "Investissements en bourse": [
                 "Placements en bourse",
-                "Qu'appelle-t-on les valeurs du Trésor ?",
+                "Valeurs du Trésor : qu'est-ce que c'est ?",
                 "Plan d'épargne en actions (PEA)"
             ],
             "Véhicule": [
@@ -578,10 +579,10 @@
                 "Un majeur protégé (tutelle, curatelle...) peut-il demander un titre d'identité ?",
                 "Carte d'identité d'un majeur : première demande",
                 "Carte d'identité d'un mineur : première demande",
-                "Carte nationale d'identité d'un majeur : en cas de perte",
+                "Carte d'identité d'un majeur : en cas de perte",
                 "Carte d'identité / Passeport : quel justificatif de domicile ?",
                 "Peut-on obtenir une carte d'identité en urgence ?",
-                "Carte nationale d'identité d'un majeur : en cas de vol",
+                "Carte d'identité d'un majeur : en cas de vol",
                 "Carte nationale d'identité d'un mineur : en cas de vol",
                 "Carte d'identité/Passeport d'un mineur : comment prouver l'autorité parentale ?",
                 "Que faire si je retrouve une carte d'identité ou un passeport perdu ou volé ?",
@@ -593,7 +594,7 @@
                 "Que faire si j'ai perdu tous mes papiers en même temps ?",
                 "Peut-on voyager avec une carte d'identité de plus de 10 ans ?",
                 "Carte d'identité / Passeport : quel justificatif de domicile pour un mineur ?",
-                "Comment faire figurer le nom de son mari ou de sa femme sur ses papiers ?",
+                "Comment inscrire le nom de son mari ou de sa femme sur ses papiers ?",
                 "Comment remplir le formulaire de demande de carte d'identité ou de passeport ?",
                 "Carte d'identité perdue ou volée : comment acheter un timbre fiscal ?",
                 "Comment savoir où en est ma demande de carte d'identité ?",
@@ -693,7 +694,7 @@
             ],
             "Obligations de l'administration vis-à-vis des usagers": [
                 "Accès aux documents administratifs",
-                "Publication des lois, règlements, circulaires et instructions",
+                "Publication des lois, règlements et circulaires",
                 "Obligation de motivation des décisions administratives",
                 "Comment consulter les actes d'une collectivité territoriale ?",
                 "Contacter l'administration par courrier ou formulaire papier",
@@ -1026,7 +1027,7 @@
                 "Licenciement d'une salariée enceinte ou en congé de maternité",
                 "Le salarié peut-il prendre des congés payés pendant son préavis ?",
                 "Qu'est-ce qu'un abandon de poste par un salarié dans le secteur privé ?",
-                "Perçoit-on des indemnités en cas de licenciement pour inaptitude physique ?",
+                "Perçoit-on des indemnités en cas de licenciement pour inaptitude physique ?",
                 "Un salarié peut-il être licencié à cause du retrait de son permis de conduire ?",
                 "Le jeune père salarié bénéficie-t-il d'une protection contre le licenciement ?",
                 "Licenciement illégal : le salarié doit-il rembourser les indemnités de chômage ?",
@@ -1100,6 +1101,7 @@
                 "Un salarié saisonnier est-il suivi par la médecine du travail ?",
                 "Santé et sécurité au travail : obligations du salarié",
                 "Santé et sécurité : utilisation et aménagement des lieux de travail",
+                "Comment est mis en place le travail de nuit dans l'entreprise ?",
                 "Travailleur à domicile",
                 "Convention collective"
             ],
@@ -1281,6 +1283,7 @@
                 "Rupture conventionnelle dans la fonction publique",
                 "Un agent public peut-il partir travailler dans le privé ?",
                 "Qu'est-ce que le référent déontologue dans la fonction publique ?",
+                "Un agent public peut-il percevoir l'allocation chômage en cas de démission ?",
                 "Fonction publique : congé spécial",
                 "Démission d'un fonctionnaire ou d'un agent non titulaire",
                 "Licenciement d'un fonctionnaire ",
@@ -1331,7 +1334,6 @@
                 "Autorisation d'absence pour mariage ou Pacs dans la fonction publique",
                 "Autorisation d'absence pour décès d'un proche dans la fonction publique",
                 "Congé de proche aidant dans la fonction publique",
-                "Congés et covid-19 : quelles sont les règles dans la fonction publique ?",
                 "Fonction publique : congés annuels",
                 "Autorisations d'absence pour garde d'enfant dans la fonction publique",
                 "Congé parental dans la fonction publique",
@@ -1339,6 +1341,11 @@
                 "Congé d'adoption dans la fonction publique",
                 "Congé de présence parentale dans la fonction publique",
                 "Fonction publique : congé de paternité et d'accueil de l'enfant"
+            ],
+            "Stage en entreprise": [
+                "Un stagiaire peut-il bénéficier des avantages du comité social et économique (CSE) ?",
+                "Stage d'un étudiant en milieu professionnel",
+                "Gratification minimale d'un stagiaire étudiant ou élève dans une entreprise"
             ],
             "Conflits du travail dans la fonction publique": [
                 "Quel lien entre procédures disciplinaire et pénale pour un fonctionnaire ?",
@@ -1473,7 +1480,7 @@
                 "Mise en examen",
                 "Garde à vue",
                 "Déroulement d'une affaire devant le tribunal correctionnel",
-                "Procès devant la cour d'assises et devant la cour criminelle",
+                "Procès devant la cour d'assises ou la cour criminelle",
                 "Audition des témoins au cours d'une enquête pénale",
                 "Peut-on retirer une plainte et quelles en sont les conséquences ?",
                 "Qu'est-ce que la légitime défense ?",
@@ -1579,7 +1586,7 @@
                 "Victime de l'amiante : comment être indemnisé ?",
                 "Qui doit payer en cas de casse dans un magasin ?",
                 "Victime d'infraction : indemnisation par le fonds de garantie",
-                "Peut-on être indemnisé avec les biens et comptes saisis du condamné ?"
+                "Peut-on indemniser la victime avec les biens du condamné qui sont confisqués ?"
             ],
             "Affaire civile": [
                 "Procès civil : comment agir rapidement devant le tribunal ?",
@@ -1616,7 +1623,7 @@
                 "Cour d'assises des mineurs : déroulement du procès",
                 "Mineur délinquant : enquête par le juge des enfants ou le juge d'instruction",
                 "Mineur mis en cause pénalement : mesures restrictives de liberté",
-                "Est-ce que le tribunal correctionnel pour mineurs existe encore ?",
+                "Le tribunal correctionnel pour mineurs existe t-il encore ?",
                 "Mineur délinquant : procédure devant le tribunal pour enfants",
                 "Que risque un mineur délinquant au pénal ?",
                 "Mineur délinquant : jugement par le juge des enfants",
@@ -1666,8 +1673,8 @@
             ],
             "Infractions sur internet": [
                 "Comment signaler le contenu illégal d'un site internet ?",
-                "Responsabilité des contenus publiés sur internet",
-                "Hadopi - Téléchargement illégal",
+                "Responsabilité des contenus publiés sur internet : quelles sont les règles ?",
+                "Téléchargement illégal (Hadopi) : quelles sont les règles ?",
                 "Ransomware (rançongiciel) - Blocage d'un ordinateur ou smartphone",
                 "Phishing (hameçonnage)"
             ],
@@ -2052,17 +2059,6 @@
                 "Allocation de soutien familial (ASF) : parents séparés",
                 "Prestations familiales : que faire en cas de changement de situation ?"
             ],
-            "Formations et diplômes de l'enseignement supérieur": [
-                "Un stagiaire peut-il bénéficier des avantages du comité social et économique (CSE) ?",
-                "Stage d'un étudiant en milieu professionnel",
-                "Qu'est-ce que le certificat informatique et internet (C2i) ?",
-                "Formations et diplômes niveau Bac + 2",
-                "Enseignement supérieur : formations et diplômes de la santé",
-                "Enseignement supérieur : formations et diplômes de niveau Bac +3 et plus",
-                "Gratification minimale d'un stagiaire étudiant ou élève dans une entreprise",
-                "Qu'est-ce que le statut national étudiant-entrepreneur ?",
-                "Un étudiant peut-il faire une césure dans ses études ?"
-            ],
             "Union libre": [
                 "Certificat de vie commune ou de concubinage",
                 "Mariage, Pacs ou concubinage (union libre) : quelles différences ?",
@@ -2122,6 +2118,14 @@
                 "Accueil en crèche",
                 "Accueil d'un enfant dans une halte-garderie"
             ],
+            "Formations et diplômes de l'enseignement supérieur": [
+                "Qu'est-ce que le certificat informatique et internet (C2i) ?",
+                "Formations et diplômes niveau Bac + 2",
+                "Enseignement supérieur : formations et diplômes de la santé",
+                "Enseignement supérieur : formations et diplômes de niveau Bac +3 et plus",
+                "Qu'est-ce que le statut national étudiant-entrepreneur ?",
+                "Un étudiant peut-il faire une césure dans ses études ?"
+            ],
             "Inscription dans l'enseignement supérieur": [
                 "Que faire face à un bizutage ?",
                 "Étudiant en situation de handicap",
@@ -2146,7 +2150,7 @@
                 "Droit au logement opposable (Dalo) : faire valoir son droit à un logement",
                 "Renouvellement d'une demande de logement social",
                 "Radiation d'une demande de logement social",
-                "Conditions d'attribution d'un logement social"
+                "Quelles sont les conditions pour obtenir un logement social ?"
             ],
             "Location immobilière : fin du bail": [
                 "Qu'est-ce qu'un bail de sortie progressive de la loi de 1948 ?",
@@ -2159,7 +2163,7 @@
                 "Le bailleur d'un logement conventionné Anah peut-il donner congé au locataire ?",
                 "Un locataire peut-il quitter son logement sans préavis ?",
                 "Bail d'habitation : peut-on envoyer son préavis (congé) par mail ?",
-                "Un propriétaire peut-il vendre un logement occupé par un locataire ?",
+                "Un propriétaire peut-il vendre un logement habité par un locataire ?",
                 "Comment calculer le délai de préavis en cas de congé donné par un locataire ?",
                 "Quelle sanction s'applique en cas de préavis frauduleux du bailleur ?",
                 "État des lieux de sortie dans un contrat de location",
@@ -2262,7 +2266,8 @@
                 "Convocation de l'assemblée générale des copropriétaires",
                 "Déroulement d'une assemblée générale des copropriétaires",
                 "Procès-verbal d'assemblée générale des copropriétaires",
-                "Peut-on changer l'usage d'un lot de copropriété ?"
+                "Peut-on changer l'usage d'un lot de copropriété ?",
+                "Peut-on contester une décision prise en assemblée générale de copropriété ?"
             ],
             "Acteurs de la copropriété (organisation juridique)": [
                 "Qui peut assister aux réunions du conseil syndical d'une copropriété ?",
@@ -2334,9 +2339,8 @@
                 "Éco-prêt à taux zéro (éco-PTZ)",
                 "Anah : qu'est-ce que l'aide Habiter Mieux Sérénité ?",
                 "Quelles aides peut-on toucher pour réaliser des travaux dans son logement ?",
-                "Prime \"Coup de pouce économies énergie\"",
+                "Prime \"Coup de pouce économies énergie\" : chauffage et isolation",
                 "Prime de transition énergétique \"MaPrimeRénov\"",
-                "Peut-on contester une décision prise en assemblée générale de copropriété ?",
                 "Prime \"Coup de pouce thermostat avec régulation performante\""
             ],
             "Aide pour le dépôt de garantie ou la caution d'un logement en location": [
@@ -2451,7 +2455,7 @@
                 "Le maire peut-il imposer l'achat de bacs à poubelle (conteneurs) spécifiques ?",
                 "Existe-il une amende pour abandon de déchets dans la rue ?",
                 "Dans quel cas le débroussaillage est-il obligatoire ?",
-                "Où recycler ou jeter mes déchets (textiles, électriques, dangereux, ...) ?"
+                "Où recycler, jeter mes déchets (textiles, électriques, dangereux, ...) ?"
             ],
             "Travaux": [
                 "Affichage de l'autorisation d'urbanisme sur le terrain",
@@ -2484,13 +2488,12 @@
                 "Reprise du bien exproprié",
                 "Procédure d'expropriation"
             ],
-            "Vie pratique en appartement (copropriété)": [
+            "Droits des copropriétaires": [
                 "Copropriété : usage privé de l'appartement par son propriétaire occupant",
                 "Copropriété : travaux et aménagement dans l'appartement du propriétaire occupant",
                 "Copropriété : usage privatif d'une partie commune (droit de jouissance exclusif)",
-                "Le propriétaire est-il responsable des nuisances causées par son locataire ?",
                 "Peut-on accrocher librement des objets à ses fenêtres ?",
-                "Local à poubelles d'un immeuble en copropriété"
+                "Local à poubelles d'un immeuble en copropriété : quelles sont les règles ?"
             ]
         },
         "Social - Santé": {
@@ -2725,9 +2728,10 @@
                 "Quel justificatif fournir pour s'inscrire à Pôle emploi ?",
                 "Médiateur de Pôle emploi : comment y recourir ?"
             ],
-            "Chômage partiel": [
+            "Chômage partiel (activité partielle)": [
                 "Rémunération d'un salarié en chômage partiel (activité partielle)",
                 "Activité partielle : démarches de l'employeur (chômage partiel ou technique)",
+                "Activité partielle de longue durée",
                 "Quelles sont les incidences du chômage partiel sur le contrat de travail ?"
             ],
             "Addictions": [
@@ -2780,7 +2784,7 @@
             ],
             "Santé de l'enfant": [
                 "Carnet de santé d'un enfant",
-                "Suivi médical de l'enfant : examens médicaux obligatoires"
+                "Visites médicales de l'enfant : examens obligatoires"
             ]
         },
         "Transports": {
@@ -3182,7 +3186,10 @@
                 "Le regroupement familial concerne-t-il toutes les familles étrangères ?",
                 "L'époux étranger d'un Français peut-il séjourner en France ?",
                 "L'époux ou partenaire européen d'un Français peut-il s'installer en France ?",
-                "Séjour en France de la famille d'un citoyen européen"
+                "Séjour en France de la famille d'un citoyen européen",
+                "Un étranger sans titre de séjour français peut-il faire venir sa famille en France ?",
+                "Réunification familiale",
+                "Procédure simplifiée \"famille accompagnante\""
             ],
             "Titres, carte de séjour et documents de circulation pour étranger en France": [
                 "Carte de résident permanent d'un étranger en France",
