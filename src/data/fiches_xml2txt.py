@@ -51,7 +51,8 @@ def save_subfiche(doc_path: Path,
                   situation_title: str = None, situation_text: str = None,
                   chapitre_title: str = None, chapitre_text: str = None,
                   cas_title: str = None, cas_text: str = None,
-                  create_folders: bool = False, as_json: bool = False):
+                  create_folders: bool = False, arborescence: list = None,
+                  as_json: bool = False):
     # fiche_type = [t for t in TYPE_FICHES if t in doc_path.as_posix()][0]
     # output_path = output_path / fiche_type
 
@@ -105,15 +106,16 @@ def save_subfiche(doc_path: Path,
     else:
         with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as subfiche:
             content = {'text': subfiche_string,
-                       'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}'}
+                       'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}',
+                       'arborescence': arborescence}
             json.dump(content, subfiche, indent=4, ensure_ascii=False)
 
 
 def save_fiche_as_one(doc_path: Path,
                       output_path: Path,
-                      fiche_title: str = None, fiche_text: str = None,
+                      fiche_title: str = None, fiche_text: str = None, arborescence: list = None,
                       create_folders: bool = False, as_json: bool = False):
-    new_fiche_path = doc_path.stem
+    new_fiche_path = file_name = doc_path.stem
 
     extension = ".txt" if not as_json else ".json"
     new_fiche_path += extension
@@ -130,9 +132,37 @@ def save_fiche_as_one(doc_path: Path,
     else:
         with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as newfiche:
             content = {'text': fiche_string,
-                       'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}'}
+                       'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}',
+                       'arborescence': arborescence}
             json.dump(content, newfiche, indent=4, ensure_ascii=False)
 
+
+def get_arborescence(root):
+    audience = list(root.iter("Audience"))[0].text
+    titre = list(root.findall(".//dc:title", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
+    # Le theme n'est vide que quand il s'agit d'une fiche "Comment faire si..."
+    try:
+        theme = list(list(root.iter("Theme"))[0])[0].text
+    except IndexError:
+        theme = ''
+    # Cinq cas différents (cas de base + 4 types de fiches spéciaux), on les traite différemment
+    try:
+        dossier = list(list(root.iter("DossierPere"))[0])[0].text
+    except IndexError:
+        dossier = list(root.findall(".//dc:type", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
+        if dossier in ['Question-réponse', 'Comment faire si...']:
+            theme = ''
+        elif dossier == 'Dossier':
+            pass
+        elif dossier == 'Thème':
+            return None
+    # Sous-dossiers pas toujours présents
+    try:
+        sous_dossier = list(root.iter("SousDossierPere"))[0].text
+    except IndexError:
+        sous_dossier = ''
+
+    return {'audience': audience, 'theme': theme, 'dossier': dossier, 'sous_dossier': sous_dossier, 'titre': titre}
 
 def try_get_text(root: Element, tag: str) -> str:
     existing_tags = list(root.iter(tag))
@@ -286,6 +316,7 @@ def run(doc_path: Path, output_path: Path, as_json: bool):
         fiche_title = list(list(root.iter("Publication"))[0])[0].text
         introduction_text = try_get_text(root, "Introduction")
         situations = list(root.iter("Situation"))
+        arborescence = get_arborescence(root)
 
         if not situations:
             #     tqdm.write(f"\tFile {doc_path} has no situations !")
@@ -338,6 +369,7 @@ def run(doc_path: Path, output_path: Path, as_json: bool):
                                   situation_title=situation_title, situation_text=situation_text,
                                   chapitre_title=chapitre_title, chapitre_text=chapitre_text,
                                   cas_title=cas_title, cas_text=cas_text,
+                                  arborescence=arborescence,
                                   output_path=output_path,
                                   as_json=as_json,
                                   )
@@ -360,11 +392,13 @@ def run_fiche_as_one(doc_path: Path, output_path: Path, as_json: bool):
         root = tree.getroot()
         fiche_title = list(list(root.iter("Publication"))[0])[0].text
         fiche_text += treat_no_situation_fiche(root)
+        arborescence = get_arborescence(root)
 
         save_fiche_as_one(doc_path=doc_path,
                           fiche_title=fiche_title,
                           fiche_text=fiche_text,
                           output_path=output_path,
+                          arborescence=arborescence,
                           as_json=as_json,
                           )
         return 1
