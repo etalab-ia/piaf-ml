@@ -9,6 +9,7 @@ Arguments:
     <knowledge_base_path>          The path of a knowledge-base corpus folder (the SPF uni/multi-fiches)
     <result_file_path>             The path of a results file where to store the run's perf results
     <retriever_type>               Type of retriever to use (sparse (bm25 as usual) or dense (embeddings, SBERT))
+    <filtered>
     --cores=<n> CORES       Number of cores to use [default: 1:int]
 '''
 
@@ -154,7 +155,8 @@ def main(test_corpus_path: str, knowledge_base_path: str,
         return
 
     # single_run(retriever_top_k=3)
-    eval_plot_k_range(1, 10, weight_position=True)
+    eval_plot_k_range(1, 10, weight_position=False)
+
 
 
 def prepare_framework(knowledge_base_path: str = "/data/service-public-france/extracted/",
@@ -220,6 +222,7 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
     for question, true_fiche_urls in test_dataset.items():
         true_fiche_ids = [f.split("/")[-1] for f in true_fiche_urls]
         retrieved_results = retriever.retrieve(query=question, top_k=retriever_top_k)
+        pbar.update()
         retrieved_doc_names = [f.meta["name"] for f in retrieved_results]
         precision = compute_retriever_precision(true_fiche_ids, retrieved_doc_names, weight_position=weight_position)
         summed_precision += precision
@@ -234,7 +237,7 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
                            "pred_fiche": retrieved_doc_names,
                            "true_fiche": true_fiche_ids,
                            })
-        pbar.update()
+
     avg_time = pbar.avg_time
     pbar.close()
     detailed_results = {"successes": succeses, "errors": errors, "avg_time": avg_time}
