@@ -10,18 +10,15 @@ Arguments:
     --cores=<n> CORES       Number of cores to use [default: 1:int]
 """
 
-from xml.etree.ElementTree import Element
+
 from glob import glob
 from pathlib import Path
 import xml.etree.ElementTree as ET
-from typing import List
 
 from argopt import argopt
-from joblib import Parallel, delayed
 from tqdm import tqdm
 
-import unicodedata
-import re
+import os
 import json
 
 
@@ -34,6 +31,7 @@ def extract_arbo(doc_path):
     root = tree.getroot()
     audience = list(root.iter("Audience"))[0].text
     titre = list(root.findall(".//dc:title", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
+    fiche = list(root.findall(".//dc:identifier", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
 
     # Le theme n'est vide que quand il s'agit d'une fiche "Comment faire si..."
     try:
@@ -59,7 +57,7 @@ def extract_arbo(doc_path):
     except IndexError:
         sous_dossier = ''
 
-    return {'audience': audience, 'theme': theme, 'dossier': dossier, 'sous_dossier': sous_dossier, 'titre': titre}
+    return {'audience': audience, 'theme': theme, 'dossier': dossier, 'sous_dossier': sous_dossier, 'titre': titre, 'fiche': fiche}
 
 
 def main(doc_files_path, output_path, n_jobs):
@@ -82,6 +80,7 @@ def main(doc_files_path, output_path, n_jobs):
         if arbo is not None:
             audience, theme = arbo['audience'], arbo['theme']
             dossier, sous_dossier, titre = arbo['dossier'], arbo['sous_dossier'], arbo['titre']
+            fiche = arbo['fiche']
             if audience not in arborescence.keys():
                 arborescence[audience] = {}
             if theme not in arborescence[audience].keys():
@@ -89,9 +88,12 @@ def main(doc_files_path, output_path, n_jobs):
             if dossier not in arborescence[audience][theme].keys():
                 arborescence[audience][theme][dossier] = {}
             if sous_dossier not in arborescence[audience][theme][dossier].keys():
-                arborescence[audience][theme][dossier][sous_dossier] = []
-            if titre not in arborescence[audience][theme][dossier][sous_dossier]:
-                arborescence[audience][theme][dossier][sous_dossier].append(titre)
+                arborescence[audience][theme][dossier][sous_dossier] = {}
+            if fiche not in arborescence[audience][theme][dossier][sous_dossier].keys():
+                arborescence[audience][theme][dossier][sous_dossier][fiche]=titre
+
+    if not output_path.exists():
+        os.makedirs(output_path)
 
     with open(path.as_posix(), "w", encoding='utf-8') as out_file:
         json.dump(arborescence, out_file, indent=4, ensure_ascii=False)
