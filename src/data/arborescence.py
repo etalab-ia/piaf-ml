@@ -59,14 +59,70 @@ def extract_arbo(doc_path):
 
     return {'audience': audience, 'theme': theme, 'dossier': dossier, 'sous_dossier': sous_dossier, 'titre': titre, 'fiche': fiche}
 
+def concat_ID_and_name (id, name):
+    return id + '//' + name
+
+def extra_arbo_dossier(doc_path):
+    """
+    Extracts arbo from a single fiche N in order to get the part theme / sous_theme / dosser
+    """
+
+    tree = ET.parse(doc_path)
+    root = tree.getroot()
+    #for sous_theme in list(root.iter("SousTheme")):
+
+    try:
+        type = root.attrib['type']
+    except:
+        print("not correct file -->" + doc_path)
+        return {}
+
+    def iter_fiches (study_root):
+        fiches = []
+        for fiche in study_root.iter('Fiche'):
+            fiche_id = fiche.attrib['ID']
+            fiche_name = fiche.text
+            fiche_txt = concat_ID_and_name(fiche_id, fiche_name)
+            fiches.append(fiche_txt)
+        return fiches
+
+    if type == 'Dossier':
+        theme = root.find('Theme').find('Titre').text
+        theme_id = root.find('Theme').attrib['ID']
+        theme_txt = concat_ID_and_name(theme_id, theme)
+        try:
+            sous_theme = root.find('SousThemePere').text #there might be no sous-theme
+        except:
+            sous_theme = ''
+        dossier = list(root.findall(".//dc:title", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
+        dossier_id = root.attrib['ID']
+        dossier_txt = concat_ID_and_name(dossier_id, dossier)
+        sous_dossier_dict = {}
+        if root.find('SousDossier') != None: #case when there is one or several sous_dossier
+            for ss_dossier in root.iter('SousDossier'):
+                sous_dossier = ss_dossier.find('Titre').text
+                list_fiches = iter_fiches(ss_dossier)
+                sous_dossier_dict[sous_dossier] = list_fiches
+        else: #case when there is no sous_dossier
+            list_fiches = iter_fiches(root)
+            sous_dossier_dict[""] = list_fiches
+        dossier_dict = {dossier_txt: sous_dossier_dict}
+        sous_theme_dict = {sous_theme: dossier_dict}
+        theme_dict = {theme_txt: sous_theme_dict}
+        return theme_dict
+    else:
+        return {}
+
+
 
 def main(doc_files_path, output_path, n_jobs):
 
     if not doc_files_path.is_dir() and doc_files_path.is_file():
         doc_paths = [doc_files_path]
     else:
-        doc_paths = glob(doc_files_path.as_posix() + "/**/F*.xml", recursive=True)
-        doc_paths += glob(doc_files_path.as_posix() + "/**/N*.xml", recursive=True)
+        # doc_paths = glob(doc_files_path.as_posix() + "/**/F*.xml", recursive=True)
+        # go through the N files that contains the arbo
+        doc_paths = glob(doc_files_path.as_posix() + "/**/N*.xml", recursive=True)
         doc_paths = [Path(p) for p in doc_paths]
     if not doc_paths:
         raise Exception(f"Path {doc_paths} not found")
@@ -75,22 +131,21 @@ def main(doc_files_path, output_path, n_jobs):
     arborescence = {}
 
     for doc_path in tqdm(doc_paths):
-
-        arbo = extract_arbo(doc_path)
-        if arbo is not None:
-            audience, theme = arbo['audience'], arbo['theme']
-            dossier, sous_dossier, titre = arbo['dossier'], arbo['sous_dossier'], arbo['titre']
-            fiche = arbo['fiche']
-            if audience not in arborescence.keys():
-                arborescence[audience] = {}
-            if theme not in arborescence[audience].keys():
-                arborescence[audience][theme] = {}
-            if dossier not in arborescence[audience][theme].keys():
-                arborescence[audience][theme][dossier] = {}
-            if sous_dossier not in arborescence[audience][theme][dossier].keys():
-                arborescence[audience][theme][dossier][sous_dossier] = {}
-            if fiche not in arborescence[audience][theme][dossier][sous_dossier].keys():
-                arborescence[audience][theme][dossier][sous_dossier][fiche]=titre
+        arbo = extra_arbo_dossier(doc_path)
+        if len(arbo) != 0:
+            theme = list(arbo.keys())[0]
+            if theme not in arborescence.keys():
+                arborescence[theme] = arbo[theme]
+            else:
+                sous_theme = list(arbo[theme].keys())[0]
+                if sous_theme not in arborescence[theme].keys():
+                    arborescence[theme][sous_theme]=arbo[theme][sous_theme]
+                else:
+                    dossier = list(arbo[theme][sous_theme].keys())[0]
+                    if dossier not in arborescence[theme][sous_theme].keys():
+                        arborescence[theme][sous_theme][dossier] = arbo[theme][sous_theme][dossier]
+                    else:
+                        print('This should not occur')
 
     if not output_path.exists():
         os.makedirs(output_path)
