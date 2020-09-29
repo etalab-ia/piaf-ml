@@ -48,7 +48,7 @@ def get_filters_list(test_corpus_path):
     dossier_list = list(df.dossier.unique())
     return  theme_list, dossier_list
 
-def load_25k_test_set(test_corpus_path: str, filter):
+def load_25k_test_set(test_corpus_path: str, filter_name, filter_value):
     """
     Loads the 25k dataset. The 25k dataset is a csv that must contain the url columns (url, url2, url3, url4)
     and a question column. The former contains the list of proposed fiches' URLs and the latter contains the
@@ -61,7 +61,7 @@ def load_25k_test_set(test_corpus_path: str, filter):
     df = pd.read_csv(test_corpus_path).fillna("")
     dict_question_fiche = {}
     for row in df.iterrows():
-        if row[1]["theme"] == filter:
+        if row[1][filter_name] == filter_value:
             question = row[1]["question"]
             list_url = [row[1][u] for u in url_cols if row[1][u]]
             dict_question_fiche[question] = list_url
@@ -93,7 +93,8 @@ def compute_retriever_precision(true_fiches, retrieved_fiches, weight_position=F
 # compute_retriever_precision(["f1", "f2", "f3"], ["f3"], False)
 
 def main(test_corpus_path: str, knowledge_base_path: str,
-         result_file_path: str, retriever_type: str):
+         result_file_path: str, retriever_type: str,
+         filter_name: str):
 
     def eval_plot_k(k: int, weight_position: bool):
         """
@@ -110,7 +111,9 @@ def main(test_corpus_path: str, knowledge_base_path: str,
             retriever=retriever,
             retriever_top_k=k,
             test_dataset=test_dataset,
-            weight_position=weight_position)
+            weight_position=weight_position,
+            filter_name=filter_name,
+            filter_value=filter_value)
         result_dict = {"k": k,
                        "corpus": corpus_name,
                        "retriever": retriever_type,
@@ -134,20 +137,23 @@ def main(test_corpus_path: str, knowledge_base_path: str,
         with open(f"./results/k_{retriever_top_k}_detailed_results.json", "w") as outo:
             json.dump(detailed_results, outo, indent=4, ensure_ascii=False)
 
+    retriever = prepare_framework(knowledge_base_path=knowledge_base_path, retriever_type=retriever_type)
+
     theme_list, dossier_list = get_filters_list(test_corpus_path)
 
+    if filter_name == 'theme':
+        filter_list = theme_list
+    elif filter_name == 'dossier':
+        filter_list = dossier_list
+    else:
+        print('The filter name is not correct')
     results = []
-    for theme in theme_list:
-        test_dataset = load_25k_test_set(test_corpus_path, theme)
-        retriever = prepare_framework(knowledge_base_path=knowledge_base_path, retriever_type=retriever_type, filter_name=theme)
-        if not retriever:
-            logger.info("Could not prepare the testing framework!! Exiting :(")
-            continue
-
+    for filter_value in filter_list:
+        test_dataset = load_25k_test_set(test_corpus_path, filter_name, filter_value)
         for k in range (1, 2):
             # single_run(retriever_top_k=3)
             result_dict = eval_plot_k(k, weight_position=False)
-            result_dict['filter_name'] = theme
+            result_dict[filter_name] = filter_value
             results.append(result_dict)
     df_results: pd.DataFrame = pd.DataFrame(results)
     if Path(result_file_path).exists():
@@ -166,15 +172,6 @@ def prepare_framework(knowledge_base_path: str = "/data/service-public-france/ex
     :param retriever_type: The type of retriever to be used
     :return: A Retriever object ready to be queried
     """
-    def filter_dicts(dicts, filter):
-        result = []
-        for dic in dicts:
-            try:
-                if dic['meta']['arborescence']['theme'] == filter:
-                    result.append(dic)
-            except:
-                continue
-        return result
 
     try:
         # kill ES container if running
@@ -196,7 +193,6 @@ def prepare_framework(knowledge_base_path: str = "/data/service-public-france/ex
 
         dicts = convert_json_files_v10_to_dicts(dir_path=knowledge_base_path)
 
-        dicts = filter_dicts(dicts, filter_name)
 
         # Now, let's write the docs to our DB
         document_store.write_documents(dicts)
@@ -212,7 +208,8 @@ def prepare_framework(knowledge_base_path: str = "/data/service-public-france/ex
 
 
 def compute_score(retriever: BaseRetriever, retriever_top_k: int,
-                  test_dataset: Dict[str, List], weight_position: bool = False):
+                  test_dataset: Dict[str, List], weight_position: bool = False,
+                  filter_name: str = None, filter_value: str = None):
     """
     Given a Retriever to query and its parameters and a test dataset (couple query->true related doc), computes
     the number of matches found by the Retriever. A match is succesful if the retrieved document is among the
@@ -221,6 +218,8 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
     :param retriever_top_k: The number of docs to retrieve
     :param test_dataset: A collection of "query":[relevant_doc_1, relevant_doc_2, ...]
     :param weight_position: Whether to take into account the position of the retrieved result in the accuracy computation
+    :param filter_name: The name of the filter requested, usually the level from the arborescence : 'theme', 'dossier' ..
+    :param filter_value: The value of the filter, e.g. for a theme : 'Famille', 'Transport' ...
     :return: Returns mean_precision, avg_time, and detailed_results
     """
     summed_precision = 0
@@ -232,7 +231,10 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
     pbar = tqdm(total=len(test_dataset))
     for question, true_fiche_urls in test_dataset.items():
         true_fiche_ids = [f.split("/")[-1] for f in true_fiche_urls]
-        retrieved_results = retriever.retrieve(query=question, top_k=retriever_top_k)
+        if filter_value == None or filter_name == None:
+            retrieved_results = retriever.retrieve(query=question, top_k=retriever_top_k)
+        else:
+            retrieved_results = retriever.retrieve(query=question, filters={filter_name: [filter_value]},top_k=retriever_top_k)
         pbar.update()
         retrieved_doc_names = [f.meta["name"] for f in retrieved_results]
         precision = compute_retriever_precision(true_fiche_ids, retrieved_doc_names, weight_position=weight_position)
@@ -250,6 +252,8 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
                            })
 
     avg_time = pbar.avg_time
+    if avg_time == None: #quick fix for a bug idk why is happening
+        avg_time = 0
     pbar.close()
     detailed_results = {"successes": succeses, "errors": errors, "avg_time": avg_time}
 
@@ -268,4 +272,4 @@ if __name__ == '__main__':
     retriever_type = parser.retriever_type
     # TODO: as as parameters the weighted_computation and k_range
     main(test_corpus_path=test_corpus_path, knowledge_base_path=knowledge_base_path,
-         result_file_path=result_file_path, retriever_type=retriever_type)
+         result_file_path=result_file_path, retriever_type=retriever_type, filter_name='theme')
