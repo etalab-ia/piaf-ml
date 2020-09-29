@@ -21,7 +21,7 @@ import subprocess
 import time
 from pathlib import Path
 from random import seed
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from argopt import argopt
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
@@ -113,34 +113,37 @@ def compute_retriever_precision(true_fiches, retrieved_fiches, weight_position=F
 
 def main(test_corpus_path: str, knowledge_base_path: str,
          result_file_path: str, retriever_type: str,
-         k_range:str):
-    def single_run(retriever_top_k: int, weight_position: bool = False):
-        """
-        Runs the Retriever once with the specified retriever k.
-        :param weight_position:
-        :param retriever_top_k:
-        :return:
-        """
-        mean_precision, avg_time, found_fiche, detailed_results = compute_score(retriever=retriever,
-                                                                                retriever_top_k=retriever_top_k,
-                                                                                test_dataset=test_dataset,
-                                                                                weight_position=weight_position)
-        with open(f"./results/k_{retriever_top_k}_detailed_results.json", "w") as outo:
-            json.dump(detailed_results, outo, indent=4, ensure_ascii=False)
-
+         k_range: List[int]):
     test_dataset = load_25k_test_set(test_corpus_path)
     retriever = prepare_framework(knowledge_base_path=knowledge_base_path, retriever_type=retriever_type)
     if not retriever:
         logger.info("Could not prepare the testing framework!! Exiting :(")
         return
 
-    single_run(retriever_top_k=5, weight_position=False)
-    eval_k_range(knowledge_base_path, retriever, test_dataset, retriever_type, result_file_path, 1, 10,
-                 weight_position=False)
+    if len(k_range) < 2:
+        single_run(retriever, test_dataset, retriever_top_k=5, weight_position=False)
+    else:
+        range_run(knowledge_base_path, retriever, test_dataset, retriever_type, result_file_path, k_range,
+                  weight_position=True)
 
 
-def eval_k_range(knowledge_base_path, retriever, test_dataset, retriever_type, result_file_path, min_k: int,
-                 max_k: int, weight_position: bool):
+def single_run(retriever, test_dataset, retriever_top_k: int, weight_position: bool = False):
+    """
+    Runs the Retriever once with the specified retriever k.
+    :param weight_position:
+    :param retriever_top_k:
+    :return:
+    """
+    mean_precision, avg_time, found_fiche, detailed_results = compute_score(retriever=retriever,
+                                                                            retriever_top_k=retriever_top_k,
+                                                                            test_dataset=test_dataset,
+                                                                            weight_position=weight_position)
+    with open(f"./results/k_{retriever_top_k}_detailed_results.json", "w") as outo:
+        json.dump(detailed_results, outo, indent=4, ensure_ascii=False)
+
+
+def range_run(knowledge_base_path, retriever, test_dataset, retriever_type,
+              result_file_path, k_range: Tuple[int], weight_position: bool):
     """
     Queries ES max_k - min_k times, saving at each step the results in a list. At the end plots the line
     showing the results obtained. For now we can only vary k.
@@ -155,6 +158,7 @@ def eval_k_range(knowledge_base_path, retriever, test_dataset, retriever_type, r
 
     results = []
     corpus_name = knowledge_base_path.split('/')[-2]
+    min_k, max_k = k_range
     for k in tqdm(range(min_k, max_k + 1)):
         tqdm.write(f"Testing k={k}")
         mean_precision, avg_time, correctly_retrieved, detailed_results_weighted = compute_score(
@@ -230,7 +234,7 @@ def prepare_framework(knowledge_base_path: str = "/data/service-public-france/ex
             # dicts = convert_json_to_dictsAndEmbeddings(dir_path=knowledge_base_path,
             #                                            retriever=retriever,
             #                                            split_paragraphs=False)
-            dicts = pickle.load(open("/home/pavel/.config/JetBrains/PyCharmCE2020.1/scratches/v9_dicts.pkl", "rb"))
+            dicts = pickle.load(open("/home/pavel/code/piaf-ml/data/v11_dicts.pkl", "rb"))
 
             document_store.write_documents(dicts)
 
@@ -294,7 +298,7 @@ if __name__ == '__main__':
     knowledge_base_path = parser.knowledge_base_path
     result_file_path = parser.result_file_path
     retriever_type = parser.retriever_type
-    k_range = parser.k_range.split(",")
+    k_range = [int(k) for k in parser.k_range.split(",")]
 
     # TODO: add as parameters the weighted_computation and k_range
     main(test_corpus_path=test_corpus_path, knowledge_base_path=knowledge_base_path,
