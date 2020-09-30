@@ -1,17 +1,5 @@
 '''
-Evaluates the Retriever with different input parameters
-
-Usage:
-    retriever_perf_eval_25k.py <test_corpus_path> <knowledge_base_path> <result_file_path> <retriever_type> <k_range> [options]
-
-Arguments:
-    <test_corpus_path>             The path of a 25k dataset corpus file (the 25k QA from la DILA)
-    <knowledge_base_path>          The path of a knowledge-base corpus folder (the SPF uni/multi-fiches)
-    <result_file_path>             The path of a results file where to store the run's perf results
-    <retriever_type>               Type of retriever to use (sparse (bm25 as usual) or dense (embeddings, SBERT))
-    <k_range>                      The retriever k range to test. A comma separate string as k_min,k_max. If single digit, a single run is done
-
-    --cores=<n> CORES       Number of cores to use [default: 1:int]
+For now, it loads the config from eval_config __init__.py and uses it to start the experiments
 '''
 
 import json
@@ -22,7 +10,7 @@ import time
 from pathlib import Path
 from random import seed
 from typing import Dict, List, Tuple
-
+from sklearn.model_selection import ParameterGrid
 from argopt import argopt
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.base import BaseRetriever
@@ -111,82 +99,93 @@ def compute_retriever_precision(true_fiches, retrieved_fiches, weight_position=F
 
 # compute_retriever_precision(["f1", "f2", "f3"], ["f3"], False)
 
-def main(test_corpus_path: str, knowledge_base_path: str,
-         result_file_path: str, retriever_type: str,
-         k_range: List[int]):
-    test_dataset = load_25k_test_set(test_corpus_path)
-    retriever = prepare_framework(knowledge_base_path=knowledge_base_path, retriever_type=retriever_type)
-    if not retriever:
-        logger.info("Could not prepare the testing framework!! Exiting :(")
-        return
-
-    if len(k_range) < 2:
-        single_run(retriever, test_dataset, retriever_top_k=5, weight_position=False)
-    else:
-        range_run(knowledge_base_path, retriever, test_dataset, retriever_type, result_file_path, k_range,
-                  weight_position=True)
+# def main(test_corpus_path: str, knowledge_base_path: str,
+#          result_file_path: str, retriever_type: str,
+#          k: int):
+#
+#
+#     if len(k_range) < 2:
+#         single_run(retriever, test_dataset, retriever_top_k=5, weighted_precision=False)
+#     else:
+#         single_run(knowledge_base_path, retriever, test_dataset, retriever_type, result_file_path, k_range,
+#                    weighted_precision=True)
 
 
-def single_run(retriever, test_dataset, retriever_top_k: int, weight_position: bool = False):
-    """
-    Runs the Retriever once with the specified retriever k.
-    :param weight_position:
-    :param retriever_top_k:
-    :return:
-    """
-    mean_precision, avg_time, found_fiche, detailed_results = compute_score(retriever=retriever,
-                                                                            retriever_top_k=retriever_top_k,
-                                                                            test_dataset=test_dataset,
-                                                                            weight_position=weight_position)
-    with open(f"./results/k_{retriever_top_k}_detailed_results.json", "w") as outo:
-        json.dump(detailed_results, outo, indent=4, ensure_ascii=False)
+# def single_run(retriever, test_dataset, retriever_top_k: int, weight_position: bool = False):
+#     """
+#     Runs the Retriever once with the specified retriever k.
+#     :param weight_position:
+#     :param retriever_top_k:
+#     :return:
+#     """
+#     mean_precision, avg_time, found_fiche, detailed_results = compute_score(retriever=retriever,
+#                                                                             retriever_top_k=retriever_top_k,
+#                                                                             test_dataset=test_dataset,
+#                                                                             weight_position=weight_position)
+#     with open(f"./results/k_{retriever_top_k}_detailed_results.json", "w") as outo:
+#         json.dump(detailed_results, outo, indent=4, ensure_ascii=False)
 
 
-def range_run(knowledge_base_path, retriever, test_dataset, retriever_type,
-              result_file_path, k_range: Tuple[int], weight_position: bool):
+def single_run(parameters):
     """
     Queries ES max_k - min_k times, saving at each step the results in a list. At the end plots the line
     showing the results obtained. For now we can only vary k.
     :param min_k: Minimum retriever-k to test
     :param max_k: Maximum retriever-k to test
-    :param weight_position: Whether to take into account the position of the retrieved result in the accuracy computation
+    :param weighted_precision: Whether to take into account the position of the retrieved result in the accuracy computation
     :return:
     """
     import seaborn as sns
     import matplotlib.pyplot as plt
     # col names
 
-    results = []
-    corpus_name = knowledge_base_path.split('/')[-2]
-    min_k, max_k = k_range
-    for k in tqdm(range(min_k, max_k + 1)):
-        tqdm.write(f"Testing k={k}")
-        mean_precision, avg_time, correctly_retrieved, detailed_results_weighted = compute_score(
-            retriever=retriever,
-            retriever_top_k=k,
-            test_dataset=test_dataset,
-            weight_position=weight_position)
-        result_dict = {"k": k,
-                       "corpus": corpus_name,
-                       "retriever": retriever_type,
-                       "nb_documents": len(test_dataset),
-                       "correctly_retrieved": correctly_retrieved,
-                       "weighted_precision": str(weight_position),
-                       "precision": mean_precision,
-                       "avg_time_s": avg_time}
+    test_corpus_path = Path(parameters["test_dataset"])
+    knowledge_base_path = Path(parameters["knowledge_base"])
+    result_file_path = Path("./results/results.csv")
+    retriever_type = parameters["retriever_type"]
+    k = parameters["k"]
+    weighted_precision = parameters["weighted_precision"]
 
-        results.append(result_dict)
+    # Prepare framework
+    test_dataset = load_25k_test_set(test_corpus_path)
+    retriever = prepare_framework(knowledge_base_path=knowledge_base_path,
+                                  retriever_type=retriever_type)
+    if not retriever:
+        logger.info("Could not prepare the testing framework!! Exiting :(")
+        return
+
+    # All is good, let's run the experiment
+    results = []
+    corpus_name = knowledge_base_path.name
+    tqdm.write(f"Testing k={k}")
+    mean_precision, avg_time, correctly_retrieved, detailed_results_weighted = compute_score(
+        retriever=retriever,
+        retriever_top_k=k,
+        test_dataset=test_dataset,
+        weight_position=weighted_precision)
+    result_dict = {"k": k,
+                   "corpus": corpus_name,
+                   "retriever": retriever_type,
+                   "nb_documents": len(test_dataset),
+                   "correctly_retrieved": correctly_retrieved,
+                   "weighted_precision": str(weighted_precision),
+                   "precision": mean_precision,
+                   "avg_time_s": avg_time}
+
+    results.append(result_dict)
     df_results: pd.DataFrame = pd.DataFrame(results)
     # sns.lineplot(data=df_results[["mean_precision_weighted", "mean_precision"]])
-    fig_title = f"kb={corpus_name}--k={min_k},{max_k}--retriever={retriever_type}--weighted={weight_position}"
+    # fig_title = f"kb={corpus_name}--k={min_k},{max_k}--retriever={retriever_type}--weighted={weight_position}"
     # plt.title(fig_title)
     #
     # plt.savefig(f"./results/{fig_title}.png")
-    if Path(result_file_path).exists():
-        df_old = pd.read_csv(result_file_path)
-        df_results = pd.concat([df_old, df_results])
-    with open(result_file_path, "w") as filo:
-        df_results.to_csv(filo, index=False)
+
+    # if Path(result_file_path).exists():
+    #     df_old = pd.read_csv(result_file_path)
+    #     df_results = pd.concat([df_old, df_results])
+    # with open(result_file_path, "w") as filo:
+    #     df_results.to_csv(filo, index=False)
+    return df_results
 
 
 def prepare_framework(knowledge_base_path: str = "/data/service-public-france/extracted/",
@@ -293,13 +292,13 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
 
 
 if __name__ == '__main__':
-    parser = argopt(__doc__).parse_args()
-    test_corpus_path = parser.test_corpus_path
-    knowledge_base_path = parser.knowledge_base_path
-    result_file_path = parser.result_file_path
-    retriever_type = parser.retriever_type
-    k_range = [int(k) for k in parser.k_range.split(",")]
+    from src.evaluation.eval_config import parmeters
 
-    # TODO: add as parameters the weighted_computation and k_range
-    main(test_corpus_path=test_corpus_path, knowledge_base_path=knowledge_base_path,
-         result_file_path=result_file_path, retriever_type=retriever_type, k_range=k_range)
+    parameters_grid = list(ParameterGrid(param_grid=parmeters))
+    grid_dfs = []
+    for parameters in tqdm(parameters_grid, desc="GridSearch"):
+        # START XP
+        df_results = single_run(parameters)
+        grid_dfs.append(df_results)
+
+
