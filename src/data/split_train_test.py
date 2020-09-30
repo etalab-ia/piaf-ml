@@ -1,5 +1,5 @@
 """
-This file splits a text file containing the fiches raw text into two files: train.txt and test.txt.
+This file splits a text file containing the SPF fiches raw text into two files: train.txt and test.txt.
 To use it, pass a percentage of the desired size for the train
 """
 
