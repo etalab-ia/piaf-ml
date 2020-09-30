@@ -37,7 +37,10 @@ def convert_json_to_dictsAndEmbeddings(dir_path: str, retriever: EmbeddingRetrie
         if split_paragraphs:
             raise Exception(f"Splitting paragraph not currently supported.")
         else:
-            documents.append({"text": text, "question": text, "question_emb": question_emb, "meta": {"name": path.name,
-                                                                                                     "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}"}})
+            text_reader = jsonDoc["text_reader"] if "text_reader" in jsonDoc else text
+            arborescence = jsonDoc["arborescence"] if "arborescence" in jsonDoc else {}
+            documents.append({"text": text_reader, "question": text, "question_emb": question_emb, "meta": {"name": path.name,
+                                                                                                            "arborescence": arborescence,
+                                                                                                            "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}"}})
 
     return documents
