@@ -31,6 +31,7 @@ def convert_json_to_dictsAndEmbeddings(dir_path: str, retriever: EmbeddingRetrie
                 jsonDoc = json.load(doc)
                 text = jsonDoc["text"]
                 question_emb = retriever.embed(texts=text)[0]
+                arborescence = jsonDoc['arborescence']
         else:
             raise Exception(f"Indexing of {path.suffix} files is not currently supported.")
 

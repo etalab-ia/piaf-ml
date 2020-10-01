@@ -16,7 +16,7 @@ from haystack.retriever.base import BaseRetriever
 from sklearn.model_selection import ParameterGrid
 
 from src.evaluation.eval_config import parmeters
-from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts
+from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts, convert_json_files_v10_to_dicts
 from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dictsAndEmbeddings
 
 seed(42)
@@ -58,18 +58,22 @@ def load_25k_test_set(test_corpus_path: str):
     Loads the 25k dataset. The 25k dataset is a csv that must contain the url columns (url, url2, url3, url4)
     and a question column. The former contains the list of proposed fiches' URLs and the latter contains the
     question sent by an user.
-    :param test_corpus_path: Path of the file containing the 25k corpus
-    :return: Dict with the questions as key and the referenced fiches' URLs as values
+    :param corpus_path: Path of the file containing the 25k corpus
+    :return: Dict with the questions as key and a meta dict as values,
+    the meta dict containing urls where the answer is and the arborescence of where the answer lies
     """
     url_cols = ["url", "url_2", "url_3", "url_4"]
 
     df = pd.read_csv(test_corpus_path).fillna("")
-
     dict_question_fiche = {}
     for row in df.iterrows():
         question = row[1]["question"]
         list_url = [row[1][u] for u in url_cols if row[1][u]]
-        dict_question_fiche[question] = list_url
+        arbo = {'theme': row[1]['theme'],
+                'dossier': row[1]['dossier']}
+        meta = {'urls': list_url, 'arbo': arbo}
+        dict_question_fiche[question] = meta
+
     return dict_question_fiche
 
 
@@ -81,6 +85,7 @@ def compute_retriever_precision(true_fiches, retrieved_fiches, weight_position=F
 
     :param retrieved_fiches:
     :param true_fiches:
+    :param weight_position: Bool indicates if the precision must be calculated with a weighted precision
     :return:
     """
     summed_precision = 0
@@ -110,11 +115,13 @@ def single_run(parameters):
     retriever_type = parameters["retriever_type"]
     k = parameters["k"]
     weighted_precision = parameters["weighted_precision"]
+    filter_level = parameters["filter_level"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     # Prepare framework
     test_dataset = load_25k_test_set(test_corpus_path)
     retriever = load_retriever(knowledge_base_path=knowledge_base_path,
                                retriever_type=retriever_type)
+
     if not retriever:
         logger.info("Could not prepare the testing framework!! Exiting :(")
         return
@@ -122,15 +129,17 @@ def single_run(parameters):
     # All is good, let's run the experiment
     results = []
     tqdm.write(f"Testing k={k}")
-    mean_precision, avg_time, correctly_retrieved, detailed_results_weighted = compute_score(
+    mean_precision, avg_time, correctly_retrieved, detailed_results_weighted, nb_questions = compute_score(
         retriever=retriever,
         retriever_top_k=k,
         test_dataset=test_dataset,
-        weight_position=weighted_precision)
+        weight_position=weighted_precision,
+        filter_level=filter_level
+    )
 
     results_dict = dict(parameters)
     results_dict.update({
-        "nb_documents": len(test_dataset),
+        "nb_documents": nb_questions,
         "correctly_retrieved": correctly_retrieved,
         "precision": mean_precision,
         "avg_time_s": avg_time,
@@ -143,7 +152,7 @@ def single_run(parameters):
     detailed_results_weighted["experiment_id"] = experiment_id
 
     ordered_headers = ["experiment_id",
-                       "knowledge_base", "test_dataset", "k", "filtering",  "retriever_type",
+                       "knowledge_base", "test_dataset", "k", "filtering",  "retriever_type", "filter_level", 
                        "nb_documents", "correctly_retrieved", "weighted_precision",
                        "precision", "avg_time_s", "date", "hostname"]
 
@@ -212,9 +221,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                            use_gpu=True, model_format="sentence_transformers",
                                            pooling_strategy="reduce_max")
 
-            dicts = convert_json_to_dictsAndEmbeddings(dir_path=knowledge_base_path,
-                                                       retriever=retriever,
-                                                       split_paragraphs=False)
+            dicts = convert_json_files_v10_to_dicts(dir_path=knowledge_base_path)
             # dicts = pickle.load(open("/home/pavel/code/piaf-ml/data/v11_dicts.pkl", "rb"))
 
             document_store.write_documents(dicts)
@@ -226,7 +233,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
 
 def compute_score(retriever: BaseRetriever, retriever_top_k: int,
-                  test_dataset: Dict[str, List], weight_position: bool = False):
+                  test_dataset: Dict[str, List], weight_position: bool = False, filter_level: str = None):
     """
     Given a Retriever to query and its parameters and a test dataset (couple query->true related doc), computes
     the number of matches found by the Retriever. A match is succesful if the retrieved document is among the
@@ -235,22 +242,34 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
     :param retriever_top_k: The number of docs to retrieve
     :param test_dataset: A collection of "query":[relevant_doc_1, relevant_doc_2, ...]
     :param weight_position: Whether to take into account the position of the retrieved result in the accuracy computation
+    :param filter_level: The name of the filter requested, usually the level from the arborescence : 'theme', 'dossier' ..
     :return: Returns mean_precision, avg_time, and detailed_results
     """
     summed_precision = 0
     found_fiche = 0
+    nb_questions = 0
     succeses = []
     errors = []
     if weight_position:
         logger.info("Using position weighted accuracy")
     pbar = tqdm(total=len(test_dataset))
-    for question, true_fiche_urls in test_dataset.items():
+    for question, meta in test_dataset.items():
+
+        true_fiche_urls = meta['urls']
         true_fiche_ids = [f.split("/")[-1] for f in true_fiche_urls]
-        retrieved_results = retriever.retrieve(query=question, top_k=retriever_top_k)
+        if filter_level == None:
+            retrieved_results = retriever.retrieve(query=question, top_k=retriever_top_k)
+        else:
+	    arborescence = meta['arbo']
+            filter_value = arborescence[filter_level]
+            if filter_level is not None and filter_value == '': #sometimes the value for the filter is not present in the data
+                continue
+            retrieved_results = retriever.retrieve(query=question, filters={filter_level: [filter_value]}, top_k=retriever_top_k)
         pbar.update()
         retrieved_doc_names = [f.meta["name"] for f in retrieved_results]
         precision = compute_retriever_precision(true_fiche_ids, retrieved_doc_names, weight_position=weight_position)
         summed_precision += precision
+        nb_questions += 1
         if precision:
             found_fiche += 1
             succeses.append({"question": question,
@@ -264,14 +283,16 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
                            })
 
     avg_time = pbar.avg_time
+    if avg_time is None: #quick fix for a bug idk why is happening
+        avg_time = 0
     pbar.close()
     detailed_results = {"successes": succeses, "errors": errors, "avg_time": avg_time}
 
-    mean_precision = summed_precision / len(test_dataset)
+    mean_precision = summed_precision / nb_questions
     tqdm.write(
-        f"The retriever correctly found {found_fiche} fiches among {len(test_dataset)}. Mean_precision {mean_precision}. "
+        f"The retriever correctly found {found_fiche} fiches among {nb_questions}. Mean_precision {mean_precision}. "
         f"Time per ES query (ms): {avg_time * 1000:.3f}")
-    return mean_precision, avg_time, found_fiche, detailed_results
+    return mean_precision, avg_time, found_fiche, detailed_results, nb_questions
 
 
 if __name__ == '__main__':
