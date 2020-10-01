@@ -5,18 +5,19 @@ import json
 import logging
 import pickle
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from random import seed
 from typing import Dict, List, Tuple
-
+import hashlib
 from elasticsearch import Elasticsearch
-from sklearn.model_selection import ParameterGrid
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.base import BaseRetriever
+from sklearn.model_selection import ParameterGrid
 
-from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts
 from src.evaluation.eval_config import parmeters
-from datetime import datetime
+from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts
+from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dictsAndEmbeddings
 
 seed(42)
 from tqdm import tqdm
@@ -26,6 +27,10 @@ from haystack.retriever.dense import EmbeddingRetriever
 import pandas as pd
 import socket
 
+from joblib import Memory
+location = '/tmp/'
+memory = Memory(location, verbose=1)
+convert_json_to_dictsAndEmbeddings = memory.cache(convert_json_to_dictsAndEmbeddings)
 logger = logging.getLogger(__name__)
 
 DENSE_MAPPING = {"mappings": {"properties": {
@@ -105,7 +110,7 @@ def single_run(parameters):
     retriever_type = parameters["retriever_type"]
     k = parameters["k"]
     weighted_precision = parameters["weighted_precision"]
-    experiment_id = hash(str(parameters)) % 2 ** 16
+    experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     # Prepare framework
     test_dataset = load_25k_test_set(test_corpus_path)
     retriever = load_retriever(knowledge_base_path=knowledge_base_path,
@@ -116,7 +121,6 @@ def single_run(parameters):
 
     # All is good, let's run the experiment
     results = []
-    corpus_name = knowledge_base_path.name
     tqdm.write(f"Testing k={k}")
     mean_precision, avg_time, correctly_retrieved, detailed_results_weighted = compute_score(
         retriever=retriever,
@@ -137,6 +141,14 @@ def single_run(parameters):
     results.append(results_dict)
     df_results: pd.DataFrame = pd.DataFrame(results)
     detailed_results_weighted["experiment_id"] = experiment_id
+
+    ordered_headers = ["experiment_id",
+                       "knowledge_base", "test_dataset", "k", "filtering",  "retriever_type",
+                       "nb_documents", "correctly_retrieved", "weighted_precision",
+                       "precision", "avg_time_s", "date", "hostname"]
+
+    df_results = df_results[ordered_headers]
+
     return df_results, detailed_results_weighted
 
 
@@ -147,13 +159,14 @@ def save_results(result_file_path: Path, all_results: List[Tuple]):
         df_old = pd.read_csv(result_file_path)
         df_results = pd.concat([df_old, df_results])
 
-    with open(result_file_path, "w") as filo:
+    with open(result_file_path.as_posix(), "w") as filo:
         df_results.to_csv(filo, index=False)
     # saved detailed results
     for dic in detailed_results:
         file_name = f"{dic['experiment_id']}_detailed_results.json"
         with open((result_file_path.parent / file_name).as_posix(), "w") as filo:
             json.dump(dic, filo, indent=4, ensure_ascii=True)
+
 
 def lauch_ES():
     es = Elasticsearch(['http://localhost:9200/'], verify_certs=True)
@@ -167,10 +180,6 @@ def lauch_ES():
                 "Failed to launch Elasticsearch. If you want to connect to an existing Elasticsearch instance"
                 "then set LAUNCH_ELASTICSEARCH in the script to False.")
 
-    subprocess.run(
-        ['curl -X DELETE localhost:9200/document  '], shell=True
-    )
-
 
 def load_retriever(knowledge_base_path: str = "/data/service-public-france/extracted/",
                    retriever_type: str = "sparse"):
@@ -180,7 +189,11 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
     :param retriever_type: The type of retriever to be used
     :return: A Retriever object ready to be queried
     """
+    retriever = None
     try:
+        # delete the index to make sure we are not using other docs
+        es = Elasticsearch(['http://localhost:9200/'], verify_certs=True)
+        es.indices.delete(index='document', ignore=[400, 404])
         if retriever_type == "sparse":
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document")
 
@@ -196,19 +209,20 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                                         custom_mapping=DENSE_MAPPING)
             retriever = EmbeddingRetriever(document_store=document_store,
                                            embedding_model="distiluse-base-multilingual-cased",
-                                           use_gpu=False, model_format="sentence_transformers",
+                                           use_gpu=True, model_format="sentence_transformers",
                                            pooling_strategy="reduce_max")
 
-            # dicts = convert_json_to_dictsAndEmbeddings(dir_path=knowledge_base_path,
-            #                                            retriever=retriever,
-            #                                            split_paragraphs=False)
-            dicts = pickle.load(open("/home/pavel/code/piaf-ml/data/v11_dicts.pkl", "rb"))
+            dicts = convert_json_to_dictsAndEmbeddings(dir_path=knowledge_base_path,
+                                                       retriever=retriever,
+                                                       split_paragraphs=False)
+            # dicts = pickle.load(open("/home/pavel/code/piaf-ml/data/v11_dicts.pkl", "rb"))
 
             document_store.write_documents(dicts)
 
-        return retriever
     except Exception as e:
         logger.error(f"Failed with error {str(e)}")
+    finally:
+        return retriever
 
 
 def compute_score(retriever: BaseRetriever, retriever_top_k: int,
