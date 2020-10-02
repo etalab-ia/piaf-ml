@@ -1,5 +1,5 @@
 parmeters = {
-    "k": [1, 2],
+    "k": [1, 2, 3],
     "retriever_type": ["sparse"],
     "knowledge_base": ["/home/pavel/code/piaf-ml/data/v11"],
                        # "/home/pavel/code/piaf-ml/data/v10"],

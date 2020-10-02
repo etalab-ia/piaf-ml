@@ -28,6 +28,7 @@ import pandas as pd
 import socket
 
 from joblib import Memory
+
 location = '/tmp/'
 memory = Memory(location, verbose=1)
 convert_json_to_dictsAndEmbeddings = memory.cache(convert_json_to_dictsAndEmbeddings)
@@ -152,7 +153,7 @@ def single_run(parameters):
     detailed_results_weighted["experiment_id"] = experiment_id
 
     ordered_headers = ["experiment_id",
-                       "knowledge_base", "test_dataset", "k", "filtering",  "retriever_type", "filter_level", 
+                       "knowledge_base", "test_dataset", "k", "filtering", "retriever_type", "filter_level",
                        "nb_documents", "correctly_retrieved", "weighted_precision",
                        "precision", "avg_time_s", "date", "hostname"]
 
@@ -206,11 +207,12 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
         if retriever_type == "sparse":
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document")
 
-            dicts = convert_json_files_to_dicts(dir_path=knowledge_base_path)
-
+            retriever = ElasticsearchRetriever(document_store=document_store)
+            dicts = convert_json_to_dictsAndEmbeddings(dir_path=knowledge_base_path,
+                                                       retriever=retriever,
+                                                       compute_embeddings=False)
             # Now, let's write the docs to our DB.
             document_store.write_documents(dicts)
-            retriever = ElasticsearchRetriever(document_store=document_store)
         elif retriever_type == "dense":
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         embedding_field="question_emb", embedding_dim=512,
@@ -221,7 +223,9 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                            use_gpu=True, model_format="sentence_transformers",
                                            pooling_strategy="reduce_max")
 
-            dicts = convert_json_files_v10_to_dicts(dir_path=knowledge_base_path)
+            dicts = convert_json_to_dictsAndEmbeddings(dir_path=knowledge_base_path,
+                                                       retriever=retriever,
+                                                       compute_embeddings=True)
             # dicts = pickle.load(open("/home/pavel/code/piaf-ml/data/v11_dicts.pkl", "rb"))
 
             document_store.write_documents(dicts)
@@ -254,17 +258,17 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
         logger.info("Using position weighted accuracy")
     pbar = tqdm(total=len(test_dataset))
     for question, meta in test_dataset.items():
-
         true_fiche_urls = meta['urls']
         true_fiche_ids = [f.split("/")[-1] for f in true_fiche_urls]
         if filter_level == None:
             retrieved_results = retriever.retrieve(query=question, top_k=retriever_top_k)
         else:
-	    arborescence = meta['arbo']
+            arborescence = meta['arbo']
             filter_value = arborescence[filter_level]
-            if filter_level is not None and filter_value == '': #sometimes the value for the filter is not present in the data
+            if filter_level is not None and filter_value == '':  # sometimes the value for the filter is not present in the data
                 continue
-            retrieved_results = retriever.retrieve(query=question, filters={filter_level: [filter_value]}, top_k=retriever_top_k)
+            retrieved_results = retriever.retrieve(query=question, filters={filter_level: [filter_value]},
+                                                   top_k=retriever_top_k)
         pbar.update()
         retrieved_doc_names = [f.meta["name"] for f in retrieved_results]
         precision = compute_retriever_precision(true_fiche_ids, retrieved_doc_names, weight_position=weight_position)
@@ -283,7 +287,7 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
                            })
 
     avg_time = pbar.avg_time
-    if avg_time is None: #quick fix for a bug idk why is happening
+    if avg_time is None:  # quick fix for a bug idk why is happening
         avg_time = 0
     pbar.close()
     detailed_results = {"successes": succeses, "errors": errors, "avg_time": avg_time}
@@ -301,9 +305,9 @@ if __name__ == '__main__':
     parameters_grid = list(ParameterGrid(param_grid=parmeters))
     all_results = []
     lauch_ES()
-    for parameters in tqdm(parameters_grid, desc="GridSearch"):
+    for param in tqdm(parameters_grid, desc="GridSearch"):
         # START XP
-        run_results = single_run(parameters)
+        run_results = single_run(param)
         all_results.append(run_results)
 
     save_results(result_file_path=result_file_path, all_results=all_results)
