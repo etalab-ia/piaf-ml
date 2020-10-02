@@ -3,6 +3,7 @@ For now, it loads the config from eval_config __init__.py and uses it to start t
 '''
 import json
 import logging
+import os
 import pickle
 import subprocess
 from datetime import datetime
@@ -15,7 +16,7 @@ from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.base import BaseRetriever
 from sklearn.model_selection import ParameterGrid
 
-from src.evaluation.eval_config import parmeters
+from src.evaluation.eval_config import parameters
 from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts, convert_json_files_v10_to_dicts
 from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dictsAndEmbeddings
 
@@ -153,7 +154,7 @@ def single_run(parameters):
     detailed_results_weighted["experiment_id"] = experiment_id
 
     ordered_headers = ["experiment_id",
-                       "knowledge_base", "test_dataset", "k", "filtering", "retriever_type", "filter_level",
+                       "knowledge_base", "test_dataset", "k", "filter_level", "retriever_type", "filter_level",
                        "nb_documents", "correctly_retrieved", "weighted_precision",
                        "precision", "avg_time_s", "date", "hostname"]
 
@@ -168,7 +169,8 @@ def save_results(result_file_path: Path, all_results: List[Tuple]):
     if result_file_path.exists():
         df_old = pd.read_csv(result_file_path)
         df_results = pd.concat([df_old, df_results])
-
+    else:
+        os.makedirs(result_file_path.parent)
     with open(result_file_path.as_posix(), "w") as filo:
         df_results.to_csv(filo, index=False)
     # saved detailed results
@@ -302,7 +304,7 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
 if __name__ == '__main__':
 
     result_file_path = Path("./results/results.csv")
-    parameters_grid = list(ParameterGrid(param_grid=parmeters))
+    parameters_grid = list(ParameterGrid(param_grid=parameters))
     all_results = []
     lauch_ES()
     for param in tqdm(parameters_grid, desc="GridSearch"):
