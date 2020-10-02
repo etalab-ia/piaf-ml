@@ -154,7 +154,7 @@ def single_run(parameters):
     detailed_results_weighted["experiment_id"] = experiment_id
 
     ordered_headers = ["experiment_id",
-                       "knowledge_base", "test_dataset", "k", "filter_level", "retriever_type", "filter_level",
+                       "knowledge_base", "test_dataset", "k", "filter_level", "retriever_type",
                        "nb_documents", "correctly_retrieved", "weighted_precision",
                        "precision", "avg_time_s", "date", "hostname"]
 
