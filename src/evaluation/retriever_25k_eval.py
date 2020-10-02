@@ -210,11 +210,13 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document")
 
             retriever = ElasticsearchRetriever(document_store=document_store)
+
             dicts = convert_json_to_dictsAndEmbeddings(dir_path=knowledge_base_path,
                                                        retriever=retriever,
                                                        compute_embeddings=False)
             # Now, let's write the docs to our DB.
             document_store.write_documents(dicts)
+
         elif retriever_type == "dense":
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         embedding_field="question_emb", embedding_dim=512,
