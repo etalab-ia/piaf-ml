@@ -77,10 +77,13 @@ def save_subfiche(doc_path: Path,
 
     tqdm.write(f"\tSaving sub-fiche to {new_fiche_path}")
     subfiche_string = f"{fiche_title} : "
+    subfiche_reader_string = ""
     if fiche_intro_text:
         subfiche_string += f"{fiche_intro_text}"
+        subfiche_reader_string += f"{fiche_intro_text}"
 
     subfiche_string += "\n\n"
+    subfiche_reader_string += "\n\n"
 
     if situation_title:
         subfiche_string += f"{situation_title}: "
@@ -88,17 +91,23 @@ def save_subfiche(doc_path: Path,
         if not (slugify(cas_text.lower().strip()) in slugify(situation_text.lower().strip())):
             print('Entered')
             subfiche_string += f"{situation_text}"
+            subfiche_reader_string += f"{situation_text}"
         subfiche_string += "\n\n"
+        subfiche_reader_string += "\n\n"
 
     if chapitre_title:
         subfiche_string += f"{chapitre_title}: "
     if chapitre_text:
         subfiche_string += f"{chapitre_text}"
-        subfiche_string += "\n\n"
+        subfiche_reader_string += f"{chapitre_text}"
+
+    subfiche_string += "\n\n"
+    subfiche_reader_string += "\n\n"
 
     if cas_text:
         if not (slugify(cas_text.lower().strip()) in slugify(subfiche_string.lower().strip())):
             subfiche_string += f"{cas_text.lstrip(chapitre_title)}"
+            subfiche_reader_string += f"{cas_text}"
 
     if not as_json:
         with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as subfiche:
@@ -106,7 +115,9 @@ def save_subfiche(doc_path: Path,
     else:
         with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as subfiche:
             content = {'text': subfiche_string,
+                       'text_reader': subfiche_reader_string,
                        'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}',
+                       'name': f"{subfiche_file_name}",
                        'arborescence': arborescence}
             json.dump(content, subfiche, indent=4, ensure_ascii=False)
 
@@ -287,7 +298,7 @@ def treat_no_situation_fiche(root: Element):
         return "\n" + fiche_text
     else:
         # raise Exception("Fiche without situation. We could not extract anything")
-        # we have to return a string otherwise the run will fail with a NoneType 
+        # we have to return a string otherwise the run will fail with a NoneType
         return ""
 
 
