@@ -53,7 +53,6 @@ def convert_json_to_dictsAndEmbeddings(dir_path: str, retriever: BaseRetriever,
         else:
             raise Exception(f"Indexing of {path.suffix} files is not currently supported.")
 
-
         if split_paragraphs:
             raise Exception(f"Splitting paragraph not currently supported.")
         else:

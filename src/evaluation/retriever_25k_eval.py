@@ -42,12 +42,21 @@ DENSE_MAPPING = {"mappings": {"properties": {
     "name": {
         "type": "keyword"
     },
-    "question": {
+    "question_sparse": {
         "type": "text"
     },
     "question_emb": {
         "type": "dense_vector",
         "dims": 512
+    },
+    "text": {
+        "type": "text"
+    }
+}}}
+
+SPARSE_MAPPING = {"mappings": {"properties": {
+    "question_sparse": {
+        "type": "text"
     },
     "text": {
         "type": "text"
@@ -206,19 +215,12 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
         # delete the index to make sure we are not using other docs
         es = Elasticsearch(['http://localhost:9200/'], verify_certs=True)
         es.indices.delete(index='document', ignore=[400, 404])
-            if retriever_type == "sparse":
+        if retriever_type == "sparse":
 
-            SPARSE_MAPPING = {"mappings": {"properties": {
-                "question_sparse": {
-                    "type": "text"
-                },
-                "text": {
-                    "type": "text"
-                }
-            }}}
 
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
-                                                        search_fields=['text'],
+                                                        search_fields=['question_sparse'],
+                                                        text_field='text',
                                                         custom_mapping=SPARSE_MAPPING)
 
             retriever = ElasticsearchRetriever(document_store=document_store)
@@ -231,19 +233,6 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             document_store.write_documents(dicts)
 
         elif retriever_type == "dense":
-
-            DENSE_MAPPING = {"mappings": {"properties": {
-                "question_sparse": {
-                    "type": "text"
-                },
-                'question_emb': {
-                    'type': 'dense_vector',
-                    'dims': 512
-                },
-                "text": {
-                    "type": "text"
-                }
-            }}}
 
             #TODO: change the way embedding_dim is declared as it may vary based on the embedding_model
 
