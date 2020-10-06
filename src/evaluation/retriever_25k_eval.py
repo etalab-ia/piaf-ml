@@ -15,7 +15,6 @@ from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.base import BaseRetriever
 from sklearn.model_selection import ParameterGrid
-
 from src.evaluation.eval_config import parameters
 from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts, convert_json_files_v10_to_dicts
 from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dictsAndEmbeddings
@@ -32,7 +31,6 @@ from joblib import Memory
 
 location = '/tmp/'
 memory = Memory(location, verbose=1)
-convert_json_to_dictsAndEmbeddings = memory.cache(convert_json_to_dictsAndEmbeddings)
 logger = logging.getLogger(__name__)
 
 DENSE_MAPPING = {"mappings": {"properties": {
@@ -130,7 +128,7 @@ def single_run(parameters):
 
     # All is good, let's run the experiment
     results = []
-    tqdm.write(f"Testing k={k}")
+    tqdm.write(str(parameters))
     mean_precision, avg_time, correctly_retrieved, detailed_results_weighted, nb_questions = compute_score(
         retriever=retriever,
         retriever_top_k=k,
@@ -145,7 +143,7 @@ def single_run(parameters):
         "correctly_retrieved": correctly_retrieved,
         "precision": mean_precision,
         "avg_time_s": avg_time,
-        "date": datetime.today().strftime('%Y-%m-%d'),
+        "date": datetime.today().strftime('%Y-%m-%d_%H-%M-%S'),
         "hostname": socket.gethostname(),
         "experiment_id": experiment_id})
 
@@ -193,6 +191,30 @@ def lauch_ES():
                 "then set LAUNCH_ELASTICSEARCH in the script to False.")
 
 
+def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
+                                cached_dicts_path: Path = Path("./data/dense_dicts/")):
+    cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}.pkl")
+    if cached_dicts_name.exists():
+        logger.info(f"Found and loading embeddings dict cache: {cached_dicts_name}")
+        try:
+            with open(cached_dicts_name, "rb") as cache:
+                dict_embeddings = pickle.load(cache)
+            return dict_embeddings
+        except Exception as e:
+            logger.info(f"Could not load dict embeddings {cached_dicts_name}. Error: {str(e)}")
+            return
+    else:
+        return
+
+
+def cache_dict_embeddings(dicts: Dict, knowledge_base_path: Path, retriever_type: str,
+                          cached_dicts_path: Path = Path("./data/dense_dicts/")):
+    cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}.pkl")
+
+    with open(cached_dicts_name, "wb") as cache:
+        pickle.dump(dicts, cache)
+
+
 def load_retriever(knowledge_base_path: str = "/data/service-public-france/extracted/",
                    retriever_type: str = "sparse"):
     """
@@ -227,9 +249,16 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                            use_gpu=True, model_format="sentence_transformers",
                                            pooling_strategy="reduce_max")
 
-            dicts = convert_json_to_dictsAndEmbeddings(dir_path=knowledge_base_path,
-                                                       retriever=retriever,
-                                                       compute_embeddings=True)
+            dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
+                                                retriever_type=retriever_type)
+            if not dicts:
+                dicts = convert_json_to_dictsAndEmbeddings(dir_path=knowledge_base_path,
+                                                           retriever=retriever,
+                                                           compute_embeddings=True)
+
+                cache_dict_embeddings(dicts=dicts, knowledge_base_path=Path(knowledge_base_path),
+                                      retriever_type=retriever_type)
+
             # dicts = pickle.load(open("/home/pavel/code/piaf-ml/data/v11_dicts.pkl", "rb"))
 
             document_store.write_documents(dicts)
