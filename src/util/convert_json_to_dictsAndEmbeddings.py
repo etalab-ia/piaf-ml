@@ -27,6 +27,7 @@ def convert_json_to_dictsAndEmbeddings(dir_path: str, retriever: BaseRetriever,
     file_paths = [p for p in Path(dir_path).glob("**/*")]
 
     documents = []
+
     def get_arbo(dict, level):
         if "arborescence" in dict:
             try:
@@ -52,28 +53,21 @@ def convert_json_to_dictsAndEmbeddings(dir_path: str, retriever: BaseRetriever,
         else:
             raise Exception(f"Indexing of {path.suffix} files is not currently supported.")
 
+
         if split_paragraphs:
             raise Exception(f"Splitting paragraph not currently supported.")
         else:
-            if compute_embeddings:
-                text_reader = json_doc["text_reader"] if "text_reader" in json_doc else text
-                documents.append({"text": text_reader,
-                                  "question": text,
-                                  "question_emb": question_emb,
-                                  "meta": {"name": path.name,
-                                           "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
-                                           'audience': audience,
-                                           'theme': theme,
-                                           'sous_theme': sous_theme,
-                                           'dossier': dossier,
-                                           'sous_dossier': sous_dossier}})
-            else: #this is to not mess the sparse retriever
-                documents.append({"text": text,
-                                  "meta": {"name": path.name,
-                                           "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
-                                           'audience': audience,
-                                           'theme': theme,
-                                           'sous_theme': sous_theme,
-                                           'dossier': dossier,
-                                           'sous_dossier': sous_dossier}})
+            text_reader = json_doc["text_reader"] if "text_reader" in json_doc else text
+            #TODO: evaluate performances based on text_reader or text in 'text'
+            documents.append({"text": text_reader,
+                              'question_sparse': text,
+                              'question_emb': question_emb,
+                              "meta": {"name": path.name,
+                                       "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
+                                       'audience': audience,
+                                       'theme': theme,
+                                       'sous_theme': sous_theme,
+                                       'dossier': dossier,
+                                       'sous_dossier': sous_dossier}})
+
     return documents
