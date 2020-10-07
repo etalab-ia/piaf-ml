@@ -259,7 +259,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             #TODO: change the way embedding_dim is declared as it may vary based on the embedding_model
 
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
-                                                        search_fields=['text'],
+                                                        search_fields=['question_sparse'],
                                                         embedding_field="question_emb", embedding_dim=512,
                                                         excluded_meta_data=["question_emb"],
                                                         custom_mapping=DENSE_MAPPING)
