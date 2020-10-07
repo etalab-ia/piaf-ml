@@ -49,6 +49,12 @@ DENSE_MAPPING = {"mappings": {"properties": {
     },
     "text": {
         "type": "text"
+    },
+    "theme": {
+        "type": "keyword"
+    },
+    "dossier": {
+        "type": "keyword"
     }
 }}}
 
@@ -187,7 +193,7 @@ def save_results(result_file_path: Path, all_results: List[Tuple]):
             json.dump(dic, filo, indent=4, ensure_ascii=True)
 
 
-def lauch_ES():
+def launch_ES():
     es = Elasticsearch(['http://localhost:9200/'], verify_certs=True)
     if not es.ping():
         logging.info("Starting Elasticsearch ...")
@@ -357,7 +363,7 @@ if __name__ == '__main__':
     result_file_path = Path("./results/results.csv")
     parameters_grid = list(ParameterGrid(param_grid=parameters))
     all_results = []
-    lauch_ES()
+    launch_ES()
     for param in tqdm(parameters_grid, desc="GridSearch"):
         # START XP
         run_results = single_run(param)
