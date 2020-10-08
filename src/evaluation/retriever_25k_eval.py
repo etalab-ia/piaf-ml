@@ -64,6 +64,12 @@ SPARSE_MAPPING = {"mappings": {"properties": {
     },
     "text": {
         "type": "text"
+    },
+    "theme": {
+        "type": "keyword"
+    },
+    "dossier": {
+        "type": "keyword"
     }
 }}}
 
@@ -272,7 +278,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
             retriever = EmbeddingRetriever(document_store=document_store,
                                            embedding_model="distiluse-base-multilingual-cased",
-                                           use_gpu=True, model_format="sentence_transformers",
+                                           use_gpu=False, model_format="sentence_transformers",
                                            pooling_strategy="reduce_max")
 
             dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
