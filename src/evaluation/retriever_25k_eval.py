@@ -98,7 +98,7 @@ def load_25k_test_set(test_corpus_path: str):
     return dict_question_fiche
 
 
-def compute_retriever_precision(true_fiches, retrieved_fiches, weight_position=False):
+def compute_retriever_precision(true_fiches, retrieved_results, weight_position=False):
     """
     Computes an accuracy-like score to determine the fairness of the retriever.
     Takes the k *retrieved* fiches' names and counts how many of them exist in the *true* fiches names
@@ -109,16 +109,34 @@ def compute_retriever_precision(true_fiches, retrieved_fiches, weight_position=F
     :param weight_position: Bool indicates if the precision must be calculated with a weighted precision
     :return:
     """
+    retrieved_docs = []
     summed_precision = 0
+    results_info = {}
+    correct_doc_info = {}
+    retrieved_doc_names = [(f.meta["name"],
+                            idx + 1,
+                            f.score,
+                            f.probability) for idx, f in enumerate(retrieved_results)]
     for fiche_idx, true_fiche_id in enumerate(true_fiches):
-        for retrieved_doc_idx, doc in enumerate(retrieved_fiches):
-            if true_fiche_id in doc:
+        for retrieved_doc_idx, retrieved_doc in enumerate(retrieved_results):
+            retrieved_doc_id = retrieved_doc.meta["name"]
+            retrieved_docs.append(retrieved_doc_id)
+            if true_fiche_id in retrieved_doc_id:
                 if weight_position:
                     summed_precision += ((fiche_idx + 1) / (fiche_idx + retrieved_doc_idx + 1))
                 else:
                     summed_precision += 1
+                correct_doc_info[retrieved_doc_id] = {
+                    "position": retrieved_doc_idx + 1,
+                    "probability": retrieved_doc.probability,
+                    "score": retrieved_doc.score}
                 break
-    return summed_precision
+
+    results_info["true_fiches"] = true_fiches
+    results_info["pred_fiches"] = retrieved_doc_names
+    # results_info["correct_docs"] = correct_doc_info
+
+    return summed_precision, results_info
 
 
 def single_run(parameters):
@@ -196,7 +214,7 @@ def save_results(result_file_path: Path, all_results: List[Tuple]):
     for dic in detailed_results:
         file_name = f"{dic['experiment_id']}_detailed_results.json"
         with open((result_file_path.parent / file_name).as_posix(), "w") as filo:
-            json.dump(dic, filo, indent=4, ensure_ascii=True)
+            json.dump(dic, filo, indent=4, ensure_ascii=False)
 
 
 def launch_ES():
@@ -251,7 +269,6 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
         es.indices.delete(index='document', ignore=[400, 404])
         if retriever_type == "sparse":
 
-
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         search_fields=['question_sparse'],
                                                         text_field='text',
@@ -268,7 +285,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
         elif retriever_type == "dense":
 
-            #TODO: change the way embedding_dim is declared as it may vary based on the embedding_model
+            # TODO: change the way embedding_dim is declared as it may vary based on the embedding_model
 
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         search_fields=['question_sparse'],
@@ -317,15 +334,15 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
     summed_precision = 0
     found_fiche = 0
     nb_questions = 0
-    succeses = []
-    errors = []
+    successes = {}
+    errors = {}
     if weight_position:
         logger.info("Using position weighted accuracy")
     pbar = tqdm(total=len(test_dataset))
     for question, meta in test_dataset.items():
         true_fiche_urls = meta['urls']
         true_fiche_ids = [f.split("/")[-1] for f in true_fiche_urls]
-        if filter_level == None:
+        if filter_level is None:
             retrieved_results = retriever.retrieve(query=question, top_k=retriever_top_k)
         else:
             arborescence = meta['arbo']
@@ -335,27 +352,23 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
             retrieved_results = retriever.retrieve(query=question, filters={filter_level: [filter_value]},
                                                    top_k=retriever_top_k)
         pbar.update()
-        retrieved_doc_names = [f.meta["name"] for f in retrieved_results]
-        precision = compute_retriever_precision(true_fiche_ids, retrieved_doc_names, weight_position=weight_position)
+
+        precision, results_info = compute_retriever_precision(true_fiche_ids,
+                                                              retrieved_results,
+                                                              weight_position=weight_position)
+
         summed_precision += precision
         nb_questions += 1
         if precision:
             found_fiche += 1
-            succeses.append({"question": question,
-                             "pred_fiche": retrieved_doc_names,
-                             "true_fiche": true_fiche_ids,
-                             })
+            successes[question] = results_info
         else:
-            errors.append({"question": question,
-                           "pred_fiche": retrieved_doc_names,
-                           "true_fiche": true_fiche_ids,
-                           })
-
+            errors[question] = results_info
     avg_time = pbar.avg_time
     if avg_time is None:  # quick fix for a bug idk why is happening
         avg_time = 0
     pbar.close()
-    detailed_results = {"successes": succeses, "errors": errors, "avg_time": avg_time}
+    detailed_results = {"successes": successes, "errors": errors, "avg_time": avg_time}
 
     mean_precision = summed_precision / nb_questions
     tqdm.write(
