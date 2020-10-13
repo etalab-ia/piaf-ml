@@ -6,7 +6,7 @@ Usage:
 
 Arguments:
     <squad_file_path>   SQuAD file path
-    <dpr_output_path>   DPR outpput file path
+    <dpr_output_path>   DPR outpput folder path
 """
 import logging
 import subprocess
@@ -152,15 +152,6 @@ def get_near_entire_phrase(context: str, pos: int, side="left"):
             return pos
 
 
-def get_negative_context(retriever: ElasticsearchRetriever, question: str, answer: str):
-    retriever_docs = retriever.retrieve(query=question, top_k=5, index="document")
-    for retrieved_doc in retriever_docs:
-        retrieved_doc_id = retrieved_doc.meta["name"]
-        retrieved_doc_text = retrieved_doc.text
-        if answer.lower() not in retrieved_doc_text.lower():
-            return {"title": retrieved_doc_id, "text": retrieved_doc_text}
-
-
 def create_dpr_training_dataset(squad_file_path: Path, dpr_output_path: Path):
     squad_file = json.load(open(squad_file_path.as_posix()))
     version = squad_file["version"]
@@ -168,40 +159,62 @@ def create_dpr_training_dataset(squad_file_path: Path, dpr_output_path: Path):
     retriever = prepare_es_retrieval(squad_data=squad_data)
     random.shuffle(squad_data)
     list_DPR = []
-    for article in tqdm(squad_data[:1000]):
+    for article in tqdm(squad_data[:]):
         article_title = article["title"]
         for paragraph in article["paragraphs"]:
             context = paragraph["context"]
             for question in paragraph["qas"]:
-                limited_positive_ctxs = limit_context_size(question["answers"], context)
                 answers = [a["text"] for a in question["answers"]]
+                hard_negative_ctxs = get_negative_context(retriever=retriever,
+                                                          question=question["question"],
+                                                          answer=answers[0])
+                positive_ctxs = [{
+                    "title": f"{article_title}_{i}",
+                    "text": c
+                } for i, c in enumerate(limit_context_size(question["answers"], context))]
+                if not hard_negative_ctxs or not positive_ctxs:
+                    print("Empty contexts!!")
                 dict_DPR = {
                     "question": question["question"],
                     "answers": answers,
-                    "positive_ctxs": [{
-                        "title": f"{article_title}_{i}",
-                        "text": c
-                    } for i, c in enumerate(limited_positive_ctxs)],
+                    "positive_ctxs": positive_ctxs,
                     "negative_ctxs": [],
-                    "hard_negative_ctxs": [get_negative_context(retriever=retriever,
-                                                                question=question["question"],
-                                                                answer=answers[0])]
+                    "hard_negative_ctxs": [hard_negative_ctxs]
                 }
                 list_DPR.append(dict_DPR)
-    with open(dpr_output_path.as_posix(), "w") as filo:
-        json.dump(list_DPR, filo, ensure_ascii=False, indent=4)
-    return 1
+
+    return list_DPR
+
+
+def split_save_train_dev(list_dpr: List[Dict], train_size: float = 0.8):
+    random.shuffle(list_dpr)
+    train_len = int(train_size * len(list_dpr))
+
+    dataset = {"train": list_dpr[:train_len],
+               "dev": list_dpr[train_len:]}
+    for key, value in dataset.items():
+        with open(dpr_output_path / Path(f"DPR_FR_{key}.json"), "w") as filo:
+            json.dump(value, filo, ensure_ascii=False, indent=4)
+
+
+def get_negative_context(retriever: ElasticsearchRetriever, question: str, answer: str):
+    retrieved_docs = retriever.retrieve(query=question, top_k=10, index="document")
+    for retrieved_doc in retrieved_docs:
+        retrieved_doc_id = retrieved_doc.meta["name"]
+        retrieved_doc_text = retrieved_doc.text
+        if answer.lower() not in retrieved_doc_text.lower():
+            return {"title": retrieved_doc_id, "text": retrieved_doc_text}
+
+    # All docs found by ES have the answer within. Just return the last one found :/
+    return {"title": retrieved_docs[-1].meta["name"],
+            "text": retrieved_docs[-1].text}
 
 
 def main(squad_file_path: Path, dpr_output_path: Path):
-    job_output = []
     tqdm.write(f"Using SQuAD-like file {squad_file_path}")
-    job_output.append(create_dpr_training_dataset(squad_file_path, dpr_output_path))
+    list_DPR = create_dpr_training_dataset(squad_file_path, dpr_output_path)
 
-    logging.info(
-        f"{sum(job_output)} questions in the passed SQuAD-like file passed were added to the DPR Retriever training set"
-        f" {len(job_output) - sum(job_output)} files had some error.")
-
+    split_save_train_dev(list_dpr=list_DPR)
     return
 
 
