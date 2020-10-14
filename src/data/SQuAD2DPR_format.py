@@ -152,7 +152,7 @@ def get_near_entire_phrase(context: str, pos: int, side="left"):
             return pos
 
 
-def get_negative_context(retriever: ElasticsearchRetriever, question: str, answer: str):
+def get_hard_negative_context(retriever: ElasticsearchRetriever, question: str, answer: str):
     retriever_docs = retriever.retrieve(query=question, top_k=5, index="document")
     for retrieved_doc in retriever_docs:
         retrieved_doc_id = retrieved_doc.meta["name"]
@@ -183,7 +183,7 @@ def create_dpr_training_dataset(squad_file_path: Path, dpr_output_path: Path):
                         "text": c
                     } for i, c in enumerate(limited_positive_ctxs)],
                     "negative_ctxs": [],
-                    "hard_negative_ctxs": [get_negative_context(retriever=retriever,
+                    "hard_negative_ctxs": [get_hard_negative_context(retriever=retriever,
                                                                 question=question["question"],
                                                                 answer=answers[0])]
                 }
