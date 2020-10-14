@@ -112,7 +112,6 @@ def compute_retriever_precision(true_fiches, retrieved_results, weight_position=
     retrieved_docs = []
     summed_precision = 0
     results_info = {}
-    correct_doc_info = {}
     retrieved_doc_names = [(f.meta["name"],
                             idx + 1,
                             f.score,
@@ -126,15 +125,10 @@ def compute_retriever_precision(true_fiches, retrieved_results, weight_position=
                     summed_precision += ((fiche_idx + 1) / (fiche_idx + retrieved_doc_idx + 1))
                 else:
                     summed_precision += 1
-                correct_doc_info[retrieved_doc_id] = {
-                    "position": retrieved_doc_idx + 1,
-                    "probability": retrieved_doc.probability,
-                    "score": retrieved_doc.score}
                 break
 
     results_info["true_fiches"] = true_fiches
     results_info["pred_fiches"] = retrieved_doc_names
-    # results_info["correct_docs"] = correct_doc_info
 
     return summed_precision, results_info
 
