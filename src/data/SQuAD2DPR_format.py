@@ -189,14 +189,14 @@ def create_dpr_training_dataset(squad_file_path: Path):
     return list_DPR
 
 
-def split_save_train_dev(list_dpr: List[Dict], train_size: float = 0.8, dpr_outpupt_path: Path):
+def split_save_train_dev(list_dpr: List[Dict], dpr_outpupt_path: Path, train_size: float = 0.8):
     random.shuffle(list_dpr)
     train_len = int(train_size * len(list_dpr))
 
     dataset = {"train": list_dpr[:train_len],
                "dev": list_dpr[train_len:]}
     for key, value in dataset.items():
-        with open(dpr_output_path / Path(f"DPR_FR_{key}.json"), "w") as filo:
+        with open(dpr_outpupt_path / Path(f"DPR_FR_{key}.json"), "w") as filo:
             json.dump(value, filo, ensure_ascii=False, indent=4)
 
 
