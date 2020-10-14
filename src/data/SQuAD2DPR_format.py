@@ -165,15 +165,18 @@ def create_dpr_training_dataset(squad_file_path: Path, dpr_output_path: Path):
             context = paragraph["context"]
             for question in paragraph["qas"]:
                 answers = [a["text"] for a in question["answers"]]
-                hard_negative_ctxs = get_negative_context(retriever=retriever,
-                                                          question=question["question"],
-                                                          answer=answers[0])
+                hard_negative_ctxs = get_hard_negative_context(retriever=retriever,
+                                                               question=question["question"],
+                                                               answer=answers[0])
                 positive_ctxs = [{
                     "title": f"{article_title}_{i}",
                     "text": c
                 } for i, c in enumerate(limit_context_size(question["answers"], context))]
+
                 if not hard_negative_ctxs or not positive_ctxs:
-                    print("Empty contexts!!")
+                    logging.info(
+                        f"No retrieved candidates for article {article_title}, with question {question['question']}")
+                    continue
                 dict_DPR = {
                     "question": question["question"],
                     "answers": answers,
@@ -197,7 +200,7 @@ def split_save_train_dev(list_dpr: List[Dict], train_size: float = 0.8):
             json.dump(value, filo, ensure_ascii=False, indent=4)
 
 
-def get_negative_context(retriever: ElasticsearchRetriever, question: str, answer: str):
+def get_hard_negative_context(retriever: ElasticsearchRetriever, question: str, answer: str):
     retrieved_docs = retriever.retrieve(query=question, top_k=10, index="document")
     for retrieved_doc in retrieved_docs:
         retrieved_doc_id = retrieved_doc.meta["name"]
@@ -206,6 +209,8 @@ def get_negative_context(retriever: ElasticsearchRetriever, question: str, answe
             return {"title": retrieved_doc_id, "text": retrieved_doc_text}
 
     # All docs found by ES have the answer within. Just return the last one found :/
+    if not retrieved_docs:
+        return
     return {"title": retrieved_docs[-1].meta["name"],
             "text": retrieved_docs[-1].text}
 
