@@ -152,7 +152,7 @@ def get_near_entire_phrase(context: str, pos: int, side="left"):
             return pos
 
 
-def create_dpr_training_dataset(squad_file_path: Path, dpr_output_path: Path):
+def create_dpr_training_dataset(squad_file_path: Path):
     squad_file = json.load(open(squad_file_path.as_posix()))
     version = squad_file["version"]
     squad_data = squad_file["data"]
@@ -189,7 +189,7 @@ def create_dpr_training_dataset(squad_file_path: Path, dpr_output_path: Path):
     return list_DPR
 
 
-def split_save_train_dev(list_dpr: List[Dict], train_size: float = 0.8):
+def split_save_train_dev(list_dpr: List[Dict], train_size: float = 0.8, dpr_outpupt_path: Path):
     random.shuffle(list_dpr)
     train_len = int(train_size * len(list_dpr))
 
@@ -217,9 +217,9 @@ def get_hard_negative_context(retriever: ElasticsearchRetriever, question: str, 
 
 def main(squad_file_path: Path, dpr_output_path: Path):
     tqdm.write(f"Using SQuAD-like file {squad_file_path}")
-    list_DPR = create_dpr_training_dataset(squad_file_path, dpr_output_path)
+    list_DPR = create_dpr_training_dataset(squad_file_path)
 
-    split_save_train_dev(list_dpr=list_DPR)
+    split_save_train_dev(list_dpr=list_DPR, dpr_outpupt_path=dpr_output_path)
     return
 
 
