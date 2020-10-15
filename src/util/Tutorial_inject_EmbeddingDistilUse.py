@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 import json
 
-from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dictsAndEmbeddings
+from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts
 
 DENSE_MAPPING = {"mappings": {"properties": {
     "link": {
@@ -40,8 +40,8 @@ retriever = EmbeddingRetriever(document_store=document_store, embedding_model="d
 
 
 
-dicts = convert_json_to_dictsAndEmbeddings(dir_path="./data/v11", retriever=retriever,
-                                           split_paragraphs=False)
+dicts = convert_json_to_dicts(dir_path="./data/v11", retriever=retriever,
+                              split_paragraphs=False)
 # import pickle
 # pickle.dump(dicts, open("./data/v11_dicts.pkl", "wb"))
 

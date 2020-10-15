@@ -11,18 +11,21 @@ from pathlib import Path
 from random import seed
 from typing import Dict, List, Tuple
 import hashlib
+
+import torch
 from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.base import BaseRetriever
 from sklearn.model_selection import ParameterGrid
 from src.evaluation.eval_config import parameters
 from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts, convert_json_files_v10_to_dicts
-from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dictsAndEmbeddings
+from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts
 
 seed(42)
 from tqdm import tqdm
 from haystack.retriever.sparse import ElasticsearchRetriever
-from haystack.retriever.dense import EmbeddingRetriever
+from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
+from haystack.document_store.faiss import FAISSDocumentStore
 
 import pandas as pd
 import socket
@@ -32,6 +35,8 @@ from joblib import Memory
 location = '/tmp/'
 memory = Memory(location, verbose=1)
 logger = logging.getLogger(__name__)
+
+GPU_AVAILABLE = torch.cuda.is_available()
 
 DENSE_MAPPING = {"mappings": {"properties": {
     "link": {
@@ -134,7 +139,6 @@ def compute_retriever_precision(true_fiches, retrieved_results, weight_position=
 
     results_info["true_fiches"] = true_fiches
     results_info["pred_fiches"] = retrieved_doc_names
-    # results_info["correct_docs"] = correct_doc_info
 
     return summed_precision, results_info
 
@@ -267,7 +271,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
         # delete the index to make sure we are not using other docs
         es = Elasticsearch(['http://localhost:9200/'], verify_certs=True)
         es.indices.delete(index='document', ignore=[400, 404])
-        if retriever_type == "sparse":
+        if retriever_type == "bm25":
 
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         search_fields=['question_sparse'],
@@ -276,14 +280,14 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
             retriever = ElasticsearchRetriever(document_store=document_store)
 
-            dicts = convert_json_to_dictsAndEmbeddings(dir_path=knowledge_base_path,
-                                                       retriever=retriever,
-                                                       compute_embeddings=False)
+            dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
+                                          retriever=retriever,
+                                          compute_embeddings=False)
 
             # Now, let's write the docs to our DB.
             document_store.write_documents(dicts)
 
-        elif retriever_type == "dense":
+        elif retriever_type == "embeddings":
 
             # TODO: change the way embedding_dim is declared as it may vary based on the embedding_model
 
@@ -295,22 +299,47 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
             retriever = EmbeddingRetriever(document_store=document_store,
                                            embedding_model="distiluse-base-multilingual-cased",
-                                           use_gpu=False, model_format="sentence_transformers",
+                                           use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                            pooling_strategy="reduce_max")
 
             dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
                                                 retriever_type=retriever_type)
             if not dicts:
-                dicts = convert_json_to_dictsAndEmbeddings(dir_path=knowledge_base_path,
-                                                           retriever=retriever,
-                                                           compute_embeddings=True)
+                dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
+                                              retriever=retriever,
+                                              compute_embeddings=True)
 
                 cache_dict_embeddings(dicts=dicts, knowledge_base_path=Path(knowledge_base_path),
                                       retriever_type=retriever_type)
 
-            # dicts = pickle.load(open("/home/pavel/code/piaf-ml/data/v11_dicts.pkl", "rb"))
-
             document_store.write_documents(dicts)
+
+        elif retriever_type == "dpr":
+
+            document_store = FAISSDocumentStore()
+
+            retriever = DensePassageRetriever(document_store=document_store,
+                                              query_embedding_model="facebook/dpr-question_encoder-single-nq-base",
+                                              passage_embedding_model="facebook/dpr-ctx_encoder-single-nq-base",
+                                              use_gpu=GPU_AVAILABLE,
+                                              embed_title=False,
+                                              max_seq_len=256,
+                                              batch_size=16,
+                                              remove_sep_tok_from_untitled_passages=True)
+            # TODO: Embed passages check function here
+            dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
+                                                retriever_type=retriever_type)
+            if not dicts:
+                dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
+                                              retriever=retriever,
+                                              compute_embeddings=True)
+
+                cache_dict_embeddings(dicts=dicts, knowledge_base_path=Path(knowledge_base_path),
+                                      retriever_type=retriever_type)
+
+            document_store.faiss_index.reset()
+            document_store.write_documents(dicts)
+
 
     except Exception as e:
         logger.error(f"Failed with error {str(e)}")
