@@ -2,7 +2,7 @@ import logging
 import json
 from haystack.database.elasticsearch import ElasticsearchDocumentStore
 from pathlib import Path
-import tqdm
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
