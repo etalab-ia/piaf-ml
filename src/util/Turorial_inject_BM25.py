@@ -66,19 +66,15 @@ def convert_json_files_to_dicts(dir_path: str):
         else:
             raise Exception(f"Indexing of {path.suffix} files is not currently supported.")
 
-        if split_paragraphs:
-            raise Exception(f"Splitting paragraph not currently supported.")
-        else:
-            text_reader = json_doc["text_reader"] if "text_reader" in json_doc else text
-            #TODO: evaluate performances based on text_reader or text in 'text'
-            documents.append({"text": text,
-                              "meta": {"name": path.name,
-                                       "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
-                                       'audience': audience,
-                                       'theme': theme,
-                                       'sous_theme': sous_theme,
-                                       'dossier': dossier,
-                                       'sous_dossier': sous_dossier}})
+        text_reader = json_doc["text_reader"] if "text_reader" in json_doc else text
+        documents.append({"text": text,
+                          "meta": {"name": path.name,
+                                   "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
+                                   "audience": audience,
+                                   "theme": theme,
+                                   "sous_theme": sous_theme,
+                                   "dossier": dossier,
+                                   "sous_dossier": sous_dossier}})
     return documents
     
     
