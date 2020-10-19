@@ -216,7 +216,7 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int, test_dataset,
     for question, meta in test_dataset.items():
         arborescence = meta['arbo']
         filter_value = arborescence[filter_level]
-        if filter_value == '': #sometimes the value for the filter is not present in the data
+        if filter_level is not None and filter_value == '': #sometimes the value for the filter is not present in the data
             continue
         true_fiche_urls = meta['urls']
         true_fiche_ids = [f.split("/")[-1] for f in true_fiche_urls]
@@ -242,7 +242,7 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int, test_dataset,
                            })
 
     avg_time = pbar.avg_time
-    if avg_time == None: #quick fix for a bug idk why is happening
+    if avg_time is None: #quick fix for a bug idk why is happening
         avg_time = 0
     pbar.close()
     detailed_results = {"successes": succeses, "errors": errors, "avg_time": avg_time}

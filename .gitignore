@@ -134,5 +134,7 @@ dmypy.json
 .pytype/
 .idea/
 
+results/
+
 # specific project folders
 src/data/notebooks/data/
