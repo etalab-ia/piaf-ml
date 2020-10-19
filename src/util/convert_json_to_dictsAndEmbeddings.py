@@ -68,5 +68,4 @@ def convert_json_to_dictsAndEmbeddings(dir_path: str, retriever: BaseRetriever,
                                        'sous_theme': sous_theme,
                                        'dossier': dossier,
                                        'sous_dossier': sous_dossier}})
-
     return documents
