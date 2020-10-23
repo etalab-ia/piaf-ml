@@ -37,7 +37,7 @@ def convert_json_to_dicts(dir_path: str, retriever: BaseRetriever,
             except:  # in case the level does not exist or there is no dict at all
                 return ''
 
-    for path in tqdm(file_paths):
+    for path in tqdm(file_paths[:200]):
         if path.suffix.lower() == ".json":
             with open(path) as doc:
                 json_doc = json.load(doc)
@@ -48,10 +48,10 @@ def convert_json_to_dicts(dir_path: str, retriever: BaseRetriever,
             sous_theme = get_arbo(json_doc, 'sous_theme')
             dossier = get_arbo(json_doc, 'dossier')
             sous_dossier = get_arbo(json_doc, 'sous_dossier')
-            question_emb = []
+            embedding = []
             if compute_embeddings:
                 assert retriever is not None
-                question_emb = retriever.embed_passages(docs=[Document(text=text)])[0]
+                embedding = retriever.embed_passages(docs=[Document(text=text)])[0]
         else:
             raise Exception(f"Indexing of {path.suffix} files is not currently supported.")
 
@@ -60,15 +60,16 @@ def convert_json_to_dicts(dir_path: str, retriever: BaseRetriever,
 
         text_reader = json_doc["text_reader"] if "text_reader" in json_doc else text
         # TODO: evaluate performances based on text_reader or text in 'text'
-        documents.append({"text": text_reader,
+        doc_dict = {"text": text_reader,
                           'question_sparse': text,
-                          'question_emb': question_emb,
+                          'embedding': embedding,
                           "meta": {"name": path.name,
                                    "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
                                    'audience': audience,
                                    'theme': theme,
                                    'sous_theme': sous_theme,
                                    'dossier': dossier,
-                                   'sous_dossier': sous_dossier}})
+                                   'sous_dossier': sous_dossier}}
+        documents.append(doc_dict)
 
     return documents

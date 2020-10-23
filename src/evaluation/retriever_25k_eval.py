@@ -37,7 +37,7 @@ memory = Memory(location, verbose=1)
 logger = logging.getLogger(__name__)
 
 GPU_AVAILABLE = torch.cuda.is_available()
-
+USE_CACHE = False
 DENSE_MAPPING = {"mappings": {"properties": {
     "link": {
         "type": "keyword"
@@ -166,8 +166,7 @@ def single_run(parameters):
                                retriever_type=retriever_type)
 
     if not retriever:
-        logger.info("Could not prepare the testing framework!! Exiting :(")
-        return
+        raise Exception("Could not prepare the testing framework!! Exiting :(")
 
     # All is good, let's run the experiment
     results = []
@@ -287,7 +286,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             # Now, let's write the docs to our DB.
             document_store.write_documents(dicts)
 
-        elif retriever_type == "embeddings":
+        elif retriever_type == "sbert":
 
             # TODO: change the way embedding_dim is declared as it may vary based on the embedding_model
 
@@ -319,16 +318,19 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             document_store = FAISSDocumentStore()
 
             retriever = DensePassageRetriever(document_store=document_store,
-                                              query_embedding_model="facebook/dpr-question_encoder-single-nq-base",
-                                              passage_embedding_model="facebook/dpr-ctx_encoder-single-nq-base",
+                                              query_embedding_model="/home/pavel/code/dpr2hf/models/encoder_question",
+                                              passage_embedding_model="/home/pavel/code/dpr2hf/models/encoder_ctx",
                                               use_gpu=GPU_AVAILABLE,
                                               embed_title=False,
                                               max_seq_len=256,
                                               batch_size=16,
                                               remove_sep_tok_from_untitled_passages=True)
             # TODO: Embed passages check function here
-            dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
-                                                retriever_type=retriever_type)
+            dicts = []
+            if USE_CACHE:
+                dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
+                                                    retriever_type=retriever_type)
+
             if not dicts:
                 dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
                                               retriever=retriever,
@@ -339,7 +341,8 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
             document_store.faiss_index.reset()
             document_store.write_documents(dicts)
-
+        else:
+            raise Exception("Choose a retriever type between : bm25, sbert, dpr")
 
     except Exception as e:
         logger.error(f"Failed with error {str(e)}")
