@@ -341,10 +341,12 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
         else:
             arborescence = meta['arbo']
             filter_value = arborescence[filter_level]
-            if filter_level is not None and filter_value == '':  # sometimes the value for the filter is not present in the data
-                continue
-            retrieved_results = retriever.retrieve(query=question, filters={filter_level: [filter_value]},
-                                                   top_k=retriever_top_k)
+            filter_ = None
+            if not filter_value:  # sometimes the value for the filter is not present in the data
+                logger.info(f"Fiche(s) {meta['urls']} have no filter data available.")
+            else:
+                filter_ = {filter_level: [filter_value]}
+            retrieved_results = retriever.retrieve(query=question, filters=filter_, top_k=retriever_top_k)
         pbar.update()
 
         precision, results_info = compute_retriever_precision(true_fiche_ids,
