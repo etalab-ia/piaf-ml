@@ -9,7 +9,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 from random import seed
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional, Callable
 import hashlib
 from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
@@ -17,7 +17,10 @@ from haystack.retriever.base import BaseRetriever
 from sklearn.model_selection import ParameterGrid
 from src.evaluation.eval_config import parameters
 from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts, convert_json_files_v10_to_dicts
-from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dictsAndEmbeddings
+import torch
+
+from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts, preprocess_text
+
 
 seed(42)
 from tqdm import tqdm
@@ -32,6 +35,9 @@ from joblib import Memory
 location = '/tmp/'
 memory = Memory(location, verbose=1)
 logger = logging.getLogger(__name__)
+
+GPU_AVAILABLE = torch.cuda.is_available()
+USE_CACHE = True
 
 DENSE_MAPPING = {"mappings": {"properties": {
     "link": {
@@ -166,6 +172,7 @@ def single_run(parameters):
         retriever=retriever,
         retriever_top_k=k,
         test_dataset=test_dataset,
+        clean_func=preprocess_text,
         weight_position=weighted_precision,
         filter_level=filter_level
     )
@@ -270,9 +277,10 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
             retriever = ElasticsearchRetriever(document_store=document_store)
 
-            dicts = convert_json_to_dictsAndEmbeddings(dir_path=knowledge_base_path,
-                                                       retriever=retriever,
-                                                       compute_embeddings=False)
+            dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
+                                          clean_func=preprocess_text,
+                                          retriever=retriever,
+                                          compute_embeddings=False)
 
             # Now, let's write the docs to our DB.
             document_store.write_documents(dicts)
@@ -295,7 +303,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
                                                 retriever_type=retriever_type)
             if not dicts:
-                dicts = convert_json_to_dictsAndEmbeddings(dir_path=knowledge_base_path,
+                dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
                                                            retriever=retriever,
                                                            compute_embeddings=True)
 
@@ -313,7 +321,9 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
 
 def compute_score(retriever: BaseRetriever, retriever_top_k: int,
-                  test_dataset: Dict[str, List], weight_position: bool = False, filter_level: str = None):
+                  test_dataset: Dict[str, List],
+                  clean_func: Optional[Callable] = None,
+                  weight_position: bool = False, filter_level: str = None):
     """
     Given a Retriever to query and its parameters and a test dataset (couple query->true related doc), computes
     the number of matches found by the Retriever. A match is succesful if the retrieved document is among the
@@ -336,6 +346,8 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
     for question, meta in test_dataset.items():
         true_fiche_urls = meta['urls']
         true_fiche_ids = [f.split("/")[-1] for f in true_fiche_urls]
+        if clean_func:
+            question = clean_func(question)
         if filter_level is None:
             retrieved_results = retriever.retrieve(query=question, top_k=retriever_top_k)
         else:
