@@ -96,9 +96,10 @@ def load_25k_test_set(test_corpus_path: str):
     for row in df.iterrows():
         question = row[1]["question"]
         list_url = [row[1][u] for u in url_cols if row[1][u]]
+        id = row[1]['id']
         arbo = {'theme': row[1]['theme'],
                 'dossier': row[1]['dossier']}
-        meta = {'urls': list_url, 'arbo': arbo}
+        meta = {'urls': list_url, 'arbo': arbo, 'id': id}
         dict_question_fiche[question] = meta
 
     return dict_question_fiche
