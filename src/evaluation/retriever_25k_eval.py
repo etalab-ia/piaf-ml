@@ -216,7 +216,8 @@ def save_results(result_file_path: Path, all_results: List[Tuple]):
         df_old = pd.read_csv(result_file_path)
         df_results = pd.concat([df_old, df_results])
     else:
-        os.makedirs(result_file_path.parent)
+        if not result_file_path.parent.exists():
+            os.makedirs(result_file_path.parent)
     with open(result_file_path.as_posix(), "w") as filo:
         df_results.to_csv(filo, index=False)
     # saved detailed results
@@ -390,14 +391,15 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
         precision, results_info = compute_retriever_precision(true_fiche_ids,
                                                               retrieved_results,
                                                               weight_position=weight_position)
-
+        id = meta['id']
+        results_info['question'] = question
         summed_precision += precision
         nb_questions += 1
         if precision:
             found_fiche += 1
-            successes[question] = results_info
+            successes[id] = results_info
         else:
-            errors[question] = results_info
+            errors[id] = results_info
     avg_time = pbar.avg_time
     if avg_time is None:  # quick fix for a bug idk why is happening
         avg_time = 0
