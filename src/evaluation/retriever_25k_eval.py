@@ -19,7 +19,7 @@ from src.evaluation.eval_config import parameters
 from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts, convert_json_files_v10_to_dicts
 import torch
 
-from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts, preprocess_text
+from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts, preprocess_text, no_preprocessing
 
 
 seed(42)
@@ -96,9 +96,10 @@ def load_25k_test_set(test_corpus_path: str):
     for row in df.iterrows():
         question = row[1]["question"]
         list_url = [row[1][u] for u in url_cols if row[1][u]]
+        id = row[1]['id']
         arbo = {'theme': row[1]['theme'],
                 'dossier': row[1]['dossier']}
-        meta = {'urls': list_url, 'arbo': arbo}
+        meta = {'urls': list_url, 'arbo': arbo, 'id': id}
         dict_question_fiche[question] = meta
 
     return dict_question_fiche
@@ -155,15 +156,22 @@ def single_run(parameters):
     k = parameters["k"]
     weighted_precision = parameters["weighted_precision"]
     filter_level = parameters["filter_level"]
+    lemma_preprocessing = parameters["lemma_preprocessing"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     # Prepare framework
     test_dataset = load_25k_test_set(test_corpus_path)
     retriever = load_retriever(knowledge_base_path=knowledge_base_path,
-                               retriever_type=retriever_type)
+                               retriever_type=retriever_type,
+                               preprocessing=lemma_preprocessing)
 
     if not retriever:
         logger.info("Could not prepare the testing framework!! Exiting :(")
         return
+
+    if lemma_preprocessing:
+        clean_function = preprocess_text
+    else:
+        clean_function = no_preprocessing
 
     # All is good, let's run the experiment
     results = []
@@ -172,7 +180,7 @@ def single_run(parameters):
         retriever=retriever,
         retriever_top_k=k,
         test_dataset=test_dataset,
-        clean_func=preprocess_text,
+        clean_func=clean_function,
         weight_position=weighted_precision,
         filter_level=filter_level
     )
@@ -192,7 +200,7 @@ def single_run(parameters):
     detailed_results_weighted["experiment_id"] = experiment_id
 
     ordered_headers = ["experiment_id",
-                       "knowledge_base", "test_dataset", "k", "filter_level", "retriever_type",
+                       "knowledge_base", "test_dataset", "lemma_preprocessing", "k", "filter_level", "retriever_type",
                        "nb_documents", "correctly_retrieved", "weighted_precision",
                        "precision", "avg_time_s", "date", "hostname"]
 
@@ -208,7 +216,8 @@ def save_results(result_file_path: Path, all_results: List[Tuple]):
         df_old = pd.read_csv(result_file_path)
         df_results = pd.concat([df_old, df_results])
     else:
-        os.makedirs(result_file_path.parent)
+        if not result_file_path.parent.exists():
+            os.makedirs(result_file_path.parent)
     with open(result_file_path.as_posix(), "w") as filo:
         df_results.to_csv(filo, index=False)
     # saved detailed results
@@ -232,8 +241,13 @@ def launch_ES():
 
 
 def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
-                                cached_dicts_path: Path = Path("./data/dense_dicts/")):
-    cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}.pkl")
+                                cached_dicts_path: Path = Path("./data/dense_dicts/"),
+                                preprocessing: bool= False):
+    if preprocessing:
+        preprocessing_tag = "preprocessed"
+    else:
+        preprocessing_tag = 'notpreprocessed'
+    cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}_{preprocessing_tag}.pkl")
     if cached_dicts_name.exists():
         logger.info(f"Found and loading embeddings dict cache: {cached_dicts_name}")
         try:
@@ -248,21 +262,33 @@ def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
 
 
 def cache_dict_embeddings(dicts: Dict, knowledge_base_path: Path, retriever_type: str,
-                          cached_dicts_path: Path = Path("./data/dense_dicts/")):
-    cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}.pkl")
+                          cached_dicts_path: Path = Path("./data/dense_dicts/"),
+                                preprocessing: bool= False):
+    if preprocessing:
+        preprocessing_tag = "preprocessed"
+    else:
+        preprocessing_tag = 'notpreprocessed'
+    cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}_{preprocessing_tag}.pkl")
 
     with open(cached_dicts_name, "wb") as cache:
         pickle.dump(dicts, cache)
 
 
 def load_retriever(knowledge_base_path: str = "/data/service-public-france/extracted/",
-                   retriever_type: str = "sparse"):
+                   retriever_type: str = "sparse",
+                   preprocessing: bool = False):
     """
     Loads ES if needed (check LAUNCH_ES var above) and indexes the knowledge_base corpus
     :param knowledge_base_path: PAth of the folder containing the knowledge_base corpus
     :param retriever_type: The type of retriever to be used
     :return: A Retriever object ready to be queried
     """
+
+    if preprocessing:
+        clean_function = preprocess_text
+    else:
+        clean_function = no_preprocessing
+
     retriever = None
     try:
         # delete the index to make sure we are not using other docs
@@ -278,7 +304,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             retriever = ElasticsearchRetriever(document_store=document_store)
 
             dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
-                                          clean_func=preprocess_text,
+                                          clean_func=clean_function,
                                           retriever=retriever,
                                           compute_embeddings=False)
 
@@ -301,16 +327,17 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                            pooling_strategy="reduce_max")
 
             dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
-                                                retriever_type=retriever_type)
+                                                retriever_type=retriever_type,
+                                                preprocessing=preprocessing)
             if not dicts:
                 dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
-                                                           retriever=retriever,
-                                                           compute_embeddings=True)
+                                              clean_func=clean_function,
+                                              retriever=retriever,
+                                              compute_embeddings=True)
 
                 cache_dict_embeddings(dicts=dicts, knowledge_base_path=Path(knowledge_base_path),
-                                      retriever_type=retriever_type)
-
-            # dicts = pickle.load(open("/home/pavel/code/piaf-ml/data/v11_dicts.pkl", "rb"))
+                                      retriever_type=retriever_type,
+                                      preprocessing=preprocessing)
 
             document_store.write_documents(dicts)
 
@@ -364,14 +391,15 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
         precision, results_info = compute_retriever_precision(true_fiche_ids,
                                                               retrieved_results,
                                                               weight_position=weight_position)
-
+        id = meta['id']
+        results_info['question'] = question
         summed_precision += precision
         nb_questions += 1
         if precision:
             found_fiche += 1
-            successes[question] = results_info
+            successes[id] = results_info
         else:
-            errors[question] = results_info
+            errors[id] = results_info
     avg_time = pbar.avg_time
     if avg_time is None:  # quick fix for a bug idk why is happening
         avg_time = 0

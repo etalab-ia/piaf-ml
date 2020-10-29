@@ -22,10 +22,14 @@ def preprocess_text(text: str):
     :return:
     """
     if not NLP:
+        print('Warning NLP not loaded, text will not be preprocessed')
         return text
 
     doc = NLP(text)
     text = " ".join(t.lemma_.lower() for t in doc if not t.is_stop).replace("\n", " ")
+    return text
+
+def no_preprocessing(text: str):
     return text
 
 
