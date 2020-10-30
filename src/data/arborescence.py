@@ -187,6 +187,116 @@ def complete_arbo_with_F_files (arborescence, doc_paths):
     return arborescence
 
 
+def init_theme(theme):
+    if theme == '':
+        id = None
+        name = 'Autre'
+    else:
+        id = theme.split('//')[0]
+        name = theme.split('//')[1]
+    return {'id': id,
+            'type': 'theme',
+            'name': name,
+            'data': []
+            }
+
+
+def init_sous_theme(sous_theme):
+    if sous_theme == "":
+        name = 'Autre'
+    else:
+        name = sous_theme
+    dict = {'id': None,
+            'type': 'sous_theme',
+            'name': name,
+            'data': []
+            }
+    return dict
+
+def init_dossier(dossier):
+    if dossier == '':
+        id = None
+        name = 'Autre'
+    elif '//' in dossier:
+        id = dossier.split('//')[0]
+        name = dossier.split('//')[1]
+    else:
+        id = None
+        name = dossier
+    return {'id': id,
+            'type': 'dossier',
+            'name': name,
+            'data': []
+            }
+
+
+def init_sous_dossier(sous_dossier):
+    if sous_dossier == "":
+        name = 'Autre'
+    else:
+        name = sous_dossier
+    dict = {'id': None,
+            'type': 'sous_dossier',
+            'name': name,
+            'data': []
+            }
+    return dict
+
+
+def init_fiche(fiche):
+    if fiche == '':
+        id = None
+        name = 'Autre'
+    else:
+        id = fiche.split('//')[0]
+        name = fiche.split('//')[1]
+    return {'id': id,
+            'type': 'fiche',
+            'name': name,
+            'data': None
+            }
+
+
+def reformat_json(arborescence):
+    all_data = []
+    for theme in arborescence.keys():
+        theme_dict = init_theme(theme)
+        sous_theme_exists = len(arborescence[theme].keys()) > 1
+        theme_data = []
+        for sous_theme in arborescence[theme].keys():
+            if sous_theme_exists:
+                sous_theme_dict = init_sous_theme(sous_theme)
+            sous_theme_data = []
+            for dossier in arborescence[theme][sous_theme]:
+                dossier_dict = init_dossier(dossier)
+                dossier_data = []
+                sous_dossier_exists = len(arborescence[theme][sous_theme][dossier].keys()) > 1
+                for sous_dossier in arborescence[theme][sous_theme][dossier].keys():
+                    if sous_dossier_exists:
+                        sous_dossier_dict = init_sous_dossier(sous_dossier)
+                    sous_dossier_data = []
+                    for fiche in arborescence[theme][sous_theme][dossier][sous_dossier]:
+                        fiche_dict = init_fiche(fiche)
+                        sous_dossier_data += [fiche_dict]
+                    if sous_dossier_exists:
+                        sous_dossier_dict['data'] = sous_dossier_data
+                        dossier_data += [sous_dossier_dict]
+                if not sous_dossier_exists:
+                    dossier_data = sous_dossier_data
+                dossier_dict['data'] = dossier_data
+                sous_theme_data += [dossier_dict]
+            if sous_theme_exists:
+                sous_theme_dict['data'] = sous_theme_data
+                theme_data += [dossier_dict]
+        if not sous_theme_exists:
+            theme_data = sous_theme_data
+        theme_dict['data'] = theme_data
+        all_data += [theme_dict]
+    return {'version': '1.0',
+            'data': all_data}
+
+
+
 def main(doc_files_path, output_path, n_jobs):
     if not doc_files_path.is_dir() and doc_files_path.is_file():
         doc_paths = [doc_files_path]
@@ -204,9 +314,12 @@ def main(doc_files_path, output_path, n_jobs):
     arborescence = fill_arborescence_with_N_files(doc_paths_N)
     arborescence = complete_arbo_with_F_files(arborescence, doc_paths_F)
 
+    arborescence = reformat_json(arborescence)
 
     if not output_path.exists():
         os.makedirs(output_path)
+
+
 
     with open(path.as_posix(), "w", encoding='utf-8') as out_file:
         json.dump(arborescence, out_file, indent=4, ensure_ascii=False)
