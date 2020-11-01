@@ -1,5 +1,4 @@
-from haystack.database.elasticsearch import ElasticsearchDocumentStore
-from haystack.indexing.utils import fetch_archive_from_http
+from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.sparse import ElasticsearchRetriever
 from haystack.reader.transformers import TransformersReader
 from haystack.reader.farm import FARMReader
@@ -11,54 +10,43 @@ import subprocess
 import time
 import json
 
+from src.evaluation.retriever_25k_eval import launch_ES
+
 logger = logging.getLogger(__name__)
 
 ##############################################
 # Settings
 ##############################################
-LAUNCH_ELASTICSEARCH = True
-
-eval_retriever_only = True
-eval_reader_only = True
-eval_both = False
+eval_retriever_only = False
+eval_reader_only = False
+eval_both = True
 
 # Create our own indexes names as default ones are sometimes buggy
-eval_qr_filename = "../../data/spf_qr_test.json"
+eval_qr_filename = "./data/filtered_spf_qr_test.json"
 doc_index = "piaf_eval_docs"
 label_index = "piaf_eval_labels"
 
 ##############################################
 # Code
 ##############################################
-device, n_gpu = initialize_device_settings(use_cuda=True)
+device, n_gpu = initialize_device_settings(use_cuda=False)
 # Start an Elasticsearch server
 # You can start Elasticsearch on your local machine instance using Docker. If Docker is not readily available in
 # your environment (eg., in Colab notebooks), then you can manually download and execute Elasticsearch from source.
-if LAUNCH_ELASTICSEARCH:
-    logging.info("Starting Elasticsearch ...")
-    status = subprocess.run(
-        ['docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'], shell=True
-    )
-    if status.returncode:
-        raise Exception("Failed to launch Elasticsearch. If you want to connect to an existing Elasticsearch instance"
-                        "then set LAUNCH_ELASTICSEARCH in the script to False.")
-    time.sleep(30)
+
+launch_ES()
 
 # Connect to Elasticsearch
 document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                             create_index=False)
-
+document_store.delete_all_documents(index=doc_index)
+document_store.delete_all_documents(index=label_index)
 # Add evaluation data to Elasticsearch database
 # TODO: change with later Haystack version with delete_all_documents(index=...), see Tutorial 5 Evaluation on github
-if LAUNCH_ELASTICSEARCH:
-    document_store.add_eval_data(filename=eval_qr_filename, doc_index=doc_index, label_index=label_index)
-else:
-    logger.warning("Since we already have a running ES instance we should not index the same documents again."
-                   "If you still want to do this call:"
-                   "'document_store.add_eval_data('../../data/spf_qr_test.json')' manually ")
+document_store.add_eval_data(filename=eval_qr_filename, doc_index=doc_index, label_index=label_index)
 
 # Checking data integrity
-with open("../../data/spf_qr_test.json") as file:
+with open("./data/filtered_spf_qr_test.json") as file:
     n_docs = len(json.load(file, encoding='utf-8')['data'])
 n_eval_data = document_store.get_document_count(index=doc_index)
 print(f"Number of documents in eval data is {n_eval_data}, should be {n_docs}")
@@ -67,7 +55,7 @@ print(f"Number of documents in eval data is {n_eval_data}, should be {n_docs}")
 retriever = ElasticsearchRetriever(document_store=document_store)
 
 # Initialize Reader
-reader = FARMReader("etalab-ia/camembert-base-squadFR-fquad-piaf", use_gpu=True, top_k_per_candidate=4)
+reader = FARMReader("etalab-ia/camembert-base-squadFR-fquad-piaf", use_gpu=False, top_k_per_candidate=4)
 
 # Initialize Finder which sticks together Reader and Retriever
 finder = Finder(reader, retriever)
@@ -101,5 +89,5 @@ if eval_reader_only:
 
 # Evaluate combination of Reader and Retriever through Finder
 if eval_both:
-    finder_eval_results = finder.eval(top_k_retriever=10, top_k_reader=10, doc_index=doc_index, label_index=label_index)
+    finder_eval_results = finder.eval(top_k_retriever=10, top_k_reader=5, doc_index=doc_index, label_index=label_index)
     finder.print_eval_results(finder_eval_results)

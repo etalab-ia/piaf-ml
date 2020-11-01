@@ -6,6 +6,7 @@ import logging
 import os
 import pickle
 import subprocess
+import time
 from datetime import datetime
 from pathlib import Path
 from random import seed
@@ -238,7 +239,7 @@ def launch_ES():
             raise Exception(
                 "Failed to launch Elasticsearch. If you want to connect to an existing Elasticsearch instance"
                 "then set LAUNCH_ELASTICSEARCH in the script to False.")
-
+    time.sleep(10)
 
 def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
                                 cached_dicts_path: Path = Path("./data/dense_dicts/"),
