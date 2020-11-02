@@ -287,7 +287,7 @@ def reformat_json(arborescence):
                 sous_theme_data += [dossier_dict]
             if sous_theme_exists:
                 sous_theme_dict['data'] = sous_theme_data
-                theme_data += [dossier_dict]
+                theme_data += [sous_theme_dict]
         if not sous_theme_exists:
             theme_data = sous_theme_data
         theme_dict['data'] = theme_data
