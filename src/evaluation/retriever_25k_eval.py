@@ -180,6 +180,7 @@ def single_run(parameters):
         retriever=retriever,
         retriever_top_k=k,
         test_dataset=test_dataset,
+        retriever_type=retriever_type,
         clean_func=clean_function,
         weight_position=weighted_precision,
         filter_level=filter_level
@@ -274,6 +275,60 @@ def cache_dict_embeddings(dicts: Dict, knowledge_base_path: Path, retriever_type
         pickle.dump(dicts, cache)
 
 
+def load_sparse_retriever (clean_function,
+                         knowledge_base_path: str = "/data/service-public-france/extracted/"):
+    retriever_type = 'sparse'
+    document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+                                                search_fields=['question_sparse'],
+                                                text_field='text',
+                                                custom_mapping=SPARSE_MAPPING)
+
+    retriever = ElasticsearchRetriever(document_store=document_store)
+
+    dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
+                                  clean_func=clean_function,
+                                  retriever=retriever,
+                                  compute_embeddings=False)
+
+    # Now, let's write the docs to our DB.
+    document_store.write_documents(dicts)
+
+    return retriever
+
+def load_dense_retriever(clean_function,
+                         knowledge_base_path: str = "/data/service-public-france/extracted/",
+                         preprocessing: bool = False):
+    retriever_type='dense'
+    # TODO: change the way embedding_dim is declared as it may vary based on the embedding_model
+
+    document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+                                                search_fields=['question_sparse'],
+                                                embedding_field="question_emb", embedding_dim=512,
+                                                excluded_meta_data=["question_emb"],
+                                                custom_mapping=DENSE_MAPPING)
+
+    retriever = EmbeddingRetriever(document_store=document_store,
+                                   embedding_model="distiluse-base-multilingual-cased",
+                                   use_gpu=False, model_format="sentence_transformers",
+                                   pooling_strategy="reduce_max")
+
+    dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
+                                        retriever_type=retriever_type,
+                                        preprocessing=preprocessing)
+    if not dicts:
+        dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
+                                      clean_func=clean_function,
+                                      retriever=retriever,
+                                      compute_embeddings=True)
+
+        cache_dict_embeddings(dicts=dicts, knowledge_base_path=Path(knowledge_base_path),
+                              retriever_type=retriever_type,
+                              preprocessing=preprocessing)
+
+    document_store.write_documents(dicts)
+
+    return  retriever
+
 def load_retriever(knowledge_base_path: str = "/data/service-public-france/extracted/",
                    retriever_type: str = "sparse",
                    preprocessing: bool = False):
@@ -289,57 +344,20 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
     else:
         clean_function = no_preprocessing
 
-    retriever = None
+    retriever = {}
     try:
         # delete the index to make sure we are not using other docs
         es = Elasticsearch(['http://localhost:9200/'], verify_certs=True)
         es.indices.delete(index='document', ignore=[400, 404])
         if retriever_type == "sparse":
-
-            document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
-                                                        search_fields=['question_sparse'],
-                                                        text_field='text',
-                                                        custom_mapping=SPARSE_MAPPING)
-
-            retriever = ElasticsearchRetriever(document_store=document_store)
-
-            dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
-                                          clean_func=clean_function,
-                                          retriever=retriever,
-                                          compute_embeddings=False)
-
-            # Now, let's write the docs to our DB.
-            document_store.write_documents(dicts)
+            retriever['sparse'] = load_sparse_retriever(clean_function, knowledge_base_path)
 
         elif retriever_type == "dense":
+            retriever['dense'] = load_dense_retriever(clean_function, knowledge_base_path, preprocessing)
 
-            # TODO: change the way embedding_dim is declared as it may vary based on the embedding_model
-
-            document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
-                                                        search_fields=['question_sparse'],
-                                                        embedding_field="question_emb", embedding_dim=512,
-                                                        excluded_meta_data=["question_emb"],
-                                                        custom_mapping=DENSE_MAPPING)
-
-            retriever = EmbeddingRetriever(document_store=document_store,
-                                           embedding_model="distiluse-base-multilingual-cased",
-                                           use_gpu=False, model_format="sentence_transformers",
-                                           pooling_strategy="reduce_max")
-
-            dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
-                                                retriever_type=retriever_type,
-                                                preprocessing=preprocessing)
-            if not dicts:
-                dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
-                                              clean_func=clean_function,
-                                              retriever=retriever,
-                                              compute_embeddings=True)
-
-                cache_dict_embeddings(dicts=dicts, knowledge_base_path=Path(knowledge_base_path),
-                                      retriever_type=retriever_type,
-                                      preprocessing=preprocessing)
-
-            document_store.write_documents(dicts)
+        elif retriever_type == 'both':
+            retriever['sparse'] = load_sparse_retriever(clean_function, knowledge_base_path)
+            retriever['dense'] = load_dense_retriever(clean_function, knowledge_base_path, preprocessing)
 
     except Exception as e:
         logger.error(f"Failed with error {str(e)}")
@@ -347,8 +365,12 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
         return retriever
 
 
+def combine_retriever(retrieved_results_dense, retrieved_results_sparse, retriever_top_k):
+    return retrieved_results_sparsest[:retriever_top_k]
+
 def compute_score(retriever: BaseRetriever, retriever_top_k: int,
                   test_dataset: Dict[str, List],
+                  retriever_type: str,
                   clean_func: Optional[Callable] = None,
                   weight_position: bool = False, filter_level: str = None):
     """
@@ -376,7 +398,12 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
         if clean_func:
             question = clean_func(question)
         if filter_level is None:
-            retrieved_results = retriever.retrieve(query=question, top_k=retriever_top_k)
+            if not retriever_type == 'both':
+                retrieved_results = retriever[retriever_type].retrieve(query=question, top_k=retriever_top_k)
+            else:
+                retrieved_results_dense = retriever['dense'].retrieve(query=question, top_k=100)
+                retrieved_results_sparse = retriever['sparse'].retrieve(query=question, top_k=100)
+                retrieved_results = combine_retriever(retrieved_results_dense,retrieved_results_sparse,retriever_top_k)
         else:
             arborescence = meta['arbo']
             filter_value = arborescence[filter_level]
@@ -385,7 +412,7 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
                 logger.info(f"Fiche(s) {meta['urls']} have no filter data available.")
             else:
                 filter_ = {filter_level: [filter_value]}
-            retrieved_results = retriever.retrieve(query=question, filters=filter_, top_k=retriever_top_k)
+            retrieved_results = retriever[retriever_type].retrieve(query=question, filters=filter_, top_k=retriever_top_k)
         pbar.update()
 
         precision, results_info = compute_retriever_precision(true_fiche_ids,

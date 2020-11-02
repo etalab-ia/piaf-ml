@@ -1,11 +1,11 @@
 parameters = {
-    "k": [20,30],
-    "retriever_type": ["sparse",'dense'],
+    "k": [5],   
+    "retriever_type": ['both','sparse','dense'],
     "knowledge_base": ["./data/v11"],
                        # "/home/pavel/code/piaf-ml/data/v10"],
     "test_dataset": ["./data/407_question-fiche_anonym.csv"],
     "weighted_precision": [False],
-    "filter_level": ['theme'],
+    "filter_level": [None],
     "lemma_preprocessing": [False]
 }
 # rules:
