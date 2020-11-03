@@ -7,11 +7,13 @@ import os
 import pickle
 import subprocess
 from datetime import datetime
+import numpy as np
 from pathlib import Path
 from random import seed
 from typing import Dict, List, Tuple, Optional, Callable
 import hashlib
 from elasticsearch import Elasticsearch
+from haystack.schema import Document
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.base import BaseRetriever
 from sklearn.model_selection import ParameterGrid
@@ -61,6 +63,9 @@ DENSE_MAPPING = {"mappings": {"properties": {
     },
     "dossier": {
         "type": "keyword"
+    },
+    'id_doc': {
+        'type': 'text'
     }
 }}}
 
@@ -76,6 +81,9 @@ SPARSE_MAPPING = {"mappings": {"properties": {
     },
     "dossier": {
         "type": "keyword"
+    },
+    'id_doc': {
+        'type': 'text'
     }
 }}}
 
@@ -157,6 +165,7 @@ def single_run(parameters):
     weighted_precision = parameters["weighted_precision"]
     filter_level = parameters["filter_level"]
     lemma_preprocessing = parameters["lemma_preprocessing"]
+    dual_retriever_top_k=parameters["dual_retriever_top_k"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     # Prepare framework
     test_dataset = load_25k_test_set(test_corpus_path)
@@ -179,6 +188,7 @@ def single_run(parameters):
     mean_precision, avg_time, correctly_retrieved, detailed_results_weighted, nb_questions = compute_score(
         retriever=retriever,
         retriever_top_k=k,
+        dual_retriever_top_k=dual_retriever_top_k,
         test_dataset=test_dataset,
         retriever_type=retriever_type,
         clean_func=clean_function,
@@ -201,7 +211,7 @@ def single_run(parameters):
     detailed_results_weighted["experiment_id"] = experiment_id
 
     ordered_headers = ["experiment_id",
-                       "knowledge_base", "test_dataset", "lemma_preprocessing", "k", "filter_level", "retriever_type",
+                       "knowledge_base", "test_dataset", "lemma_preprocessing", "k", 'dual_retriever_top_k', "filter_level", "retriever_type",
                        "nb_documents", "correctly_retrieved", "weighted_precision",
                        "precision", "avg_time_s", "date", "hostname"]
 
@@ -248,6 +258,7 @@ def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
         preprocessing_tag = "preprocessed"
     else:
         preprocessing_tag = 'notpreprocessed'
+
     cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}_{preprocessing_tag}.pkl")
     if cached_dicts_name.exists():
         logger.info(f"Found and loading embeddings dict cache: {cached_dicts_name}")
@@ -259,6 +270,7 @@ def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
             logger.info(f"Could not load dict embeddings {cached_dicts_name}. Error: {str(e)}")
             return
     else:
+        logger.info(f"Could not find embeddings dict cache: {cached_dicts_name}")
         return
 
 
@@ -278,12 +290,12 @@ def cache_dict_embeddings(dicts: Dict, knowledge_base_path: Path, retriever_type
 def load_sparse_retriever (clean_function,
                          knowledge_base_path: str = "/data/service-public-france/extracted/"):
     retriever_type = 'sparse'
-    document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+    document_store_sparse = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_sparse",
                                                 search_fields=['question_sparse'],
                                                 text_field='text',
                                                 custom_mapping=SPARSE_MAPPING)
 
-    retriever = ElasticsearchRetriever(document_store=document_store)
+    retriever = ElasticsearchRetriever(document_store=document_store_sparse)
 
     dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
                                   clean_func=clean_function,
@@ -291,7 +303,7 @@ def load_sparse_retriever (clean_function,
                                   compute_embeddings=False)
 
     # Now, let's write the docs to our DB.
-    document_store.write_documents(dicts)
+    document_store_sparse.write_documents(dicts)
 
     return retriever
 
@@ -301,13 +313,13 @@ def load_dense_retriever(clean_function,
     retriever_type='dense'
     # TODO: change the way embedding_dim is declared as it may vary based on the embedding_model
 
-    document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+    document_store_dense = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_dense",
                                                 search_fields=['question_sparse'],
                                                 embedding_field="question_emb", embedding_dim=512,
                                                 excluded_meta_data=["question_emb"],
                                                 custom_mapping=DENSE_MAPPING)
 
-    retriever = EmbeddingRetriever(document_store=document_store,
+    retriever = EmbeddingRetriever(document_store=document_store_dense,
                                    embedding_model="distiluse-base-multilingual-cased",
                                    use_gpu=False, model_format="sentence_transformers",
                                    pooling_strategy="reduce_max")
@@ -325,9 +337,9 @@ def load_dense_retriever(clean_function,
                               retriever_type=retriever_type,
                               preprocessing=preprocessing)
 
-    document_store.write_documents(dicts)
+    document_store_dense.write_documents(dicts)
 
-    return  retriever
+    return retriever
 
 def load_retriever(knowledge_base_path: str = "/data/service-public-france/extracted/",
                    retriever_type: str = "sparse",
@@ -348,7 +360,8 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
     try:
         # delete the index to make sure we are not using other docs
         es = Elasticsearch(['http://localhost:9200/'], verify_certs=True)
-        es.indices.delete(index='document', ignore=[400, 404])
+        es.indices.delete(index='document_sparse', ignore=[400, 404])
+        es.indices.delete(index='document_dense', ignore=[400, 404])
         if retriever_type == "sparse":
             retriever['sparse'] = load_sparse_retriever(clean_function, knowledge_base_path)
 
@@ -356,8 +369,8 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             retriever['dense'] = load_dense_retriever(clean_function, knowledge_base_path, preprocessing)
 
         elif retriever_type == 'both':
-            retriever['sparse'] = load_sparse_retriever(clean_function, knowledge_base_path)
             retriever['dense'] = load_dense_retriever(clean_function, knowledge_base_path, preprocessing)
+            retriever['sparse'] = load_sparse_retriever(clean_function, knowledge_base_path)
 
     except Exception as e:
         logger.error(f"Failed with error {str(e)}")
@@ -365,10 +378,65 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
         return retriever
 
 
-def combine_retriever(retrieved_results_dense, retrieved_results_sparse, retriever_top_k):
-    return retrieved_results_sparsest[:retriever_top_k]
+def get_pred_fiches(retrieved_results):
+    pred_fiches = []
+    for res in retrieved_results:
+        pred_fiches.append(res.meta["id_doc"])
+    return pred_fiches
 
-def compute_score(retriever: BaseRetriever, retriever_top_k: int,
+
+def intersection(lst1, lst2):
+    return list(set(lst1) & set(lst2))
+
+
+def get_list_common_fiches(retrieved_results_dense, retrieved_results_sparse):
+    list_fiches_dense = get_pred_fiches(retrieved_results_dense)
+    list_fiches_sparse = get_pred_fiches(retrieved_results_sparse)
+    return intersection(list_fiches_dense, list_fiches_sparse)
+
+
+def get_scores(list_fiches, retrieved_results, param_dense):
+    scores = np.zeros(len(list_fiches))
+    i = 0
+    for res in retrieved_results:
+        if res.meta["id_doc"] in list_fiches:
+            scores[i]=res.score
+            i += 1
+    scores = (scores - param_dense['mean']) / param_dense['scale']
+    return scores
+
+
+def prepare_doc_results(retrieved_results_dense, df_scores):
+    results = []
+    for res in retrieved_results_dense:
+        if res.meta['id_doc'] in df_scores.list_common_fiches.values.tolist():
+            res.score = df_scores[df_scores.list_common_fiches == res.meta['id_doc']].score_final.values[0]
+            results.append(res)
+    return results
+
+def get_scores_common_fiches(retrieved_results_dense, retrieved_results_sparse,list_common_fiches, retriever_top_k):
+    param_sparse = {'mean':18.33259795, "scale":8.13641822}
+    param_dense = {'mean': 0.41424847, "scale":0.10654837}
+    scores_dense = get_scores(list_common_fiches, retrieved_results_dense, param_dense)
+    scores_sparse = get_scores(list_common_fiches, retrieved_results_sparse, param_sparse)
+    score_final = np.abs(scores_dense * scores_sparse)
+    df_scores = pd.DataFrame([list_common_fiches, score_final.tolist()])
+    df_scores = df_scores.transpose()
+    df_scores.columns = ['list_common_fiches', 'score_final']
+    return df_scores.sort_values('score_final', ascending=True).head(retriever_top_k)
+
+def combine_retriever(retrieved_results_dense, retrieved_results_sparse, retriever_top_k):
+    list_common_fiches = get_list_common_fiches(retrieved_results_dense, retrieved_results_sparse)
+    df_scores = get_scores_common_fiches(retrieved_results_dense, retrieved_results_sparse,list_common_fiches,retriever_top_k)
+    retrieved_results = prepare_doc_results(retrieved_results_dense, df_scores)
+    return retrieved_results
+
+def get_top_k_both_retriever(retrieved_results_dense, retrieved_results_sparse, retriever_top_k):
+    k_sparse = retriever_top_k//2 + retriever_top_k%2
+    k_dense = retriever_top_k // 2
+    return retrieved_results_sparse[:k_sparse] + retrieved_results_dense[:k_dense]
+
+def compute_score(retriever: BaseRetriever, retriever_top_k: int, dual_retriever_top_k: int,
                   test_dataset: Dict[str, List],
                   retriever_type: str,
                   clean_func: Optional[Callable] = None,
@@ -401,8 +469,8 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
             if not retriever_type == 'both':
                 retrieved_results = retriever[retriever_type].retrieve(query=question, top_k=retriever_top_k)
             else:
-                retrieved_results_dense = retriever['dense'].retrieve(query=question, top_k=100)
-                retrieved_results_sparse = retriever['sparse'].retrieve(query=question, top_k=100)
+                retrieved_results_dense = retriever['dense'].retrieve(query=question, top_k=dual_retriever_top_k)
+                retrieved_results_sparse = retriever['sparse'].retrieve(query=question, top_k=dual_retriever_top_k)
                 retrieved_results = combine_retriever(retrieved_results_dense,retrieved_results_sparse,retriever_top_k)
         else:
             arborescence = meta['arbo']
@@ -412,7 +480,13 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
                 logger.info(f"Fiche(s) {meta['urls']} have no filter data available.")
             else:
                 filter_ = {filter_level: [filter_value]}
-            retrieved_results = retriever[retriever_type].retrieve(query=question, filters=filter_, top_k=retriever_top_k)
+            if not retriever_type == 'both':
+                retrieved_results = retriever[retriever_type].retrieve(query=question, filters=filter_, top_k=retriever_top_k)
+            else:
+                retrieved_results_dense = retriever['dense'].retrieve(query=question, filters=filter_, top_k=dual_retriever_top_k)
+                retrieved_results_sparse = retriever['sparse'].retrieve(query=question, filters=filter_, top_k=dual_retriever_top_k)
+                retrieved_results = combine_retriever(retrieved_results_dense,retrieved_results_sparse,retriever_top_k)
+
         pbar.update()
 
         precision, results_info = compute_retriever_precision(true_fiche_ids,

@@ -66,11 +66,11 @@ def convert_json_to_dicts(dir_path: str,
             except:  # in case the level does not exist or there is no dict at all
                 return ''
 
-    for path in tqdm(file_paths[:]):
+    for i, path in tqdm(enumerate(file_paths[:])):
         if path.suffix.lower() == ".json":
             with open(path) as doc:
                 json_doc = json.load(doc)
-
+            id = i
             text = json_doc["text"]
             audience = get_arbo(json_doc, 'audience')
             theme = get_arbo(json_doc, 'theme')
@@ -96,6 +96,7 @@ def convert_json_to_dicts(dir_path: str,
                     'question_sparse': text,
                     'embedding': embedding,
                     "meta": {"name": path.name,
+                             'id_doc': str(id),
                              "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
                              'audience': audience,
                              'theme': theme,

@@ -153,16 +153,8 @@ def get_list_common_fiches(retrieved_results_dense, retrieved_results_sparse, l)
     list_fiches_sparse = get_pred_fiches(retrieved_results_sparse, l)
     return intersection(list_fiches_dense, list_fiches_sparse)
 
-def get_scores(list_fiches, retrieved_results, param_dense):
-    scores = np.zeros(len(list_fiches))
-    i = 0
-    for res in retrieved_results:
-        if res[0] in list_fiches:
-            scores[i]=res[2]
-    # CHANGE scores = (scores - param_dense['mean']) / param_dense['scale']
-    if len(list_fiches) == 1:
-        scores = np.array([scores])
-    return  scores
+
+
 
 def combine_dense_sparse(retrieved_results_dense, retrieved_results_sparse, k, l):
     param_sparse = {'mean':18.33259795, "scale":8.13641822}
