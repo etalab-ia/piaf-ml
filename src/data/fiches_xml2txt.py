@@ -114,8 +114,10 @@ def save_subfiche(doc_path: Path,
             subfiche.write(subfiche_string)
     else:
         with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as subfiche:
-            content = {'text': subfiche_string,
-                       'text_reader': subfiche_reader_string,
+            # text: we remove every line breaks because it reduce ES performances
+            # text_reader: we delete more than 4 line breaks in a row, of text without titles
+            content = {'text': re.sub(r"\s{2,}", " ", subfiche_string.replace("\n"," ")),
+                       'text_reader': re.sub(r"\n{4,}", "" , subfiche_reader_string),
                        'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}',
                        'name': f"{subfiche_file_name}",
                        'arborescence': arborescence}
