@@ -29,9 +29,6 @@ def preprocess_text(text: str):
     text = " ".join(t.lemma_.lower() for t in doc if not t.is_stop).replace("\n", " ")
     return text
 
-def no_preprocessing(text: str):
-    return text
-
 
 def convert_json_to_dicts(dir_path: str,
                           retriever: Union[EmbeddingRetriever, DensePassageRetriever,

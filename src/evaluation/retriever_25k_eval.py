@@ -20,7 +20,7 @@ from src.evaluation.eval_config import parameters
 from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts, convert_json_files_v10_to_dicts
 import torch
 
-from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts, preprocess_text, no_preprocessing
+from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts, preprocess_text
 
 
 seed(42)
@@ -169,10 +169,9 @@ def single_run(parameters):
         logger.info("Could not prepare the testing framework!! Exiting :(")
         return
 
+    clean_function = None
     if lemma_preprocessing:
         clean_function = preprocess_text
-    else:
-        clean_function = no_preprocessing
 
     # All is good, let's run the experiment
     results = []
@@ -284,11 +283,9 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
     :param retriever_type: The type of retriever to be used
     :return: A Retriever object ready to be queried
     """
-
+    clean_function = None
     if preprocessing:
         clean_function = preprocess_text
-    else:
-        clean_function = no_preprocessing
 
     retriever = None
     try:
@@ -324,7 +321,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
             retriever = EmbeddingRetriever(document_store=document_store,
                                            embedding_model="distiluse-base-multilingual-cased",
-                                           use_gpu=False, model_format="sentence_transformers",
+                                           use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                            pooling_strategy="reduce_max")
 
             dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
