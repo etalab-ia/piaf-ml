@@ -12,7 +12,7 @@ import logging
 import subprocess
 from pathlib import Path
 from time import sleep
-from typing import List, Dict
+from typing import List, Dict, Iterator
 
 from argopt import argopt
 from elasticsearch import Elasticsearch
@@ -159,7 +159,7 @@ def create_dpr_training_dataset(squad_file_path: Path):
     retriever = prepare_es_retrieval(squad_data=squad_data)
     random.shuffle(squad_data)
     list_DPR = []
-    for article in tqdm(squad_data[:]):
+    for idx_article, article in enumerate(tqdm(squad_data)):
         article_title = article["title"]
         for paragraph in article["paragraphs"]:
             context = paragraph["context"]
@@ -182,44 +182,52 @@ def create_dpr_training_dataset(squad_file_path: Path):
                     "answers": answers,
                     "positive_ctxs": positive_ctxs,
                     "negative_ctxs": [],
-                    "hard_negative_ctxs": [hard_negative_ctxs]
+                    "hard_negative_ctxs": hard_negative_ctxs
                 }
                 list_DPR.append(dict_DPR)
-
-    return list_DPR
-
-
-def split_save_train_dev(list_dpr: List[Dict], dpr_outpupt_path: Path, train_size: float = 0.8):
-    random.shuffle(list_dpr)
-    train_len = int(train_size * len(list_dpr))
-
-    dataset = {"train": list_dpr[:train_len],
-               "dev": list_dpr[train_len:]}
-    for key, value in dataset.items():
-        with open(dpr_outpupt_path / Path(f"DPR_FR_{key}.json"), "w") as filo:
-            json.dump(value, filo, ensure_ascii=False, indent=4)
+        if idx_article % int(len(squad_data) * 0.3) == 0:
+            yield list_DPR
+            list_DPR.clear()
+            # list_DPR.clear()
 
 
-def get_hard_negative_context(retriever: ElasticsearchRetriever, question: str, answer: str):
-    retrieved_docs = retriever.retrieve(query=question, top_k=10, index="document")
+def split_save_train_dev(iter_dpr: Iterator, dpr_outpupt_path: Path):
+    for list_dpr in iter_dpr:
+        # list_dpr = chunk
+        random.shuffle(list_dpr)
+
+        dataset_file_name = dpr_outpupt_path / Path(f"DPR_FR_all.json")
+
+        if dataset_file_name.exists():
+            with open(dataset_file_name) as json_ds:
+                saved_data = json.load(json_ds)
+            saved_data.extend(list_dpr)
+        else:
+            saved_data = list_dpr
+
+        with open(dataset_file_name, "w") as json_ds:
+            json.dump(saved_data, json_ds, ensure_ascii=False, indent=4)
+
+
+def get_hard_negative_context(retriever: ElasticsearchRetriever, question: str, answer: str,
+                              n_ctxs: int = 30, n_chars: int = 600):
+    list_hard_neg_ctxs = []
+    retrieved_docs = retriever.retrieve(query=question, top_k=n_ctxs, index="document")
     for retrieved_doc in retrieved_docs:
         retrieved_doc_id = retrieved_doc.meta["name"]
         retrieved_doc_text = retrieved_doc.text
-        if answer.lower() not in retrieved_doc_text.lower():
-            return {"title": retrieved_doc_id, "text": retrieved_doc_text}
+        if answer.lower() in retrieved_doc_text.lower():
+            continue
+        list_hard_neg_ctxs.append({"title": retrieved_doc_id, "text": retrieved_doc_text[:n_chars]})
 
-    # All docs found by ES have the answer within. Just return the last one found :/
-    if not retrieved_docs:
-        return
-    return {"title": retrieved_docs[-1].meta["name"],
-            "text": retrieved_docs[-1].text}
+    return list_hard_neg_ctxs
 
 
 def main(squad_file_path: Path, dpr_output_path: Path):
     tqdm.write(f"Using SQuAD-like file {squad_file_path}")
     list_DPR = create_dpr_training_dataset(squad_file_path)
 
-    split_save_train_dev(list_dpr=list_DPR, dpr_outpupt_path=dpr_output_path)
+    split_save_train_dev(iter_dpr=list_DPR, dpr_outpupt_path=dpr_output_path)
     return
 
 
