@@ -1,6 +1,6 @@
 import logging
 import json
-from haystack.database.elasticsearch import ElasticsearchDocumentStore
+from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from pathlib import Path
 from tqdm import tqdm
 
