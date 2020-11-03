@@ -127,15 +127,16 @@ def compute_retriever_precision(true_fiches, retrieved_results, weight_position=
     retrieved_docs = []
     summed_precision = 0
     results_info = {}
-    retrieved_doc_names = [(f.meta["dossier"], #CHANGE 'name'
+    retrieved_doc_names = [(f.meta["name"], #CHANGE 'name'
                             idx + 1,
                             f.score,
-                            f.probability) for idx, f in enumerate(retrieved_results)]
-    for fiche_idx, true_fiche_id in enumerate(true_fiches):
+                            f.probability,
+                            f.meta["dossier"]) for idx, f in enumerate(retrieved_results)]
+    for fiche_idx, true_fiche in enumerate(true_fiches):
         for retrieved_doc_idx, retrieved_doc in enumerate(retrieved_results):
-            retrieved_doc_id = retrieved_doc.meta["dossier"] #CHANGE 'name'
+            retrieved_doc_id = retrieved_doc.meta["name"] #CHANGE 'name'
             retrieved_docs.append(retrieved_doc_id)
-            if true_fiche_id in retrieved_doc_id:
+            if true_fiche['fiche'] in retrieved_doc_id:
                 if weight_position:
                     summed_precision += ((fiche_idx + 1) / (fiche_idx + retrieved_doc_idx + 1))
                 else:
@@ -464,6 +465,7 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int, dual_retriever
         true_fiche_urls = meta['urls']
         true_fiche_ids = [f.split("/")[-1] for f in true_fiche_urls]
         true_dossier = [meta['arbo']['dossier']]
+        true_fiches = [{'fiche': true_fiche, 'dossier': true_dossier} for true_fiche in true_fiche_ids]
         if clean_func:
             question = clean_func(question)
         if filter_level is None:
@@ -490,7 +492,7 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int, dual_retriever
 
         pbar.update()
 
-        precision, results_info = compute_retriever_precision(true_dossier,
+        precision, results_info = compute_retriever_precision(true_fiches,
                                                               retrieved_results,
                                                               weight_position=weight_position)
         id = meta['id']
