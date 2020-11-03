@@ -17,7 +17,7 @@ services:
       # See rest_api/config.py for more variables that you can configure here.
       - DB_HOST=elasticsearch
       - USE_GPU=False
-      # - DB_INDEX=document_bm25
+      # - DB_INDEX=document_elasticsearch
       # - SEARCH_FIELD_NAME=text
       # - TEXT_FIELD_NAME=text
       # Load a model from transformers' model hub or a local path into the FARMReader.
