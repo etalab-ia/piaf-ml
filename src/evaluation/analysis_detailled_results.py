@@ -42,7 +42,7 @@ def was_fiche_already_found(df, question, fiche_info, meta):
 
 
 
-def add_info_to_df(df, question, fiche_info, meta):
+def add_info_to_df(df, question, fiche_info, meta, consistency):
     retriever_type = meta['retriever_type']
     if meta['lemma_preprocessing']:
         lemma_preprocessing = 'lemma'
@@ -54,18 +54,36 @@ def add_info_to_df(df, question, fiche_info, meta):
     df.loc[(df.question == question) & (
             df.fiche == get_fiche_name(fiche_info)) & (
             df.level == meta['filter_level']), f'position_{retriever_type}_{lemma_preprocessing}'] = fiche_info[1]
+    df.loc[(df.question == question) & (
+            df.fiche == get_fiche_name(fiche_info)) & (
+            df.level == meta['filter_level']), f'consistency_{retriever_type}_{lemma_preprocessing}'] = consistency
     return df
 
 
 def add_fiche_to_df(df, question, fiche_info, fiche_ok, meta):
     try:
         data = [question, get_fiche_name(fiche_info), fiche_ok, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
-                np.nan, meta['filter_level']]
+                np.nan, np.nan, np.nan, np.nan, np.nan, meta['filter_level']]
         df.loc[len(df)] = data
     except:
         print('add_fiche_to_df')
     return df
 
+
+def get_true_fiches (list_fiches):
+    true_fiches = []
+    for fiche in list_fiches:
+        true_fiches.append(fiche['fiche'])
+    return true_fiches
+
+def get_consistency (fiche, pred_fiche):
+    nb = 0
+    cnt = 0
+    for pred in pred_fiche:
+        cnt += 1
+        if pred[4] == fiche[4]:
+            nb +=1
+    return nb/cnt
 
 def read_json_detailed_results(file, df):
     meta = file['meta']
@@ -73,15 +91,16 @@ def read_json_detailed_results(file, df):
     for result in ['successes', 'errors']:
         for question_id in file[result].keys():
             question_data = file[result][question_id]
-            true_fiches = question_data['true_fiches']
+            true_fiches = get_true_fiches(question_data['true_fiches'])
             #question = question_data['question']
             for fiche_info in question_data['pred_fiches']:
+                consistency = get_consistency(fiche_info, question_data['pred_fiches'])
                 fiche_ok = get_fiche_name(fiche_info) in true_fiches
                 if was_fiche_already_found(df, question_id, fiche_info, meta):
-                    df = add_info_to_df(df, question_id, fiche_info, meta)
+                    df = add_info_to_df(df, question_id, fiche_info, meta, consistency)
                 else:
                     df = add_fiche_to_df(df, question_id, fiche_info, fiche_ok, meta)
-                    df = add_info_to_df(df, question_id, fiche_info, meta)
+                    df = add_info_to_df(df, question_id, fiche_info, meta, consistency)
     return df
 
 
@@ -108,19 +127,16 @@ df = pd.DataFrame(columns=[
     'position_sparse_no_lemma',
     'position_dense_lemma',
     'position_sparse_lemma',
+    'consistency_dense_no_lemma',
+    'consistency_sparse_no_lemma',
+    'consistency_dense_lemma',
+    'consistency_sparse_lemma',
     'level'
 ])
 
 
 list_xp = [
-    'b850',
-    '1ea4',
-    'a0ef',
-    '3a76',
-    '862d',
-    'ba96',
-    '208c',
-    '9e00'
+    'a082'
 ]
 
 for xp_name in tqdm(list_xp):
