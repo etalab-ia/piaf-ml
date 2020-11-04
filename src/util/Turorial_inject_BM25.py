@@ -75,9 +75,9 @@ def convert_json_files_to_dicts(dir_path: str):
             raise Exception(f"Indexing of {path.suffix} files is not currently supported.")
 
         text_reader = json_doc["text_reader"] if "text_reader" in json_doc else text
+        # we have to remove "embedding": embedding from the JSON otherwise if will raise an error
         documents.append({"text": text_reader,
                           "question_sparse": text,
-                          "embedding": embedding,
                           "meta": {"name": path.name,
                                    "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
                                    "audience": audience,
