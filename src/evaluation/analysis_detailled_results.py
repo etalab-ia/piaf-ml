@@ -76,7 +76,7 @@ def get_true_fiches (list_fiches):
         true_fiches.append(fiche['fiche'])
     return true_fiches
 
-def get_consistency (fiche, pred_fiche):
+def get_consistency_v1 (fiche, pred_fiche):
     nb = 0
     cnt = 0
     for pred in pred_fiche:
@@ -84,6 +84,15 @@ def get_consistency (fiche, pred_fiche):
         if pred[4] == fiche[4]:
             nb +=1
     return nb/cnt
+
+
+def get_consistency_v2 (fiche, pred_fiche):
+    pred_fiche_names = []
+    for pred in pred_fiche:
+        pred_fiche_names.append(pred[4])
+    nb = len(set(pred_fiche_names)) - 1
+    cnt = len(pred_fiche)
+    return 1 - nb/cnt
 
 def read_json_detailed_results(file, df):
     meta = file['meta']
@@ -94,7 +103,7 @@ def read_json_detailed_results(file, df):
             true_fiches = get_true_fiches(question_data['true_fiches'])
             #question = question_data['question']
             for fiche_info in question_data['pred_fiches']:
-                consistency = get_consistency(fiche_info, question_data['pred_fiches'])
+                consistency = get_consistency_v1(fiche_info, question_data['pred_fiches'])
                 fiche_ok = get_fiche_name(fiche_info) in true_fiches
                 if was_fiche_already_found(df, question_id, fiche_info, meta):
                     df = add_info_to_df(df, question_id, fiche_info, meta, consistency)
