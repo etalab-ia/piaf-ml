@@ -37,7 +37,7 @@ DENSE_MAPPING = {
    }
 }
 
-document_store = ElasticsearchDocumentStore(host="haystack2_elasticsearch_1", username="", password="", index="document_elasticsearch", custom_mapping=DENSE_MAPPING)
+document_store = ElasticsearchDocumentStore(host="haystack_elasticsearch_1", username="", password="", index="document_elasticsearch", custom_mapping=DENSE_MAPPING)
 
 
 def get_arbo(dict, level):
@@ -79,5 +79,5 @@ def convert_json_files_to_dicts(dir_path: str):
     
     
 
-dicts = convert_json_files_to_dicts(dir_path="data/v11")
+dicts = convert_json_files_to_dicts(dir_path="data/v12")
 document_store.write_documents(dicts)
