@@ -1,6 +1,6 @@
 parameters = {
     "k": [5],
-    "retriever_type": ['sparse'],
+    "retriever_type": ['sparse','dense'],
     "knowledge_base": ["./data/v11"],
     "test_dataset": ["./data/407_question-fiche_anonym.csv"],
     "weighted_precision": [True],

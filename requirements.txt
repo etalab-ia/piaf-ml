@@ -10,6 +10,7 @@ bleach==3.1.5
 blis==0.4.1
 boto3==1.15.5
 botocore==1.18.5
+cached-property==1.5.2
 catalogue==1.0.0
 certifi==2020.6.20
 cffi==1.14.2
@@ -30,14 +31,14 @@ elastic-apm==5.9.0
 elasticsearch==7.9.1
 entrypoints==0.3
 faiss-cpu==1.6.3
-farm==0.4.9
-farm-haystack==0.4.0
+farm==0.5.0
+-e git+https://github.com/deepset-ai/haystack.git@df13a6830db4b51c9bff43eca92560c6208931b9#egg=farm_haystack
 fastapi==0.61.1
 filelock==3.0.12
 Flask==1.1.2
 Flask-Cors==3.0.9
 flask-restplus==0.13.0
-fr-core-news-sm==2.3.0
+fr-core-news-sm @ https://github.com/explosion/spacy-models/releases/download/fr_core_news_sm-2.3.0/fr_core_news_sm-2.3.0.tar.gz
 future==0.18.2
 gitdb==4.0.5
 GitPython==3.1.8
@@ -71,6 +72,7 @@ MarkupSafe==1.1.1
 matplotlib==3.3.1
 mistune==0.8.4
 mlflow==1.0.0
+more-itertools==8.6.0
 murmurhash==1.0.2
 nbclient==0.5.0
 nbconvert==6.0.2
@@ -147,7 +149,7 @@ tornado==6.0.4
 tox==3.20.0
 tqdm==4.49.0
 traitlets==5.0.4
-transformers==3.1.0
+transformers==3.3.1
 urllib3==1.25.10
 uvicorn==0.11.8
 uvloop==0.14.0

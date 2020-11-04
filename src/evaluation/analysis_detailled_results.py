@@ -136,7 +136,8 @@ df = pd.DataFrame(columns=[
 
 
 list_xp = [
-    'a082'
+    'a082',
+    '267b'
 ]
 
 for xp_name in tqdm(list_xp):
