@@ -24,10 +24,10 @@ DENSE_MAPPING = {
          "text":{
             "type":"text"
          },
-         "question": {
+         "question_sparse": {
             "type": "text"
          },
-         "question_emb": {
+         "embedding": {
             "type": "dense_vector",
             "dims": 512
          },
