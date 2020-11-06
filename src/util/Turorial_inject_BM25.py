@@ -1,6 +1,6 @@
 import logging
 import json
-from haystack.database.elasticsearch import ElasticsearchDocumentStore
+from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from pathlib import Path
 from tqdm import tqdm
 
@@ -17,6 +17,13 @@ DENSE_MAPPING = {
          },
          "text":{
             "type":"text"
+         },
+         "question_sparse": {
+            "type": "text"
+         },
+         "embedding": {
+            "type": "dense_vector",
+            "dims": 512
          },
          "audience":{
             "type":"keyword"
@@ -37,7 +44,7 @@ DENSE_MAPPING = {
    }
 }
 
-document_store = ElasticsearchDocumentStore(host="haystack2_elasticsearch_1", username="", password="", index="document_elasticsearch", custom_mapping=DENSE_MAPPING)
+document_store = ElasticsearchDocumentStore(host="haystack_elasticsearch_1", username="", password="", index="document_elasticsearch", custom_mapping=DENSE_MAPPING)
 
 
 def get_arbo(dict, level):
@@ -58,6 +65,7 @@ def convert_json_files_to_dicts(dir_path: str):
                 json_doc = json.load(doc)
 
             text = json_doc["text"]
+            embedding = []
             audience = get_arbo(json_doc, 'audience')
             theme = get_arbo(json_doc, 'theme')
             sous_theme = get_arbo(json_doc, 'sous_theme')
@@ -67,7 +75,9 @@ def convert_json_files_to_dicts(dir_path: str):
             raise Exception(f"Indexing of {path.suffix} files is not currently supported.")
 
         text_reader = json_doc["text_reader"] if "text_reader" in json_doc else text
-        documents.append({"text": text,
+        # we have to remove "embedding": embedding from the JSON otherwise if will raise an error
+        documents.append({"text": text_reader,
+                          "question_sparse": text,
                           "meta": {"name": path.name,
                                    "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
                                    "audience": audience,
@@ -79,5 +89,5 @@ def convert_json_files_to_dicts(dir_path: str):
     
     
 
-dicts = convert_json_files_to_dicts(dir_path="data/v11")
+dicts = convert_json_files_to_dicts(dir_path="data/v12")
 document_store.write_documents(dicts)

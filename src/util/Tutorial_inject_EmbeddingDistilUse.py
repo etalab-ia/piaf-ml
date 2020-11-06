@@ -12,26 +12,46 @@ import json
 
 from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dictsAndEmbeddings
 
-DENSE_MAPPING = {"mappings": {"properties": {
-    "link": {
-        "type": "keyword"
-    },
-    "name": {
-        "type": "keyword"
-    },
-    "question": {
-        "type": "text"
-    },
-    "question_emb": {
-        "type": "dense_vector",
-        "dims": 512
-    },
-    "text": {
-        "type": "text"
-    }
-}}}
+DENSE_MAPPING = {
+   "mappings":{
+      "properties":{
+         "link":{
+            "type":"keyword"
+         },
+         "name":{
+            "type":"keyword"
+         },
+         "text":{
+            "type":"text"
+         },
+         "question_sparse": {
+            "type": "text"
+         },
+         "embedding": {
+            "type": "dense_vector",
+            "dims": 512
+         },
+         "audience":{
+            "type":"keyword"
+         },
+         "theme":{
+            "type":"keyword"
+         },
+         "sous_theme":{
+            "type":"keyword"
+         },
+         "dossier":{
+            "type":"keyword"
+         },
+         "sous_dossier":{
+            "type":"keyword"
+         }
+      }
+   }
+}
 
-document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+
+document_store = ElasticsearchDocumentStore(host="haystack_elasticsearch_1", username="", password="", index="document",
                                             embedding_field="question_emb", embedding_dim=512,
                                             excluded_meta_data=["question_emb"], custom_mapping=DENSE_MAPPING)
 retriever = EmbeddingRetriever(document_store=document_store, embedding_model="distiluse-base-multilingual-cased",
@@ -40,7 +60,7 @@ retriever = EmbeddingRetriever(document_store=document_store, embedding_model="d
 
 
 
-dicts = convert_json_to_dictsAndEmbeddings(dir_path="./data/v11", retriever=retriever,
+dicts = convert_json_to_dictsAndEmbeddings(dir_path="./data/v12", retriever=retriever,
                                            split_paragraphs=False)
 # import pickle
 # pickle.dump(dicts, open("./data/v11_dicts.pkl", "wb"))
