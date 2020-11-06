@@ -37,6 +37,10 @@ def get_arbo(arbo):
         res[level_dict['type']] = level_dict['name']
         if level_dict['type'] == 'fiche':
             res['id'] = level_dict['id']
+    # rename keys to match annotation scheme
+    res['displaytitle'] = res.pop('theme')
+    res['categorie'] = res.pop('dossier')
+    res['reference'] = res.pop('fiche')
     return res
 
 
