@@ -191,7 +191,7 @@ def create_dpr_training_dataset(squad_file_path: Path):
             # list_DPR.clear()
 
 
-def split_save_train_dev(iter_dpr: Iterator, dpr_outpupt_path: Path):
+def save_complete_dataset(iter_dpr: Iterator, dpr_outpupt_path: Path):
     for list_dpr in iter_dpr:
         # list_dpr = chunk
         random.shuffle(list_dpr)
@@ -207,6 +207,7 @@ def split_save_train_dev(iter_dpr: Iterator, dpr_outpupt_path: Path):
 
         with open(dataset_file_name, "w") as json_ds:
             json.dump(saved_data, json_ds, ensure_ascii=False, indent=4)
+    return dataset_file_name
 
 
 def get_hard_negative_context(retriever: ElasticsearchRetriever, question: str, answer: str,
@@ -223,11 +224,26 @@ def get_hard_negative_context(retriever: ElasticsearchRetriever, question: str, 
     return list_hard_neg_ctxs
 
 
+def split_dataset(dataset_file_name:Path, training_proportion:float=0.8):
+    with open(dataset_file_name) as ds:
+        dataset_json = json.load(ds)
+    nb_train_sample = int(len(dataset_json) * training_proportion)
+    train_file_name = dataset_file_name.parent / Path(dataset_file_name.stem + "_train.csv")
+    dev_file_name = dataset_file_name.parent / Path(dataset_file_name.stem + "_dev.csv")
+    dataset_complete = {"train": (dataset_file_name[:nb_train_sample], train_file_name),
+                        "dev": (dataset_file_name[nb_train_sample:], dev_file_name)}
+
+    for set, (dataset_path, dataset) in dataset_complete.items():
+        with open(dataset_path, "w") as filo:
+            json.dump(dataset, filo, indent=4, ensure_ascii=False)
+
+
 def main(squad_file_path: Path, dpr_output_path: Path):
     tqdm.write(f"Using SQuAD-like file {squad_file_path}")
     list_DPR = create_dpr_training_dataset(squad_file_path)
 
-    split_save_train_dev(iter_dpr=list_DPR, dpr_outpupt_path=dpr_output_path)
+    dataset_file_name = save_complete_dataset(iter_dpr=list_DPR, dpr_outpupt_path=dpr_output_path)
+    split_dataset(dataset_file_name=dataset_file_name)
     return
 
 
