@@ -307,7 +307,6 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
             # Now, let's write the docs to our DB.
             document_store.write_documents(dicts)
-
         elif retriever_type == "dense":
 
             # TODO: change the way embedding_dim is declared as it may vary based on the embedding_model
@@ -337,7 +336,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                       preprocessing=preprocessing)
 
             document_store.write_documents(dicts)
-            return retriever
+        return retriever
     except Exception as e:
         logger.error(f"Failed with error {str(e)}")
         return

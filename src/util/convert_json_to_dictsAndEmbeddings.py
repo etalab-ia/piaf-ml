@@ -101,7 +101,7 @@ def convert_json_to_dicts(dir_path: str,
                              'sous_dossier': sous_dossier}}
         # ES injection fails if embedding is [] while dim = 512, so we need to remove the whole porp
         if not compute_embeddings:
-            delattr(doc_dict, 'embedding') 
+            doc_dict.pop('embedding')
         documents.append(doc_dict)
 
     return documents
