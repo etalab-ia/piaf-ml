@@ -37,7 +37,7 @@ def convert_json_to_dicts(dir_path: str, retriever: BaseRetriever,
             except:  # in case the level does not exist or there is no dict at all
                 return ''
 
-    for path in tqdm(file_paths[:200]):
+    for path in tqdm(file_paths[:]):
         if path.suffix.lower() == ".json":
             with open(path) as doc:
                 json_doc = json.load(doc)

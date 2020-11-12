@@ -30,15 +30,13 @@ from haystack.document_store.faiss import FAISSDocumentStore
 import pandas as pd
 import socket
 
-from joblib import Memory
 
 location = '/tmp/'
-memory = Memory(location, verbose=1)
 logger = logging.getLogger(__name__)
 
 GPU_AVAILABLE = torch.cuda.is_available()
 USE_CACHE = False
-DENSE_MAPPING = {"mappings": {"properties": {
+SBERT_MAPPING = {"mappings": {"properties": {
     "link": {
         "type": "keyword"
     },
@@ -62,6 +60,32 @@ DENSE_MAPPING = {"mappings": {"properties": {
         "type": "keyword"
     }
 }}}
+
+DPR_MAPPING = {"mappings": {"properties": {
+    "link": {
+        "type": "keyword"
+    },
+    "name": {
+        "type": "keyword"
+    },
+    "question_sparse": {
+        "type": "text"
+    },
+    "question_emb": {
+        "type": "dense_vector",
+        "dims": 768
+    },
+    "text": {
+        "type": "text"
+    },
+    "theme": {
+        "type": "keyword"
+    },
+    "dossier": {
+        "type": "keyword"
+    }
+}}}
+
 
 SPARSE_MAPPING = {"mappings": {"properties": {
     "question_sparse": {
@@ -294,14 +318,15 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                                         search_fields=['question_sparse'],
                                                         embedding_field="question_emb", embedding_dim=512,
                                                         excluded_meta_data=["question_emb"],
-                                                        custom_mapping=DENSE_MAPPING)
+                                                        custom_mapping=SBERT_MAPPING)
 
             retriever = EmbeddingRetriever(document_store=document_store,
-                                           embedding_model="distiluse-base-multilingual-cased",
+                                           embedding_model="/data/models/dpr/distiluse",
                                            use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                            pooling_strategy="reduce_max")
-
-            dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
+            dicts = []
+            if USE_CACHE:
+                dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
                                                 retriever_type=retriever_type)
             if not dicts:
                 dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
@@ -315,16 +340,23 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
         elif retriever_type == "dpr":
 
-            document_store = FAISSDocumentStore()
+            # document_store = FAISSDocumentStore()
+
+            document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+                                                        search_fields=['question_sparse'],
+                                                        embedding_field="question_emb", embedding_dim=768,
+                                                        excluded_meta_data=["question_emb"],
+                                                        custom_mapping=DPR_MAPPING)
+
 
             retriever = DensePassageRetriever(document_store=document_store,
-                                              query_embedding_model="/home/pavel/code/dpr2hf/models/encoder_question",
-                                              passage_embedding_model="/home/pavel/code/dpr2hf/models/encoder_ctx",
+                                              query_embedding_model="/data/models/dpr/bert_multilangue/question_encoder",
+                                              passage_embedding_model="/data/models/dpr/bert_multilangue/ctx_encoder",
                                               use_gpu=GPU_AVAILABLE,
                                               embed_title=False,
-                                              max_seq_len=256,
-                                              batch_size=16,
-                                              remove_sep_tok_from_untitled_passages=True)
+                                              max_seq_len_passage=500,
+                                              batch_size=32,
+                                              )
             # TODO: Embed passages check function here
             dicts = []
             if USE_CACHE:
@@ -339,14 +371,14 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                 cache_dict_embeddings(dicts=dicts, knowledge_base_path=Path(knowledge_base_path),
                                       retriever_type=retriever_type)
 
-            document_store.faiss_index.reset()
+            # document_store.faiss_index.reset()
+            
             document_store.write_documents(dicts)
         else:
             raise Exception("Choose a retriever type between : bm25, sbert, dpr")
-
+        return retriever
     except Exception as e:
         logger.error(f"Failed with error {str(e)}")
-    finally:
         return retriever
 
 
