@@ -298,6 +298,8 @@ def reformat_json(arborescence):
 
 
 def main(doc_files_path, output_path, n_jobs):
+    doc_files_path = Path(doc_files_path)
+    output_path = Path(output_path)
     if not doc_files_path.is_dir() and doc_files_path.is_file():
         doc_paths = [doc_files_path]
     else:
@@ -327,7 +329,7 @@ def main(doc_files_path, output_path, n_jobs):
 
 if __name__ == '__main__':
     parser = argopt(__doc__).parse_args()
-    doc_files_path = Path(parser.file_path)
-    output_path = Path(parser.output_path)
+    doc_files_path = parser.file_path
+    output_path = parser.output_path
     n_jobs = parser.cores
     main(doc_files_path=doc_files_path, output_path=output_path, n_jobs=n_jobs)
