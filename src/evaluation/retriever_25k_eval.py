@@ -166,8 +166,7 @@ def single_run(parameters):
                                preprocessing=lemma_preprocessing)
 
     if not retriever:
-        logger.info("Could not prepare the testing framework!! Exiting :(")
-        return
+        raise Exception(("Could not prepare the testing framework!! Exiting :("))
 
     clean_function = None
     if lemma_preprocessing:
@@ -308,7 +307,6 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
             # Now, let's write the docs to our DB.
             document_store.write_documents(dicts)
-
         elif retriever_type == "dense":
 
             # TODO: change the way embedding_dim is declared as it may vary based on the embedding_model
@@ -338,11 +336,10 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                       preprocessing=preprocessing)
 
             document_store.write_documents(dicts)
-
+        return retriever
     except Exception as e:
         logger.error(f"Failed with error {str(e)}")
-    finally:
-        return retriever
+        return
 
 
 def compute_score(retriever: BaseRetriever, retriever_top_k: int,
