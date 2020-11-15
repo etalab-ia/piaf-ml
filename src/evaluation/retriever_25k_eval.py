@@ -6,6 +6,7 @@ import logging
 import os
 import pickle
 import subprocess
+import time
 from datetime import datetime
 from pathlib import Path
 from random import seed
@@ -30,12 +31,10 @@ from haystack.document_store.faiss import FAISSDocumentStore
 import pandas as pd
 import socket
 
-
-location = '/tmp/'
 logger = logging.getLogger(__name__)
 
 GPU_AVAILABLE = torch.cuda.is_available()
-USE_CACHE = False
+USE_CACHE = True
 SBERT_MAPPING = {"mappings": {"properties": {
     "link": {
         "type": "keyword"
@@ -340,8 +339,16 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
         elif retriever_type == "dpr":
 
-            # document_store = FAISSDocumentStore()
-
+            # status = subprocess.run(
+            #     ['docker run --name haystack-postgres -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres'],
+            #     shell=True)
+            time.sleep(3)
+            # status = subprocess.run(
+                # ['docker exec -it haystack-postgres psql -U postgres -c "CREATE DATABASE haystack;"'], shell=True)
+            time.sleep(1)
+            # document_store = FAISSDocumentStore(sql_url="postgresql://postgres:password@localhost:5432/haystack")
+            document_store = FAISSDocumentStore()
+            #
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         search_fields=['question_sparse'],
                                                         embedding_field="question_emb", embedding_dim=768,
@@ -355,7 +362,8 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                               use_gpu=GPU_AVAILABLE,
                                               embed_title=False,
                                               max_seq_len_passage=500,
-                                              batch_size=32,
+                                              batch_size=16,
+                                              use_fast_tokenizers=False
                                               )
             # TODO: Embed passages check function here
             dicts = []
@@ -372,7 +380,6 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                       retriever_type=retriever_type)
 
             # document_store.faiss_index.reset()
-            
             document_store.write_documents(dicts)
         else:
             raise Exception("Choose a retriever type between : bm25, sbert, dpr")
