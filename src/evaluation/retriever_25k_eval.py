@@ -56,10 +56,6 @@ ANALYZER_DEFAULT = {
                     "type": "stop",
                     "stopwords": "_french_"
                 },
-                "french_keywords": {
-                    "type": "keyword_marker",
-                    "keywords": ["Example"]
-                },
                 "french_stemmer": {
                     "type": "stemmer",
                     "language": "light_french"
