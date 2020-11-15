@@ -22,7 +22,6 @@ import torch
 
 from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts, preprocess_text
 
-
 seed(42)
 from tqdm import tqdm
 from haystack.retriever.sparse import ElasticsearchRetriever
@@ -39,6 +38,46 @@ logger = logging.getLogger(__name__)
 
 GPU_AVAILABLE = torch.cuda.is_available()
 USE_CACHE = True
+
+
+ANALYZER_DEFAULT = {
+        "analysis": {
+            "filter": {
+                "french_elision": {
+                    "type": "elision",
+                    "articles_case": True,
+                    "articles": [
+                        "l", "m", "t", "qu", "n", "s",
+                        "j", "d", "c", "jusqu", "quoiqu",
+                        "lorsqu", "puisqu"
+                    ]
+                },
+                "french_stop": {
+                    "type": "stop",
+                    "stopwords": "_french_"
+                },
+                "french_keywords": {
+                    "type": "keyword_marker",
+                    "keywords": ["Example"]
+                },
+                "french_stemmer": {
+                    "type": "stemmer",
+                    "language": "light_french"
+                }
+            },
+            "analyzer": {
+                "rebuilt_french": {
+                    "tokenizer": "icu_tokenizer",
+                    "filter": [
+                        "french_elision",
+                        "lowercase",
+                        "french_stop",
+                        "french_stemmer"
+                    ]
+                }
+            }
+        }
+    }
 
 DENSE_MAPPING = {"mappings": {"properties": {
     "link": {
@@ -65,20 +104,27 @@ DENSE_MAPPING = {"mappings": {"properties": {
     }
 }}}
 
-SPARSE_MAPPING = {"mappings": {"properties": {
-    "question_sparse": {
-        "type": "text"
+SPARSE_MAPPING = {
+    "mappings": {
+        "properties": {
+            "question_sparse": {
+                "type": "text",
+                "analyzer": "rebuilt_french"
+            },
+            "text": {
+                "type": "text"
+            },
+            "theme": {
+                "type": "keyword"
+            },
+            "dossier": {
+                "type": "keyword"
+            }
+        }
     },
-    "text": {
-        "type": "text"
-    },
-    "theme": {
-        "type": "keyword"
-    },
-    "dossier": {
-        "type": "keyword"
-    }
-}}}
+    "settings": ANALYZER_DEFAULT
+
+}
 
 
 def load_25k_test_set(test_corpus_path: str):
@@ -237,11 +283,12 @@ def launch_ES():
             raise Exception(
                 "Failed to launch Elasticsearch. If you want to connect to an existing Elasticsearch instance"
                 "then set LAUNCH_ELASTICSEARCH in the script to False.")
-    time.sleep(10)
+        time.sleep(10)
+
 
 def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
                                 cached_dicts_path: Path = Path("./data/dense_dicts/"),
-                                preprocessing: bool= False):
+                                preprocessing: bool = False):
     if preprocessing:
         preprocessing_tag = "preprocessed"
     else:
@@ -262,7 +309,7 @@ def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
 
 def cache_dict_embeddings(dicts: Dict, knowledge_base_path: Path, retriever_type: str,
                           cached_dicts_path: Path = Path("./data/dense_dicts/"),
-                                preprocessing: bool= False):
+                          preprocessing: bool = False):
     if preprocessing:
         preprocessing_tag = "preprocessed"
     else:
