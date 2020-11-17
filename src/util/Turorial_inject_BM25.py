@@ -6,7 +6,44 @@ from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
-DENSE_MAPPING = {
+
+ANALYZER_DEFAULT = {
+     "analysis": {
+         "filter": {
+             "french_elision": {
+                 "type": "elision",
+                 "articles_case": True,
+                 "articles": [
+                     "l", "m", "t", "qu", "n", "s",
+                     "j", "d", "c", "jusqu", "quoiqu",
+                     "lorsqu", "puisqu"
+                 ]
+             },
+             "french_stop": {
+                 "type": "stop",
+                 "stopwords": "_french_"
+             },
+             "french_stemmer": {
+                 "type": "stemmer",
+                 "language": "light_french"
+             }
+         },
+         "analyzer": {
+             "default": {
+                 "tokenizer": "standard",
+                 "filter": [
+                     "french_elision",
+                     "lowercase",
+                     "french_stop",
+                     "french_stemmer"
+                 ]
+             }
+         }
+     }
+}
+
+
+MAPPING = {
    "mappings":{
       "properties":{
          "link":{
@@ -41,10 +78,11 @@ DENSE_MAPPING = {
             "type":"keyword"
          }
       }
-   }
+   },
+   "settings": ANALYZER_DEFAULT
 }
 
-document_store = ElasticsearchDocumentStore(host="haystack_elasticsearch_1", username="", password="", index="document_elasticsearch", custom_mapping=DENSE_MAPPING)
+document_store = ElasticsearchDocumentStore(host="haystack_elasticsearch_1", username="", password="", index="document_elasticsearch", custom_mapping=MAPPING)
 
 
 def get_arbo(dict, level):
@@ -89,5 +127,5 @@ def convert_json_files_to_dicts(dir_path: str):
     
     
 
-dicts = convert_json_files_to_dicts(dir_path="data/v12")
+dicts = convert_json_files_to_dicts(dir_path="data/v14")
 document_store.write_documents(dicts)
