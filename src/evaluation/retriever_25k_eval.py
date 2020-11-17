@@ -62,8 +62,8 @@ ANALYZER_DEFAULT = {
                 }
             },
             "analyzer": {
-                "rebuilt_french": {
-                    "tokenizer": "icu_tokenizer",
+                "default": {
+                    "tokenizer": "standard",
                     "filter": [
                         "french_elision",
                         "lowercase",
@@ -105,7 +105,6 @@ SPARSE_MAPPING = {
         "properties": {
             "question_sparse": {
                 "type": "text",
-                "analyzer": "rebuilt_french"
             },
             "text": {
                 "type": "text"
