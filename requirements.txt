@@ -104,3 +104,4 @@ websockets
 werkzeug
 zipp
 wget
+joblib

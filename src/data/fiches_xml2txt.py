@@ -2,11 +2,12 @@
 Transforms service public france fiches in XML format to txt. It tries to extract the essential content from the fiches
 
 Usage:
-    fiches_xml2txt.py <file_path> <output_path> [options]
+    fiches_xml2txt.py <file_path> <output_path> <path_arbo> [options]
 
 Arguments:
     <file_path>             A path of a single XML fiche or a folder with multiple fiches XML
     <output_path>           A path where to store the extracted info
+    <path_arbo>             A path where is stored the previously generated arborescence.json file
     --cores=<n> CORES       Number of cores to use [default: 1:int]
     --as_json=<j> AS_JSON      Whether or not output JSON files instead of TXT [default: 0:int]
     --as_one=<j> AS_ONE     Whether or not output 1 file for 1 TXT, or consider sub-files [default: 0:int]
@@ -150,32 +151,79 @@ def save_fiche_as_one(doc_path: Path,
             json.dump(content, newfiche, indent=4, ensure_ascii=False)
 
 
-def get_arborescence(root):
-    audience = list(root.iter("Audience"))[0].text
-    titre = list(root.findall(".//dc:title", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
-    # Le theme n'est vide que quand il s'agit d'une fiche "Comment faire si..."
-    try:
-        theme = list(list(root.iter("Theme"))[0])[0].text
-    except IndexError:
-        theme = ''
-    # Cinq cas différents (cas de base + 4 types de fiches spéciaux), on les traite différemment
-    try:
-        dossier = list(list(root.iter("DossierPere"))[0])[0].text
-    except IndexError:
-        dossier = list(root.findall(".//dc:type", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
-        if dossier in ['Question-réponse', 'Comment faire si...']:
-            theme = ''
-        elif dossier == 'Dossier':
-            pass
-        elif dossier == 'Thème':
-            return None
-    # Sous-dossiers pas toujours présents
-    try:
-        sous_dossier = list(root.iter("SousDossierPere"))[0].text
-    except IndexError:
-        sous_dossier = ''
+# def get_arborescence(root):
+#     audience = list(root.iter("Audience"))[0].text
+#     titre = list(root.findall(".//dc:title", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
+#     # Le theme n'est vide que quand il s'agit d'une fiche "Comment faire si..."
+#     try:
+#         theme = list(list(root.iter("Theme"))[0])[0].text
+#     except IndexError:
+#         theme = ''
+#     # Cinq cas différents (cas de base + 4 types de fiches spéciaux), on les traite différemment
+#     try:
+#         dossier = list(list(root.iter("DossierPere"))[0])[0].text
+#     except IndexError:
+#         dossier = list(root.findall(".//dc:type", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
+#         if dossier in ['Question-réponse', 'Comment faire si...']:
+#             theme = ''
+#         elif dossier == 'Dossier':
+#             pass
+#         elif dossier == 'Thème':
+#             return None
+#     # Sous-dossiers pas toujours présents
+#     try:
+#         sous_dossier = list(root.iter("SousDossierPere"))[0].text
+#     except IndexError:
+#         sous_dossier = ''
+#
+#     return {'audience': audience, 'theme': theme, 'dossier': dossier, 'sous_dossier': sous_dossier, 'titre': titre}
 
-    return {'audience': audience, 'theme': theme, 'dossier': dossier, 'sous_dossier': sous_dossier, 'titre': titre}
+def get_arbo(arbo):
+    res = {'theme': '', 'sous_theme': '', 'dossier': '', 'sous_dossier': '', 'fiche': '', 'id': ''}
+    for level_dict in arbo:
+        res[level_dict['type']] = level_dict['name']
+        if level_dict['type'] == 'fiche':
+            res['id'] = level_dict['id']
+    return res
+
+
+def get_arborescence(arborescence, fiche_id):
+    arborescence = arborescence['data']
+    for level_1_dict in arborescence:
+        arbo = [level_1_dict] #used to remember the path to the fiche
+        for level_2_dict in level_1_dict['data']:
+            if len(arbo) > 1:
+                arbo= arbo[:1] #keep only the first level
+            arbo.append(level_2_dict)
+            for level_3_dict in level_2_dict['data']:
+                if len(arbo) > 2:
+                    arbo= arbo[:2] #keep only up to the 2nd level
+                arbo.append(level_3_dict)
+                if level_3_dict['id'] == fiche_id:
+                    return get_arbo(arbo)
+                elif level_3_dict['type'] == 'fiche':
+                    continue
+                else:
+                    for level_4_dict in level_3_dict['data']:
+                        if len(arbo) > 3:
+                            arbo= arbo[:3] #keep only up to the 3rd level
+                        arbo.append(level_4_dict)
+                        if level_4_dict['id'] == fiche_id:
+                            return get_arbo(arbo)
+                        elif level_4_dict['type'] == 'fiche':
+                            continue
+                        else:
+                            try:
+                                for level_5_dict in level_4_dict['data']:
+                                    if len(arbo) > 4:
+                                        arbo= arbo[:4] #keep only up to the 4th level
+                                    arbo.append(level_5_dict)
+                                    if level_5_dict['id'] == fiche_id:
+                                        return get_arbo(arbo)
+                            except:
+                                print('hello')
+
+
 
 def try_get_text(root: Element, tag: str) -> str:
     existing_tags = list(root.iter(tag))
@@ -317,11 +365,13 @@ def clean_elements(root: Element):
     tags = [tags[i] for i, t in enumerate(tag_names) if "http" not in t]
 
 
-def run(doc_path: Path, output_path: Path, as_json: bool):
+def run(doc_path: Path, output_path: Path, path_arbo: Path, as_json: bool):
     global ERROR_COUNT
     has_situations = True
     has_chapitres = True
     has_cases = True
+    with open(path_arbo) as file:
+        arborescence = json.load(file)
     try:
         tqdm.write(f"Extracting info from {doc_path}")
         tree = ET.parse(doc_path)
@@ -329,7 +379,8 @@ def run(doc_path: Path, output_path: Path, as_json: bool):
         fiche_title = list(list(root.iter("Publication"))[0])[0].text
         introduction_text = try_get_text(root, "Introduction")
         situations = list(root.iter("Situation"))
-        arborescence = get_arborescence(root)
+        fiche_id = re.search('[a-zA-Z0-9]*(?=\.xml)',str(doc_path)).group()
+        arborescence = get_arborescence(arborescence, fiche_id)
 
         if not situations:
             #     tqdm.write(f"\tFile {doc_path} has no situations !")
@@ -422,7 +473,10 @@ def run_fiche_as_one(doc_path: Path, output_path: Path, as_json: bool):
         return 0
 
 
-def main(doc_files_path: Path, output_path: Path, as_json: bool, n_jobs: int, as_one: bool):
+def main(doc_files_path: str, output_path: str, path_arbo: str, as_json: bool, n_jobs: int, as_one: bool):
+    doc_files_path = Path(doc_files_path)
+    output_path = Path(output_path)
+    path_arbo = Path(path_arbo)
     if not doc_files_path.is_dir() and doc_files_path.is_file():
         doc_paths = [doc_files_path]
     else:
@@ -439,9 +493,9 @@ def main(doc_files_path: Path, output_path: Path, as_json: bool, n_jobs: int, as
             if as_one:
                 job_output.append(run_fiche_as_one(doc_path, output_path, as_json))
             else:
-                job_output.append(run(doc_path, output_path, as_json))
+                job_output.append(run(doc_path, output_path, path_arbo, as_json))
     else:
-        job_output = Parallel(n_jobs=n_jobs)(delayed(run)(doc_path, output_path, as_json)
+        job_output = Parallel(n_jobs=n_jobs)(delayed(run)(doc_path, output_path, path_arbo, as_json)
                                              for doc_path in tqdm(doc_paths))
     tqdm.write(
         f"{sum(job_output)} XML fiche files were extracted to TXT. {len(job_output) - sum(job_output)} files "
@@ -452,9 +506,10 @@ def main(doc_files_path: Path, output_path: Path, as_json: bool, n_jobs: int, as
 
 if __name__ == '__main__':
     parser = argopt(__doc__).parse_args()
-    doc_files_path = Path(parser.file_path)
-    output_path = Path(parser.output_path)
+    doc_files_path = parser.file_path
+    output_path = parser.output_path
+    path_arbo = parser.path_arbo
     n_jobs = parser.cores
     as_json = bool(parser.as_json)
     as_one = bool(parser.as_one)
-    main(doc_files_path=doc_files_path, output_path=output_path, as_json=as_json, n_jobs=n_jobs, as_one=as_one)
+    main(doc_files_path=doc_files_path, output_path=output_path, path_arbo=path_arbo, as_json=as_json, n_jobs=n_jobs, as_one=as_one)
