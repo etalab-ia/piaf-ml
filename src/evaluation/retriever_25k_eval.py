@@ -85,7 +85,6 @@ DPR_MAPPING = {"mappings": {"properties": {
     }
 }}}
 
-
 SPARSE_MAPPING = {"mappings": {"properties": {
     "question_sparse": {
         "type": "text"
@@ -182,6 +181,7 @@ def single_run(parameters):
     k = parameters["k"]
     weighted_precision = parameters["weighted_precision"]
     filter_level = parameters["filter_level"]
+
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     # Prepare framework
     test_dataset = load_25k_test_set(test_corpus_path)
@@ -326,7 +326,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             dicts = []
             if USE_CACHE:
                 dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
-                                                retriever_type=retriever_type)
+                                                    retriever_type=retriever_type)
             if not dicts:
                 dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
                                               retriever=retriever,
@@ -342,12 +342,12 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             # status = subprocess.run(
             #     ['docker run --name haystack-postgres -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres'],
             #     shell=True)
-            time.sleep(3)
+            # time.sleep(3)
             # status = subprocess.run(
-                # ['docker exec -it haystack-postgres psql -U postgres -c "CREATE DATABASE haystack;"'], shell=True)
-            time.sleep(1)
+            # ['docker exec -it haystack-postgres psql -U postgres -c "CREATE DATABASE haystack;"'], shell=True)
+            # time.sleep(1)
             # document_store = FAISSDocumentStore(sql_url="postgresql://postgres:password@localhost:5432/haystack")
-            document_store = FAISSDocumentStore()
+            # document_store = FAISSDocumentStore()
             #
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         search_fields=['question_sparse'],
@@ -355,10 +355,9 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                                         excluded_meta_data=["question_emb"],
                                                         custom_mapping=DPR_MAPPING)
 
-
             retriever = DensePassageRetriever(document_store=document_store,
-                                              query_embedding_model="/data/models/dpr/bert_multilangue/question_encoder",
-                                              passage_embedding_model="/data/models/dpr/bert_multilangue/ctx_encoder",
+                                              query_embedding_model="/home/pavel/code/dpr2hf/models/encoder_question",
+                                              passage_embedding_model="/home/pavel/code/dpr2hf/models/encoder_ctx",
                                               use_gpu=GPU_AVAILABLE,
                                               embed_title=False,
                                               max_seq_len_passage=500,
