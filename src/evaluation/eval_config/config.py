@@ -3,7 +3,7 @@ parameters = {
     "retriever_type": ["dpr"],
     "knowledge_base": ["/home/pavel/code/piaf-ml/data/v11"],
                        # "/home/pavel/code/piaf-ml/data/v10"],
-    "test_dataset": ["./data/25k_data/15082020-ServicePublic_QR_20170612_20180612_464_single_questions.csv"],
+    "test_dataset": ["/home/pavel/code/piaf-ml/data/407_question-fiche_anonym.csv"],
     "weighted_precision": [True],
     "filter_level": [None]
 }

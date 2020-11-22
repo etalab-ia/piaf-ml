@@ -2,7 +2,7 @@
 Script to convert a SQuAD-like QA-dataset format JSON file to DPR Dense Retriever training format
 
 Usage:
-    SQuAD2DPR_format.py <squad_file_path> <dpr_output_path> [options]
+    squad2dpr.py <squad_file_path> <dpr_output_path> [options]
 
 Arguments:
     <squad_file_path>   SQuAD file path
@@ -224,7 +224,7 @@ def get_hard_negative_context(retriever: ElasticsearchRetriever, question: str, 
     return list_hard_neg_ctxs
 
 
-def split_dataset(dataset_file_name:Path, training_proportion:float=0.8):
+def split_dataset(dataset_file_name: Path, training_proportion: float = 0.8):
     with open(dataset_file_name) as ds:
         dataset_json = json.load(ds)
     nb_train_sample = int(len(dataset_json) * training_proportion)

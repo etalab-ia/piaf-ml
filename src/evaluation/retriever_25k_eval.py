@@ -1,5 +1,5 @@
 '''
-For now, it loads the config from eval_config __init__.py and uses it to start the experiments
+For now, it loads the config from eval_config config.py and uses it to start the experiments
 '''
 import json
 import logging
@@ -18,7 +18,7 @@ from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.base import BaseRetriever
 from sklearn.model_selection import ParameterGrid
-from src.evaluation.eval_config import parameters
+from src.evaluation.eval_config.config import parameters
 from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts, convert_json_files_v10_to_dicts
 from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts
 
@@ -34,7 +34,7 @@ import socket
 logger = logging.getLogger(__name__)
 
 GPU_AVAILABLE = torch.cuda.is_available()
-USE_CACHE = True
+USE_CACHE = False
 SBERT_MAPPING = {"mappings": {"properties": {
     "link": {
         "type": "keyword"
@@ -356,8 +356,10 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                                         custom_mapping=DPR_MAPPING)
 
             retriever = DensePassageRetriever(document_store=document_store,
-                                              query_embedding_model="/home/pavel/code/dpr2hf/models/encoder_question",
-                                              passage_embedding_model="/home/pavel/code/dpr2hf/models/encoder_ctx",
+                                              query_embedding_model="/data/models/dpr/camembert-facebook-dpr-8/encoder_question",
+                                              passage_embedding_model="/data/models/dpr/camembert-facebook-dpr-8/encoder_ctx",
+                                              # query_embedding_model="/data/models/dpr/bert_multilangue/question_encoder",
+                                              # passage_embedding_model="/data/models/dpr/bert_multilangue/ctx_encoder",
                                               use_gpu=GPU_AVAILABLE,
                                               embed_title=False,
                                               max_seq_len_passage=500,
