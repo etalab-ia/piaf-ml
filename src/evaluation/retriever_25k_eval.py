@@ -34,7 +34,7 @@ import socket
 logger = logging.getLogger(__name__)
 
 GPU_AVAILABLE = torch.cuda.is_available()
-USE_CACHE = False
+USE_CACHE = True
 SBERT_MAPPING = {"mappings": {"properties": {
     "link": {
         "type": "keyword"
@@ -115,7 +115,7 @@ def load_25k_test_set(test_corpus_path: str):
     df = pd.read_csv(test_corpus_path).fillna("")
     dict_question_fiche = {}
     for row in df.iterrows():
-        question = row[1]["question"]
+        question = row[1]["incoming_message"]
         list_url = [row[1][u] for u in url_cols if row[1][u]]
         arbo = {'theme': row[1]['theme'],
                 'dossier': row[1]['dossier']}
@@ -415,6 +415,7 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
         true_fiche_urls = meta['urls']
         true_fiche_ids = [f.split("/")[-1] for f in true_fiche_urls]
         if filter_level is None:
+            print(question)
             retrieved_results = retriever.retrieve(query=question, top_k=retriever_top_k)
         else:
             arborescence = meta['arbo']

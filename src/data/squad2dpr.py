@@ -22,9 +22,9 @@ from tqdm import tqdm
 import json
 import random
 import re
-
+import base64
 random.seed(42)
-
+import binascii
 """
 [
     {
@@ -81,7 +81,7 @@ def prepare_es_retrieval(squad_data: Dict):
     return launch_and_index_es(documents)
 
 
-def limit_context_size(answers_list, context: str, max_char_size=600):
+def limit_context_size(text_list, context: str, max_char_size=600):
     """
     Takes a context string and limits its size to around 100 words per context.
     As I do not want to deal for now with spans and tokenization and machin, I will assume
@@ -90,13 +90,13 @@ def limit_context_size(answers_list, context: str, max_char_size=600):
     q+m+n =~ max_char_size
 
     :param max_char_size: Max size of the tet chink (in chars)
-    :param answers_list: list containing the answers' infos [{"answer_start" : "...", "text" : "..."}]
+    :param text_list: list containing the answers' infos [{"answer_start" : "...", "text" : "..."}]
     :param context: The wikipedia paragraph where the answer is found
     :return: A list of limited size contexts
     """
     seen_answers = []
     limited_contexts = []
-    for answer in answers_list:
+    for answer in text_list:
         answer_text = answer["text"]
 
         if answer_text in seen_answers:
@@ -126,7 +126,7 @@ def limit_context_size(answers_list, context: str, max_char_size=600):
         seen_answers.append(answer_text)
         limited_context = context[left_chunk_start_pos:right_chunk_end_pos]
         limited_contexts.append(limited_context)
-        return list(set(limited_contexts))
+    return list(set(limited_contexts))
 
 
 def get_near_entire_phrase(context: str, pos: int, side="left"):
@@ -159,7 +159,9 @@ def create_dpr_training_dataset(squad_file_path: Path):
     retriever = prepare_es_retrieval(squad_data=squad_data)
     random.shuffle(squad_data)
     list_DPR = []
-    for idx_article, article in enumerate(tqdm(squad_data)):
+    n_questions = 0
+    n_non_added_questions = 0
+    for idx_article, article in enumerate(tqdm(squad_data[:], unit="article")):
         article_title = article["title"]
         for paragraph in article["paragraphs"]:
             context = paragraph["context"]
@@ -167,15 +169,17 @@ def create_dpr_training_dataset(squad_file_path: Path):
                 answers = [a["text"] for a in question["answers"]]
                 hard_negative_ctxs = get_hard_negative_context(retriever=retriever,
                                                                question=question["question"],
-                                                               answer=answers[0])
+                                                               answer=answers[0],
+                                                               n_ctxs=30)
                 positive_ctxs = [{
                     "title": f"{article_title}_{i}",
                     "text": c
                 } for i, c in enumerate(limit_context_size(question["answers"], context))]
 
                 if not hard_negative_ctxs or not positive_ctxs:
-                    logging.info(
+                    logging.error(
                         f"No retrieved candidates for article {article_title}, with question {question['question']}")
+                    n_non_added_questions += 1
                     continue
                 dict_DPR = {
                     "question": question["question"],
@@ -185,12 +189,14 @@ def create_dpr_training_dataset(squad_file_path: Path):
                     "hard_negative_ctxs": hard_negative_ctxs
                 }
                 list_DPR.append(dict_DPR)
-        if idx_article % int(len(squad_data) * 0.3) == 0:
+                n_questions += 1
+
+        if idx_article % int(len(squad_data) * 0.5) == 0:
             yield list_DPR
             list_DPR.clear()
             # list_DPR.clear()
 
-
+    print(f"Number of not added questions : {n_non_added_questions}")
 def save_complete_dataset(iter_dpr: Iterator, dpr_outpupt_path: Path):
     for list_dpr in iter_dpr:
         # list_dpr = chunk
@@ -206,7 +212,7 @@ def save_complete_dataset(iter_dpr: Iterator, dpr_outpupt_path: Path):
             saved_data = list_dpr
 
         with open(dataset_file_name, "w") as json_ds:
-            json.dump(saved_data, json_ds, ensure_ascii=False, indent=4)
+            json.dump(saved_data, json_ds, indent=4)
     return dataset_file_name
 
 
@@ -225,15 +231,22 @@ def get_hard_negative_context(retriever: ElasticsearchRetriever, question: str, 
 
 
 def split_dataset(dataset_file_name: Path, training_proportion: float = 0.8):
-    with open(dataset_file_name) as ds:
+    with open(dataset_file_name.as_posix()) as ds:
         dataset_json = json.load(ds)
     nb_train_sample = int(len(dataset_json) * training_proportion)
-    train_file_name = dataset_file_name.parent / Path(dataset_file_name.stem + "_train.csv")
-    dev_file_name = dataset_file_name.parent / Path(dataset_file_name.stem + "_dev.csv")
-    dataset_complete = {"train": (dataset_file_name[:nb_train_sample], train_file_name),
-                        "dev": (dataset_file_name[nb_train_sample:], dev_file_name)}
+    train_file_name = dataset_file_name.parent / Path(dataset_file_name.stem + "_train.json")
+    dev_file_name = dataset_file_name.parent / Path(dataset_file_name.stem + "_dev.json")
 
-    for set, (dataset_path, dataset) in dataset_complete.items():
+    train = dataset_json[:nb_train_sample]
+    dev = dataset_json[nb_train_sample:]
+
+    train_questions = set([q["question"] for q in train])
+    dev = [q for q in dev if q["question"] not in train_questions]
+
+    dataset_complete = {"train": (train, train_file_name),
+                        "dev": (dev, dev_file_name)}
+
+    for _, (dataset, dataset_path) in dataset_complete.items():
         with open(dataset_path, "w") as filo:
             json.dump(dataset, filo, indent=4, ensure_ascii=False)
 
