@@ -101,7 +101,59 @@ python ./src/evaluation/retriever_25k_eval.py
 │   └── util # Random functions that could be accessed from multiple places
 ```
 
-## How to deploy PIAF [TODO]
+## How to deploy PIAF
+
+### If you already published the docker images to https://hub.docker.com/
+
+- Then go to the [datascience server](https://datascience.etalab.studio)
+- *if not done yet,* do a git clone of https://github.com/deepset-ai/haystack, otherwise go to your haystack folder (ex: guillim/haystack)
+- *if not done yet,* customise the docker-compose.yml fil to suit your environment variables and your configuration. Example file can be found [here](https://github.com/etalab-ia/piaf-ml/blob/master/src/util/docker-compose.yml)
+Note: in this file, you specify the docker images you want for your ElasticSearch, and for PiafAgent
+- run `docker-compose up` ✅
+
+### How to publish the elasticsearch docker image
+This step is the most difficult : from downloading the latest version of service-public.fr XML files, we will publish a docker image of an Elasticsearch container in which we already injected all the service-public texts.
+
+This can be done on your laptop (preferably not on the production server as it pollutes the )
+
+- *if not done yet,* git clone piaf-ml
+- Launch the script "run-all.py" : it will download latest version of service-pubilc.fr XMLs from data.gouv.fr & store the .json into a folder in /results directory (to be verified for this location)
+- *if not done yet*, git clone haystack. Now place the folder (with all the Jsons that you just created after running the run-all script) under /data/ in the haystack repo. This is the only part 
+```md
+CONTRIBUTING.md
+Dockerfile-GPU     
+MANIFEST.in        
+annotation_tool    
+docker-compose.yml      
+haystack           
+requirements.txt 
+run_docker_gpu.sh
+test
+tutorials
+Dockerfile
+LICENSE
+README.md
+data
+  v14  # here you should now see your JSONs
+docs
+models
+rest_api           
+setup.py           
+```
+- Now, run haystack by typing `docker-compose up`
+- First, clean the old document on the index you want to update by doing a `curl -XDELETE  http://localhost:9200/document_elasticsearch` (if you forget to do this, you will add your document to the exisiting ones, making a BIG database lol)
+- Connect to your haystack container by typing `docker container logs -f  haystack_haystack-api_1` (note that the container name can change, better verifying it by typing `docker container ls`)
+- Then install ipython `pip install ipython`
+- Then run ipython `ipyhton`
+- Then run this [tutorial Turorial_inject_BM25](https://github.com/etalab-ia/piaf-ml/blob/master/src/util/Turorial_inject_BM25.py)
+Verify you have the document indexed into ES going at this endpoint [ES indexes](http://localhost:9200/_cat/indices?v)
+- Now exit the container 
+- create the image of your new ES container by typing `docker commit 829ed24c0d1b guillim/spf_particulier:v15` but don't forget to replace `829ed24c0d1b` by the ID of the elasticsearch container you can have typing `docker container ls`
+- push to docker hub: `docker push guillim/spf_particulier:v15` ✅
+
+### How to publish the piafagent docker image
+Follow README.md on the [PiafAgent repo](https://github.com/etalab-ia/piaf_agent)
+
 
 ## Contributing Lab IA Members 
 **Team Contacts :** 
