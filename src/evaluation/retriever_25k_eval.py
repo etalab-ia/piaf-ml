@@ -355,7 +355,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                                         custom_mapping=DPR_MAPPING)
 
             retriever = DensePassageRetriever(document_store=document_store,
-                                              query_embedding_model="/data/models/dpr/camembert-facebook-dpr-v2/dpr-question_encoder-fr_qa-camembert",
+                                              query_embedding_model="etalab-ia/dpr-question_encoder-fr_qa-camembert",
                                               passage_embedding_model="/data/models/dpr/camembert-facebook-dpr-v2/dpr-ctx_encoder-fr_qa-camembert",
                                               # query_embedding_model="/data/models/dpr/mbert-facebook-dpr-v2/encoder_question",
                                               # passage_embedding_model="/data/models/dpr/mbert-facebook-dpr-v2/encoder_ctx",
