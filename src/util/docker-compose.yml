@@ -30,6 +30,7 @@ services:
       - READER_TYPE=TransformersReader
       - READER_MODEL_PATH=etalab-ia/camembert-base-squadFR-fquad-piaf
       - READER_TOKENIZER=etalab-ia/camembert-base-squadFR-fquad-piaf
+      - READER_CAN_HAVE_NO_ANSWER=False
       # - RETRIEVER_TYPE=EmbeddingRetriever
       # - EMBEDDING_MODEL_PATH=deepset/sentence_bert
       # - EMBEDDING_MODEL_PATH=/home/user/models/distiluse-base-multilingual-cased
