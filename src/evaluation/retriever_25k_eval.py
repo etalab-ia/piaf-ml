@@ -34,7 +34,7 @@ import socket
 logger = logging.getLogger(__name__)
 
 GPU_AVAILABLE = torch.cuda.is_available()
-USE_CACHE = True
+USE_CACHE = False
 SBERT_MAPPING = {"mappings": {"properties": {
     "link": {
         "type": "keyword"
@@ -252,8 +252,7 @@ def launch_ES():
         )
         if status.returncode:
             raise Exception(
-                "Failed to launch Elasticsearch. If you want to connect to an existing Elasticsearch instance"
-                "then set LAUNCH_ELASTICSEARCH in the script to False.")
+                "Failed to launch Elasticsearch.")
 
 
 def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
@@ -356,10 +355,10 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                                         custom_mapping=DPR_MAPPING)
 
             retriever = DensePassageRetriever(document_store=document_store,
-                                              query_embedding_model="/data/models/dpr/camembert-facebook-dpr-8/encoder_question",
-                                              passage_embedding_model="/data/models/dpr/camembert-facebook-dpr-8/encoder_ctx",
-                                              # query_embedding_model="/data/models/dpr/bert_multilangue/question_encoder",
-                                              # passage_embedding_model="/data/models/dpr/bert_multilangue/ctx_encoder",
+                                              query_embedding_model="/data/models/dpr/camembert-facebook-dpr-v2/dpr-question_encoder-fr_qa-camembert",
+                                              passage_embedding_model="/data/models/dpr/camembert-facebook-dpr-v2/dpr-ctx_encoder-fr_qa-camembert",
+                                              # query_embedding_model="/data/models/dpr/mbert-facebook-dpr-v2/encoder_question",
+                                              # passage_embedding_model="/data/models/dpr/mbert-facebook-dpr-v2/encoder_ctx",
                                               use_gpu=GPU_AVAILABLE,
                                               embed_title=False,
                                               max_seq_len_passage=500,
@@ -415,7 +414,6 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
         true_fiche_urls = meta['urls']
         true_fiche_ids = [f.split("/")[-1] for f in true_fiche_urls]
         if filter_level is None:
-            print(question)
             retrieved_results = retriever.retrieve(query=question, top_k=retriever_top_k)
         else:
             arborescence = meta['arbo']

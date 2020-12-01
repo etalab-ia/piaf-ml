@@ -6,7 +6,7 @@ Usage:
 
 Arguments:
     <dpr_file_path>   DPR file path
-    <squad_output_path>   SQuAD outpput folder path
+    <squad_output_path>   SQuAD outpput file path
 """
 import hashlib
 from pathlib import Path
