@@ -89,7 +89,6 @@ starlette
 tabulate
 threadpoolctl
 tika
-tokenizersrc2
 toml
 torch
 tox

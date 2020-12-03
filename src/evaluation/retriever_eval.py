@@ -39,41 +39,40 @@ logger = logging.getLogger(__name__)
 GPU_AVAILABLE = torch.cuda.is_available()
 USE_CACHE = True
 
-
 ANALYZER_DEFAULT = {
-        "analysis": {
-            "filter": {
-                "french_elision": {
-                    "type": "elision",
-                    "articles_case": True,
-                    "articles": [
-                        "l", "m", "t", "qu", "n", "s",
-                        "j", "d", "c", "jusqu", "quoiqu",
-                        "lorsqu", "puisqu"
-                    ]
-                },
-                "french_stop": {
-                    "type": "stop",
-                    "stopwords": "_french_"
-                },
-                "french_stemmer": {
-                    "type": "stemmer",
-                    "language": "light_french"
-                }
+    "analysis": {
+        "filter": {
+            "french_elision": {
+                "type": "elision",
+                "articles_case": True,
+                "articles": [
+                    "l", "m", "t", "qu", "n", "s",
+                    "j", "d", "c", "jusqu", "quoiqu",
+                    "lorsqu", "puisqu"
+                ]
             },
-            "analyzer": {
-                "default": {
-                    "tokenizer": "standard",
-                    "filter": [
-                        "french_elision",
-                        "lowercase",
-                        "french_stop",
-                        "french_stemmer"
-                    ]
-                }
+            "french_stop": {
+                "type": "stop",
+                "stopwords": "_french_"
+            },
+            "french_stemmer": {
+                "type": "stemmer",
+                "language": "light_french"
+            }
+        },
+        "analyzer": {
+            "default": {
+                "tokenizer": "standard",
+                "filter": [
+                    "french_elision",
+                    "lowercase",
+                    "french_stop",
+                    "french_stemmer"
+                ]
             }
         }
     }
+}
 
 DENSE_MAPPING = {"mappings": {"properties": {
     "link": {
@@ -161,10 +160,10 @@ def compute_retriever_precision(true_fiches, retrieved_results, weight_position=
     retrieved_docs = []
     summed_precision = 0
     results_info = {}
-    retrieved_doc_names = [(f.meta["name"],
-                            idx + 1,
-                            f.score,
-                            f.probability) for idx, f in enumerate(retrieved_results)]
+    retrieved_doc_names = [{"name": f.meta["name"],
+                            "index": idx + 1,
+                            "score": f.score,
+                            "proba": f.probability} for idx, f in enumerate(retrieved_results)]
     for fiche_idx, true_fiche_id in enumerate(true_fiches):
         for retrieved_doc_idx, retrieved_doc in enumerate(retrieved_results):
             retrieved_doc_id = retrieved_doc.meta["name"]
