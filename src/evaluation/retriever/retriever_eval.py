@@ -1,5 +1,5 @@
 '''
-For now, it loads the config from eval_config __init__.py and uses it to start the experiments
+For now, it loads the config from config __init__.py and uses it to start the experiments
 '''
 import json
 import logging
@@ -16,7 +16,7 @@ from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.base import BaseRetriever
 from sklearn.model_selection import ParameterGrid
-from src.evaluation.eval_config import parameters
+from src.evaluation.config import parameters
 from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts, convert_json_files_v10_to_dicts
 import torch
 
