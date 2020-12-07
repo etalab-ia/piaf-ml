@@ -1,5 +1,5 @@
 '''
-For now, it loads the config from config __init__.py and uses it to start the experiments
+For now, it loads the config from config retriever_config.py and uses it to start the experiments
 '''
 import json
 import logging
