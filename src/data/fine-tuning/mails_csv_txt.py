@@ -1,4 +1,6 @@
 """"
+In order to fine-tune a cammebert model with the domain of service-public.fr we need text. The 25k mails from SPF seems
+like a good idea. We extract all the emails into a single text file corpus_mail_spf.txt
 This code converts all the .csv files "export*.csv" into a whole new mail.txt file
 """
 import pandas as pd

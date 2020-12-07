@@ -1,12 +1,13 @@
 '''
-Here put the description of your script
+This script creates a JSON file with fiches from service-public.fr that contain a question as title. It stores
+the question (the fiche title) and the text content of the fiche in a dict structure.
+The produced JSON file is known as the Questions Fiches dataset.
 
 Usage:
     create_questions_dataset.py <file_path> [options]
 
 Arguments:
     <file_path>                     A required path parameter
-    --optional_1 OPT1       Only convert those DOCs that are missing
     --cores=<n> CORES       Number of cores to use [default: 1:int]
 '''
 import json
@@ -34,7 +35,6 @@ def run(doc_path):
             tqdm.write(f"{doc_path} is not a question fiche")
             return 0
 
-
         qfiche_text_list = []
         for cas_paragraph in root.iter("Paragraphe"):
             qfiche_text_list.append(list(cas_paragraph.itertext()))
@@ -42,7 +42,6 @@ def run(doc_path):
         qfiche_text = "\n".join(qfiche_text_list)
 
         if qfiche_text:
-            # first_sentence = qfiche_text.split(".")[0]
             first_sentence = qfiche_text
             print(fiche_title)
             print(f"\t{first_sentence}")
@@ -71,7 +70,7 @@ def main(doc_files_path: Path, n_jobs: int):
 
     clean_job_output = [j for j in job_output if j]
     with open("./data/questions_spf.json", "w") as outo:
-            json.dump(clean_job_output, outo, indent=4, ensure_ascii=False)
+        json.dump(clean_job_output, outo, indent=4, ensure_ascii=False)
 
     tqdm.write(f"There are {len(clean_job_output)} fiches type question")
     return doc_paths
@@ -80,6 +79,5 @@ def main(doc_files_path: Path, n_jobs: int):
 if __name__ == '__main__':
     parser = argopt(__doc__).parse_args()
     doc_files_path = parser.file_path
-    optional_1 = parser.optional_1
     n_jobs = parser.cores
     main(doc_files_path=doc_files_path, n_jobs=n_jobs)

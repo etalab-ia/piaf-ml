@@ -1,5 +1,6 @@
 '''
-Transforms service public france fiches in XML format to txt. It tries to extract the essential content from the fiches
+Transforms service public france fiches in XML format to txt files.
+It tries to extract the essential content from the fiches
 
 Usage:
     fiches_xml2txt.py <file_path> <output_path> <path_arbo> [options]
@@ -117,8 +118,8 @@ def save_subfiche(doc_path: Path,
         with open(new_fiche_path.as_posix(), "w", encoding='utf-8') as subfiche:
             # text: we remove every line breaks because it reduce ES performances
             # text_reader: we delete more than 4 line breaks in a row, of text without titles
-            content = {'text': re.sub(r"\s{2,}", " ", subfiche_string.replace("\n"," ")),
-                       'text_reader': re.sub(r"\n{4,}", "" , subfiche_reader_string),
+            content = {'text': re.sub(r"\s{2,}", " ", subfiche_string.replace("\n", " ")),
+                       'text_reader': re.sub(r"\n{4,}", "", subfiche_reader_string),
                        'link': f'https://www.service-public.fr/particuliers/vosdroits/{file_name}',
                        'name': f"{subfiche_file_name}",
                        'arborescence': arborescence}
@@ -190,14 +191,14 @@ def get_arbo(arbo):
 def get_arborescence(arborescence, fiche_id):
     arborescence = arborescence['data']
     for level_1_dict in arborescence:
-        arbo = [level_1_dict] #used to remember the path to the fiche
+        arbo = [level_1_dict]  # used to remember the path to the fiche
         for level_2_dict in level_1_dict['data']:
             if len(arbo) > 1:
-                arbo= arbo[:1] #keep only the first level
+                arbo = arbo[:1]  # keep only the first level
             arbo.append(level_2_dict)
             for level_3_dict in level_2_dict['data']:
                 if len(arbo) > 2:
-                    arbo= arbo[:2] #keep only up to the 2nd level
+                    arbo = arbo[:2]  # keep only up to the 2nd level
                 arbo.append(level_3_dict)
                 if level_3_dict['id'] == fiche_id:
                     return get_arbo(arbo)
@@ -206,7 +207,7 @@ def get_arborescence(arborescence, fiche_id):
                 else:
                     for level_4_dict in level_3_dict['data']:
                         if len(arbo) > 3:
-                            arbo= arbo[:3] #keep only up to the 3rd level
+                            arbo = arbo[:3]  # keep only up to the 3rd level
                         arbo.append(level_4_dict)
                         if level_4_dict['id'] == fiche_id:
                             return get_arbo(arbo)
@@ -216,13 +217,12 @@ def get_arborescence(arborescence, fiche_id):
                             try:
                                 for level_5_dict in level_4_dict['data']:
                                     if len(arbo) > 4:
-                                        arbo= arbo[:4] #keep only up to the 4th level
+                                        arbo = arbo[:4]  # keep only up to the 4th level
                                     arbo.append(level_5_dict)
                                     if level_5_dict['id'] == fiche_id:
                                         return get_arbo(arbo)
                             except:
                                 print('hello')
-
 
 
 def try_get_text(root: Element, tag: str) -> str:
@@ -379,7 +379,7 @@ def run(doc_path: Path, output_path: Path, path_arbo: Path, as_json: bool):
         fiche_title = list(list(root.iter("Publication"))[0])[0].text
         introduction_text = try_get_text(root, "Introduction")
         situations = list(root.iter("Situation"))
-        fiche_id = re.search('[a-zA-Z0-9]*(?=\.xml)',str(doc_path)).group()
+        fiche_id = re.search('[a-zA-Z0-9]*(?=\.xml)', str(doc_path)).group()
         arborescence = get_arborescence(arborescence, fiche_id)
 
         if not situations:
@@ -512,4 +512,5 @@ if __name__ == '__main__':
     n_jobs = parser.cores
     as_json = bool(parser.as_json)
     as_one = bool(parser.as_one)
-    main(doc_files_path=doc_files_path, output_path=output_path, path_arbo=path_arbo, as_json=as_json, n_jobs=n_jobs, as_one=as_one)
+    main(doc_files_path=doc_files_path, output_path=output_path, path_arbo=path_arbo, as_json=as_json, n_jobs=n_jobs,
+         as_one=as_one)

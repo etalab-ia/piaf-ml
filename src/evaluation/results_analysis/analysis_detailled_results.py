@@ -1,3 +1,8 @@
+"""
+Analyzes the output of an experiment (by looking into the detailed results JSON file) and exports them into a
+csv file.
+"""
+
 import json
 import os
 
@@ -128,5 +133,3 @@ for xp_name in tqdm(list_xp):
     df = read_json_detailed_results(file, df)
 
 save_results(Path('./results/analysis_results.csv'), df)
-
-print('hello')

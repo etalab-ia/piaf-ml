@@ -1,4 +1,6 @@
 """
+Using the Questions Fiches Dataset, and after completing it with the span of each answer within the fiche text, we
+need this dataset into a SQuAD-format JSON file. This scripts accomplishes that.
 Transforms a list of [fiche_id, question, answer] into standard SQuAD format for evaluation.
 
 Usage:

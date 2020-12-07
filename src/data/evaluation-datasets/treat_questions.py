@@ -1,3 +1,8 @@
+"""
+Analyzes the 25k mail file from service-public and extract those incoming messages that contain a question
+(identified by a question mark)
+"""
+
 import spacy
 from tqdm import tqdm
 import pandas as pd

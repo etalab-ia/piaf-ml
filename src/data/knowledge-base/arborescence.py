@@ -1,5 +1,7 @@
 """
-Transforms service public france fiches in XML format to txt. It tries to extract the essential content from the fiches
+Transforms service public france fiches in XML format to txt files.
+It tries to extract the essential content from the fiches.
+It extracts also the category of each fiche (thematique, sous_thematique, dossier, sous_dossier)
 
 Usage:
     fiches_xml2txt.py <file_path> <output_path> [options]
@@ -9,7 +11,6 @@ Arguments:
     <output_path>           A path where to store the extracted info
     --cores=<n> CORES       Number of cores to use [default: 1:int]
 """
-
 
 from glob import glob
 from pathlib import Path
@@ -21,7 +22,8 @@ from tqdm import tqdm
 import os
 import json
 
-def concat_ID_and_name (id, name):
+
+def concat_ID_and_name(id, name):
     return id + '//' + name
 
 
@@ -30,7 +32,7 @@ def iter_fiches(study_root):
     for fiche in study_root.iter('Fiche'):
         fiche_id = fiche.attrib['ID']
         fiche_name = fiche.text
-        if fiche_name == '\n': #sometimes there are fiches that do not belong to the theme
+        if fiche_name == '\n':  # sometimes there are fiches that do not belong to the theme
             continue
         fiche_txt = concat_ID_and_name(fiche_id, fiche_name)
         fiches.append(fiche_txt)
@@ -48,13 +50,12 @@ def extract_arbo_F_doc(doc_path):
     titre = list(root.findall(".//dc:title", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
     fiche = list(root.findall(".//dc:identifier", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
 
-
     # Le theme n'est vide que quand il s'agit d'une fiche "Comment faire si..."
     try:
         theme = root.find('Theme').find('Titre').text
         theme_id = root.find('Theme').attrib['ID']
         theme_txt = concat_ID_and_name(theme_id, theme)
-    except :
+    except:
         theme = ''
 
     # Cinq cas différents (cas de base + 4 types de fiches spéciaux), on les traite différemment
@@ -62,7 +63,7 @@ def extract_arbo_F_doc(doc_path):
         dossier = root.find('DossierPere').find('Titre').text
         dossier_id = root.find('DossierPere').attrib['ID']
         dossier_txt = concat_ID_and_name(dossier_id, dossier)
-    except: #why ??
+    except:  # why ??
         dossier_txt = list(root.findall(".//dc:type", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
         if dossier_txt in ['Question-réponse', 'Comment faire si...']:
             theme_txt = ''
@@ -95,7 +96,7 @@ def extract_arbo_N_doc(doc_path):
 
     tree = ET.parse(doc_path)
     root = tree.getroot()
-    #for sous_theme in list(root.iter("SousTheme")):
+    # for sous_theme in list(root.iter("SousTheme")):
 
     try:
         type = root.attrib['type']
@@ -108,19 +109,19 @@ def extract_arbo_N_doc(doc_path):
         theme_id = root.find('Theme').attrib['ID']
         theme_txt = concat_ID_and_name(theme_id, theme)
         try:
-            sous_theme = root.find('SousThemePere').text #there might be no sous-theme
+            sous_theme = root.find('SousThemePere').text  # there might be no sous-theme
         except:
             sous_theme = ''
         dossier = list(root.findall(".//dc:title", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
         dossier_id = root.attrib['ID']
         dossier_txt = concat_ID_and_name(dossier_id, dossier)
         sous_dossier_dict = {}
-        if root.find('SousDossier') != None: #case when there is one or several sous_dossier
+        if root.find('SousDossier') != None:  # case when there is one or several sous_dossier
             for ss_dossier in root.iter('SousDossier'):
                 sous_dossier = ss_dossier.find('Titre').text
                 list_fiches = iter_fiches(ss_dossier)
                 sous_dossier_dict[sous_dossier] = list_fiches
-        else: #case when there is no sous_dossier
+        else:  # case when there is no sous_dossier
             list_fiches = iter_fiches(root)
             sous_dossier_dict[""] = list_fiches
         dossier_dict = {dossier_txt: sous_dossier_dict}
@@ -130,7 +131,8 @@ def extract_arbo_N_doc(doc_path):
     else:
         return {}
 
-def fill_arborescence_with_arbo_file (arborescence, arbo):
+
+def fill_arborescence_with_arbo_file(arborescence, arbo):
     theme = list(arbo.keys())[0]
     if theme not in arborescence.keys():
         arborescence[theme] = arbo[theme]
@@ -145,22 +147,24 @@ def fill_arborescence_with_arbo_file (arborescence, arbo):
             else:
                 sous_dossier = list(arbo[theme][sous_theme][dossier].keys())[0]
                 if sous_dossier not in arborescence[theme][sous_theme][dossier].keys():
-                    arborescence[theme][sous_theme][dossier][sous_dossier] = arbo[theme][sous_theme][dossier][sous_dossier]
+                    arborescence[theme][sous_theme][dossier][sous_dossier] = arbo[theme][sous_theme][dossier][
+                        sous_dossier]
                 else:
-                    arborescence[theme][sous_theme][dossier][sous_dossier] += arbo[theme][sous_theme][dossier][sous_dossier]
+                    arborescence[theme][sous_theme][dossier][sous_dossier] += arbo[theme][sous_theme][dossier][
+                        sous_dossier]
     return arborescence
 
 
-def fill_arborescence_with_N_files (doc_paths):
+def fill_arborescence_with_N_files(doc_paths):
     arborescence = {}
     for doc_path in tqdm(doc_paths):
         arbo = extract_arbo_N_doc(doc_path)
         if len(arbo) != 0:
-            arborescence = fill_arborescence_with_arbo_file(arborescence,arbo)
+            arborescence = fill_arborescence_with_arbo_file(arborescence, arbo)
     return arborescence
 
 
-def get_list_doc_in_arbo (arborescence):
+def get_list_doc_in_arbo(arborescence):
     list_doc_in_arbo = []
     for theme in arborescence.keys():
         for sstheme in arborescence[theme].keys():
@@ -178,7 +182,7 @@ def is_doc_in_arbo(doc_path, list_doc_arbo):
     return doc_in_arbo
 
 
-def complete_arbo_with_F_files (arborescence, doc_paths):
+def complete_arbo_with_F_files(arborescence, doc_paths):
     list_doc_in_arbo = get_list_doc_in_arbo(arborescence)
     for doc_path in tqdm(doc_paths):
         if not is_doc_in_arbo(doc_path, list_doc_in_arbo):
@@ -212,6 +216,7 @@ def init_sous_theme(sous_theme):
             'data': []
             }
     return dict
+
 
 def init_dossier(dossier):
     if dossier == '':
@@ -296,7 +301,6 @@ def reformat_json(arborescence):
             'data': all_data}
 
 
-
 def main(doc_files_path, output_path, n_jobs):
     doc_files_path = Path(doc_files_path)
     output_path = Path(output_path)
@@ -320,8 +324,6 @@ def main(doc_files_path, output_path, n_jobs):
 
     if not output_path.exists():
         os.makedirs(output_path)
-
-
 
     with open(path.as_posix(), "w", encoding='utf-8') as out_file:
         json.dump(arborescence, out_file, indent=4, ensure_ascii=False)
