@@ -37,7 +37,7 @@ memory = Memory(location, verbose=1)
 logger = logging.getLogger(__name__)
 
 GPU_AVAILABLE = torch.cuda.is_available()
-USE_CACHE = True
+USE_CACHE = False
 
 ANALYZER_DEFAULT = {
     "analysis": {

@@ -3,7 +3,7 @@ parameters = {
     "retriever_type": ['sparse'],
     "knowledge_base": ["./data/v12"],
                        # "/home/pavel/code/piaf-ml/data/v10"],
-    "test_dataset": ["./data/407_question-fiche_anonym.csv"],
+    "test_dataset": ["./data/evaluation-datasets/407_question-fiche_anonym.csv"],
     "weighted_precision": [True],
     "filter_level": [None],
     "lemma_preprocessing": [False]

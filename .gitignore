@@ -141,3 +141,4 @@ src/data/notebooks/data/
 
 # hide local data folders
 data/vosdroits-latest
+output/
