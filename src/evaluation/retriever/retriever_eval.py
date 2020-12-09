@@ -16,7 +16,7 @@ from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.base import BaseRetriever
 from sklearn.model_selection import ParameterGrid
-from src.evaluation.config import parameters
+from src.evaluation.config.retriever_config import parameters
 from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts, convert_json_files_v10_to_dicts
 import torch
 
