@@ -142,3 +142,4 @@ src/data/notebooks/data/
 # hide local data folders
 data/vosdroits-latest
 output/
+cached_dense_dicts/
