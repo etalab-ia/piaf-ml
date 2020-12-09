@@ -4,6 +4,7 @@ For now, it loads the config from config retriever_config.py and uses it to star
 import json
 import logging
 import os
+import platform
 import pickle
 import subprocess
 import time
@@ -270,9 +271,14 @@ def launch_ES():
     es = Elasticsearch(['http://localhost:9200/'], verify_certs=True)
     if not es.ping():
         logging.info("Starting Elasticsearch ...")
-        status = subprocess.run(
-            ['docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'], shell=True
-        )
+        if platform.system() == 'Windows':
+            status = subprocess.run(
+                'docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'
+            )
+        else:
+            status = subprocess.run(
+                ['docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'], shell=True
+            )
         if status.returncode:
             raise Exception(
                 "Failed to launch Elasticsearch. If you want to connect to an existing Elasticsearch instance"

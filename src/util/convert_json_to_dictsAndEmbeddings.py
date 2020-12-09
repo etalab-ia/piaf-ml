@@ -65,7 +65,7 @@ def convert_json_to_dicts(dir_path: str,
 
     for path in tqdm(file_paths[:]):
         if path.suffix.lower() == ".json":
-            with open(path) as doc:
+            with open(path, encoding='utf-8') as doc:
                 json_doc = json.load(doc)
 
             text = json_doc["text"]
