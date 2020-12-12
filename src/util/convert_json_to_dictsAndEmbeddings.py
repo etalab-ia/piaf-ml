@@ -1,13 +1,39 @@
 import json
 from pathlib import Path
+from typing import Optional, Callable, Union
 
-from haystack.retriever.base import BaseRetriever
-from haystack.retriever.dense import EmbeddingRetriever
+from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
+from haystack.retriever.sparse import ElasticsearchRetriever
 from tqdm import tqdm
 from haystack import Document
+import spacy
+
+# if not installed python -m spacy download fr_core_news_sm
+try:
+    NLP = spacy.load('fr_core_news_sm', disable=['ner', 'parser'])
+except:
+    NLP = None
 
 
-def convert_json_to_dicts(dir_path: str, retriever: BaseRetriever,
+def preprocess_text(text: str):
+    """
+    Tokenize, lemmatize, lowercase and remove stop words
+    :param text:
+    :return:
+    """
+    if not NLP:
+        print('Warning NLP not loaded, text will not be preprocessed')
+        return text
+
+    doc = NLP(text)
+    text = " ".join(t.lemma_.lower() for t in doc if not t.is_stop).replace("\n", " ")
+    return text
+
+
+def convert_json_to_dicts(dir_path: str,
+                          retriever: Union[EmbeddingRetriever, DensePassageRetriever,
+                                           ElasticsearchRetriever],
+                          clean_func: Optional[Callable] = None,
                           split_paragraphs: bool = False,
                           compute_embeddings: bool = False):
     """
@@ -59,17 +85,23 @@ def convert_json_to_dicts(dir_path: str, retriever: BaseRetriever,
             raise Exception(f"Splitting paragraph not currently supported.")
 
         text_reader = json_doc["text_reader"] if "text_reader" in json_doc else text
+        if clean_func:
+            text = clean_func(text)
+
         # TODO: evaluate performances based on text_reader or text in 'text'
         doc_dict = {"text": text_reader,
-                          'question_sparse': text,
-                          'embedding': embedding,
-                          "meta": {"name": path.name,
-                                   "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
-                                   'audience': audience,
-                                   'theme': theme,
-                                   'sous_theme': sous_theme,
-                                   'dossier': dossier,
-                                   'sous_dossier': sous_dossier}}
+                    'question_sparse': text,
+                    'embedding': embedding,
+                    "meta": {"name": path.name,
+                             "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
+                             'audience': audience,
+                             'theme': theme,
+                             'sous_theme': sous_theme,
+                             'dossier': dossier,
+                             'sous_dossier': sous_dossier}}
+        # ES injection fails if embedding is [] while dim = 512, so we need to remove the whole porp
+        if not compute_embeddings:
+            doc_dict.pop('embedding')
         documents.append(doc_dict)
 
     return documents

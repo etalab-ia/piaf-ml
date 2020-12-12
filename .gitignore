@@ -133,4 +133,13 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 .idea/
+
 results/
+
+# specific project folders
+src/data/notebooks/data/
+
+# hide local data folders
+data/vosdroits-latest
+output/
+cached_dense_dicts/
