@@ -1,6 +1,6 @@
 parameters = {
     "k": [5],
-    "retriever_type": ['sbert'],
+    "retriever_type": ['dpr'],
     "knowledge_base": ["./data/v12"],
                        # "/home/pavel/code/piaf-ml/data/v10"],
     "test_dataset": ["./data/evaluation-datasets/407_question-fiche_anonym.csv"],

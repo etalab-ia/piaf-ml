@@ -16,8 +16,9 @@ from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.base import BaseRetriever
 from sklearn.model_selection import ParameterGrid
+
+from src.evaluation.config.elasticsearch_mappings import SBERT_MAPPING, DPR_MAPPING, SPARSE_MAPPING
 from src.evaluation.config.retriever_config import parameters
-from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts, convert_json_files_v10_to_dicts
 import torch
 
 from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts, preprocess_text
@@ -26,7 +27,6 @@ seed(42)
 from tqdm import tqdm
 from haystack.retriever.sparse import ElasticsearchRetriever
 from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
-from haystack.document_store.faiss import FAISSDocumentStore
 
 import pandas as pd
 import socket
@@ -35,136 +35,6 @@ logger = logging.getLogger(__name__)
 
 GPU_AVAILABLE = torch.cuda.is_available()
 USE_CACHE = True
-SBERT_MAPPING = {"mappings": {"properties": {
-    "link": {
-        "type": "keyword"
-    },
-    "name": {
-        "type": "keyword"
-    },
-    "question_sparse": {
-        "type": "text"
-    },
-    "question_emb": {
-        "type": "dense_vector",
-        "dims": 512
-    },
-    "text": {
-        "type": "text"
-    },
-    "theme": {
-        "type": "keyword"
-    },
-    "dossier": {
-        "type": "keyword"
-    }
-}}}
-
-ANALYZER_DEFAULT = {
-    "analysis": {
-        "filter": {
-            "french_elision": {
-                "type": "elision",
-                "articles_case": True,
-                "articles": [
-                    "l", "m", "t", "qu", "n", "s",
-                    "j", "d", "c", "jusqu", "quoiqu",
-                    "lorsqu", "puisqu"
-                ]
-            },
-            "french_stop": {
-                "type": "stop",
-                "stopwords": "_french_"
-            },
-            "french_stemmer": {
-                "type": "stemmer",
-                "language": "light_french"
-            }
-        },
-        "analyzer": {
-            "default": {
-                "tokenizer": "standard",
-                "filter": [
-                    "french_elision",
-                    "lowercase",
-                    "french_stop",
-                    "french_stemmer"
-                ]
-            }
-        }
-    }
-}
-
-DENSE_MAPPING = {"mappings": {"properties": {
-    "link": {
-        "type": "keyword"
-    },
-    "name": {
-        "type": "keyword"
-    },
-    "question_sparse": {
-        "type": "text"
-    },
-    "question_emb": {
-        "type": "dense_vector",
-        "dims": 512
-    },
-    "text": {
-        "type": "text"
-    },
-    "theme": {
-        "type": "keyword"
-    },
-    "dossier": {
-        "type": "keyword"
-    }
-}}}
-
-DPR_MAPPING = {"mappings": {"properties": {
-    "link": {
-        "type": "keyword"
-    },
-    "name": {
-        "type": "keyword"
-    },
-    "question_sparse": {
-        "type": "text"
-    },
-    "question_emb": {
-        "type": "dense_vector",
-        "dims": 768
-    },
-    "text": {
-        "type": "text"
-    },
-    "theme": {
-        "type": "keyword"
-    },
-    "dossier": {
-        "type": "keyword"
-    }
-}}}
-
-SPARSE_MAPPING = {
-    "mappings": {
-        "properties": {
-            "question_sparse": {
-                "type": "text",
-            },
-            "text": {
-                "type": "text"
-            },
-            "theme": {
-                "type": "keyword"
-            },
-            "dossier": {
-                "type": "keyword"
-            }
-        }
-    },
-    "settings": ANALYZER_DEFAULT
-
-}
 
 
 def load_25k_test_set(test_corpus_path: str):
@@ -223,7 +93,6 @@ def compute_retriever_precision(true_fiches, retrieved_results, weight_position=
 
     results_info["true_fiches"] = true_fiches
     results_info["pred_fiches"] = retrieved_doc_names
-    # results_info["correct_docs"] = correct_doc_info
 
     return summed_precision, results_info
 
@@ -387,8 +256,6 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
         elif retriever_type == "sbert":
 
-            # TODO: change the way embedding_dim is declared as it may vary based on the embedding_model
-
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         search_fields=['question_sparse'],
                                                         embedding_field="question_emb", embedding_dim=512,
@@ -415,16 +282,6 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
         elif retriever_type == "dpr":
 
-            # status = subprocess.run(
-            #     ['docker run --name haystack-postgres -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres'],
-            #     shell=True)
-            # time.sleep(3)
-            # status = subprocess.run(
-            # ['docker exec -it haystack-postgres psql -U postgres -c "CREATE DATABASE haystack;"'], shell=True)
-            # time.sleep(1)
-            # document_store = FAISSDocumentStore(sql_url="postgresql://postgres:password@localhost:5432/haystack")
-            # document_store = FAISSDocumentStore()
-            #
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         search_fields=['question_sparse'],
                                                         embedding_field="question_emb", embedding_dim=768,
@@ -434,11 +291,8 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             retriever = DensePassageRetriever(document_store=document_store,
                                               query_embedding_model="/data/models/dpr/camembert-facebook-dpr-v2/dpr-question_encoder-fr_qa-camembert",
                                               passage_embedding_model="/data/models/dpr/camembert-facebook-dpr-v2/dpr-ctx_encoder-fr_qa-camembert",
-                                              # query_embedding_model="/data/models/dpr/mbert-facebook-dpr-v2/encoder_question",
-                                              # passage_embedding_model="/data/models/dpr/mbert-facebook-dpr-v2/encoder_ctx",
                                               use_gpu=GPU_AVAILABLE,
                                               embed_title=False,
-                                              max_seq_len_passage=500,
                                               batch_size=16,
                                               use_fast_tokenizers=False
                                               )
