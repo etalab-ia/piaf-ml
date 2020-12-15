@@ -113,20 +113,16 @@ def single_run(parameters):
     k = parameters["k"]
     weighted_precision = parameters["weighted_precision"]
     filter_level = parameters["filter_level"]
-    lemma_preprocessing = parameters["lemma_preprocessing"]
+    preprocessing = parameters["preprocessing"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     # Prepare framework
     test_dataset = load_25k_test_set(test_corpus_path)
     retriever = load_retriever(knowledge_base_path=knowledge_base_path,
                                retriever_type=retriever_type,
-                               preprocessing=lemma_preprocessing)
+                               preprocessing=preprocessing)
 
     if not retriever:
         raise Exception("Could not prepare the testing framework!! Exiting :(")
-
-    clean_function = None
-    if lemma_preprocessing:
-        clean_function = preprocess_text
 
     # All is good, let's run the experiment
     results = []
@@ -135,7 +131,6 @@ def single_run(parameters):
         retriever=retriever,
         retriever_top_k=k,
         test_dataset=test_dataset,
-        clean_func=clean_function,
         weight_position=weighted_precision,
         filter_level=filter_level
     )
@@ -155,7 +150,7 @@ def single_run(parameters):
     detailed_results_weighted["experiment_id"] = experiment_id
 
     ordered_headers = ["experiment_id",
-                       "knowledge_base", "test_dataset", "lemma_preprocessing", "k", "filter_level", "retriever_type",
+                       "knowledge_base", "test_dataset", "preprocessing", "k", "filter_level", "retriever_type",
                        "nb_documents", "correctly_retrieved", "weighted_precision",
                        "precision", "avg_time_s", "date", "hostname"]
 
@@ -196,8 +191,9 @@ def launch_ES():
 
 
 def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
-                                cached_dicts_path: Path = Path("./data/dense_dicts/")):
-    cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}.pkl")
+                                cached_dicts_path: Path = Path("./data/dense_dicts/"),
+                                preprocessing: bool = False):
+    cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}_{preprocessing}.pkl")
     if cached_dicts_name.exists():
         logger.info(f"Found and loading embeddings dict cache: {cached_dicts_name}")
         try:
@@ -212,11 +208,27 @@ def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
 
 
 def cache_dict_embeddings(dicts: Dict, knowledge_base_path: Path, retriever_type: str,
-                          cached_dicts_path: Path = Path("./data/dense_dicts/")):
-    cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}.pkl")
+                          cached_dicts_path: Path = Path("./data/dense_dicts/"),
+                          preprocessing: bool = False):
+
+    cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}_{preprocessing}.pkl")
 
     with open(cached_dicts_name, "wb") as cache:
         pickle.dump(dicts, cache)
+
+
+def prepare_ES_mappings(preprocessing: bool):
+    """
+    The ES preprocessor analyser is set by default. If we do not want it, we have to remove it from our mappings
+
+    :param preprocessing: Whether to use preprocessing or not
+    :return: None
+    """
+    list_mappings = [SBERT_MAPPING, DPR_MAPPING, SPARSE_MAPPING]
+    if preprocessing:
+        return
+    for mapping in list_mappings:
+        mapping["settings"] = {}
 
 
 def load_retriever(knowledge_base_path: str = "/data/service-public-france/extracted/",
@@ -228,10 +240,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
     :param retriever_type: The type of retriever to be used
     :return: A Retriever object ready to be queried
     """
-    clean_function = None
-    if preprocessing:
-        clean_function = preprocess_text
-
+    prepare_ES_mappings(preprocessing=preprocessing)
     retriever = None
     try:
         # delete the index to make sure we are not using other docs
@@ -247,7 +256,6 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             retriever = ElasticsearchRetriever(document_store=document_store)
 
             dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
-                                          clean_func=clean_function,
                                           retriever=retriever,
                                           compute_embeddings=False)
 
@@ -264,19 +272,21 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
             retriever = EmbeddingRetriever(document_store=document_store,
                                            embedding_model="distiluse-base-multilingual-cased",
-                                           use_gpu=False, model_format="sentence_transformers",
+                                           use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                            pooling_strategy="reduce_max")
             dicts = []
             if USE_CACHE:
                 dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
-                                                    retriever_type=retriever_type)
+                                                    retriever_type=retriever_type,
+                                                    preprocessing=preprocessing)
             if not dicts:
                 dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
                                               retriever=retriever,
                                               compute_embeddings=True)
 
                 cache_dict_embeddings(dicts=dicts, knowledge_base_path=Path(knowledge_base_path),
-                                      retriever_type=retriever_type)
+                                      retriever_type=retriever_type,
+                                      preprocessing=preprocessing)
 
             document_store.write_documents(dicts)
 
@@ -300,16 +310,17 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             dicts = []
             if USE_CACHE:
                 dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
-                                                    retriever_type=retriever_type)
+                                                    retriever_type=retriever_type,
+                                                    preprocessing=preprocessing)
 
             if not dicts:
                 dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
                                               retriever=retriever,
-                                              clean_func=clean_function,
                                               compute_embeddings=True)
 
                 cache_dict_embeddings(dicts=dicts, knowledge_base_path=Path(knowledge_base_path),
-                                      retriever_type=retriever_type)
+                                      retriever_type=retriever_type,
+                                      preprocessing=preprocessing)
 
             # dicts = pickle.load(open("/home/pavel/code/piaf-ml/data/v11_dicts.pkl", "rb"))
 
@@ -325,7 +336,6 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
 def compute_score(retriever: BaseRetriever, retriever_top_k: int,
                   test_dataset: Dict[str, List],
-                  clean_func: Optional[Callable] = None,
                   weight_position: bool = False, filter_level: str = None):
     """
     Given a Retriever to query and its parameters and a test dataset (couple query->true related doc), computes
@@ -349,8 +359,6 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
     for question, meta in test_dataset.items():
         true_fiche_urls = meta['urls']
         true_fiche_ids = [f.split("/")[-1] for f in true_fiche_urls]
-        if clean_func:
-            question = clean_func(question)
         if filter_level is None:
             retrieved_results = retriever.retrieve(query=question, top_k=retriever_top_k)
         else:
