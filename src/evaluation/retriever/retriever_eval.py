@@ -10,18 +10,18 @@ import time
 from datetime import datetime
 from pathlib import Path
 from random import seed
-from typing import Dict, List, Tuple, Optional, Callable
+from typing import Dict, List, Tuple
 import hashlib
 from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.base import BaseRetriever
 from sklearn.model_selection import ParameterGrid
 
-from src.evaluation.config.elasticsearch_mappings import SBERT_MAPPING, DPR_MAPPING, SPARSE_MAPPING
+from src.evaluation.config.elasticsearch_mappings import SBERT_MAPPING, DPR_MAPPING, SPARSE_MAPPING, ANALYZER_DEFAULT
 from src.evaluation.config.retriever_config import parameters
 import torch
 
-from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts, preprocess_text
+from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts
 
 seed(42)
 from tqdm import tqdm
@@ -217,30 +217,29 @@ def cache_dict_embeddings(dicts: Dict, knowledge_base_path: Path, retriever_type
         pickle.dump(dicts, cache)
 
 
-def prepare_ES_mappings(preprocessing: bool):
+def prepare_ES_mappings(preprocessing: bool, analyzer_config: Dict[str, Dict]):
     """
     The ES preprocessor analyser is set by default. If we do not want it, we have to remove it from our mappings
 
+    :param analyzer_config: Configuration to use for the ES preprocessor analyzer
     :param preprocessing: Whether to use preprocessing or not
     :return: None
     """
     list_mappings = [SBERT_MAPPING, DPR_MAPPING, SPARSE_MAPPING]
-    if preprocessing:
-        return
     for mapping in list_mappings:
-        mapping["settings"] = {}
+        mapping["settings"] = analyzer_config if preprocessing else {}
 
 
 def load_retriever(knowledge_base_path: str = "/data/service-public-france/extracted/",
                    retriever_type: str = "sparse",
                    preprocessing: bool = False):
     """
-    Loads ES if needed (check LAUNCH_ES var above) and indexes the knowledge_base corpus
+    Loads ES if needed and indexes the knowledge_base corpus
     :param knowledge_base_path: PAth of the folder containing the knowledge_base corpus
     :param retriever_type: The type of retriever to be used
     :return: A Retriever object ready to be queried
     """
-    prepare_ES_mappings(preprocessing=preprocessing)
+    prepare_ES_mappings(preprocessing=preprocessing, analyzer_config=ANALYZER_DEFAULT)
     retriever = None
     try:
         # delete the index to make sure we are not using other docs
