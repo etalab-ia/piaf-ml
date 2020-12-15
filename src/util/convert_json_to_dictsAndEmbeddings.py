@@ -33,6 +33,7 @@ def preprocess_text(text: str):
 def convert_json_to_dicts(dir_path: str,
                           retriever: Union[EmbeddingRetriever, DensePassageRetriever,
                                            ElasticsearchRetriever],
+                          clean_func: Optional[Callable] = None,
                           split_paragraphs: bool = False,
                           compute_embeddings: bool = False):
     """
@@ -84,7 +85,8 @@ def convert_json_to_dicts(dir_path: str,
             raise Exception(f"Splitting paragraph not currently supported.")
 
         text_reader = json_doc["text_reader"] if "text_reader" in json_doc else text
-
+        if clean_func:
+            text = clean_func(text)
         # TODO: evaluate performances based on text_reader or text in 'text'
         doc_dict = {"text": text_reader,
                     'question_sparse': text,

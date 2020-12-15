@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 from random import seed
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional, Callable
 import hashlib
 from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
@@ -21,7 +21,7 @@ from src.evaluation.config.elasticsearch_mappings import SBERT_MAPPING, DPR_MAPP
 from src.evaluation.config.retriever_config import parameters
 import torch
 
-from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts
+from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts, preprocess_text
 
 seed(42)
 from tqdm import tqdm
@@ -123,7 +123,9 @@ def single_run(parameters):
 
     if not retriever:
         raise Exception("Could not prepare the testing framework!! Exiting :(")
-
+    clean_function = None
+    if preprocessing and retriever_type != "bm25":  # we do not use the preprocessing func if we are using pure ES
+        clean_function = preprocess_text
     # All is good, let's run the experiment
     results = []
     tqdm.write(str(parameters))
@@ -131,6 +133,7 @@ def single_run(parameters):
         retriever=retriever,
         retriever_top_k=k,
         test_dataset=test_dataset,
+        clean_func=clean_function,
         weight_position=weighted_precision,
         filter_level=filter_level
     )
@@ -210,7 +213,6 @@ def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
 def cache_dict_embeddings(dicts: Dict, knowledge_base_path: Path, retriever_type: str,
                           cached_dicts_path: Path = Path("./data/dense_dicts/"),
                           preprocessing: bool = False):
-
     cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}_{preprocessing}.pkl")
 
     with open(cached_dicts_name, "wb") as cache:
@@ -231,14 +233,19 @@ def prepare_ES_mappings(preprocessing: bool, analyzer_config: Dict[str, Dict]):
 
 
 def load_retriever(knowledge_base_path: str = "/data/service-public-france/extracted/",
-                   retriever_type: str = "sparse",
+                   retriever_type: str = "bm25",
                    preprocessing: bool = False):
     """
     Loads ES if needed and indexes the knowledge_base corpus
+    :param preprocessing: Boolean that indicates whether we perform preprocessing or not
     :param knowledge_base_path: PAth of the folder containing the knowledge_base corpus
     :param retriever_type: The type of retriever to be used
     :return: A Retriever object ready to be queried
     """
+
+    clean_function = None
+    if preprocessing and retriever_type != "bm25":
+        clean_function = preprocess_text
     prepare_ES_mappings(preprocessing=preprocessing, analyzer_config=ANALYZER_DEFAULT)
     retriever = None
     try:
@@ -281,6 +288,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             if not dicts:
                 dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
                                               retriever=retriever,
+                                              clean_func=clean_function,
                                               compute_embeddings=True)
 
                 cache_dict_embeddings(dicts=dicts, knowledge_base_path=Path(knowledge_base_path),
@@ -315,6 +323,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             if not dicts:
                 dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
                                               retriever=retriever,
+                                              clean_func=clean_function,
                                               compute_embeddings=True)
 
                 cache_dict_embeddings(dicts=dicts, knowledge_base_path=Path(knowledge_base_path),
@@ -335,6 +344,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
 def compute_score(retriever: BaseRetriever, retriever_top_k: int,
                   test_dataset: Dict[str, List],
+                  clean_func: Optional[Callable] = None,
                   weight_position: bool = False, filter_level: str = None):
     """
     Given a Retriever to query and its parameters and a test dataset (couple query->true related doc), computes
@@ -358,6 +368,8 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
     for question, meta in test_dataset.items():
         true_fiche_urls = meta['urls']
         true_fiche_ids = [f.split("/")[-1] for f in true_fiche_urls]
+        if clean_func:
+            question = clean_func(question)
         if filter_level is None:
             retrieved_results = retriever.retrieve(query=question, top_k=retriever_top_k)
         else:
