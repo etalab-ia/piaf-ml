@@ -114,12 +114,14 @@ def single_run(parameters):
     weighted_precision = parameters["weighted_precision"]
     filter_level = parameters["filter_level"]
     preprocessing = parameters["preprocessing"]
+    elasticsearch_url = parameters["elasticsearch_url"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     # Prepare framework
     test_dataset = load_25k_test_set(test_corpus_path)
     retriever = load_retriever(knowledge_base_path=knowledge_base_path,
                                retriever_type=retriever_type,
-                               preprocessing=preprocessing)
+                               preprocessing=preprocessing,
+                               elasticsearch_url=elasticsearch_url)
 
     if not retriever:
         raise Exception("Could not prepare the testing framework!! Exiting :(")
@@ -180,17 +182,23 @@ def save_results(result_file_path: Path, all_results: List[Tuple]):
             json.dump(dic, filo, indent=4, ensure_ascii=False)
 
 
-def launch_ES():
-    es = Elasticsearch(['http://localhost:9200/'], verify_certs=True)
-    if not es.ping():
-        logging.info("Starting Elasticsearch ...")
-        status = subprocess.run(
-            ['docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'], shell=True
-        )
-        time.sleep(10)
-        if status.returncode:
-            raise Exception(
-                "Failed to launch Elasticsearch.")
+def start_ES(url_port: Optional = "localhost"):
+    url, port = url_port
+    es = Elasticsearch([f'{url}'])
+    if "localhost" in url:
+        if not es.ping():
+            logging.info("Starting Elasticsearch ...")
+            status = subprocess.run(
+                ['docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'], shell=True
+            )
+            time.sleep(10)
+            if status.returncode:
+                raise Exception("Failed to launch Elasticsearch.")
+    else:
+        if not es.ping():
+            raise Exception(f"Failed to connect to remote Elasticsearch instance with url {url}.")
+        else:
+            logger.info(f"Remote Elasticsearch instance on {url} is running...")
 
 
 def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
@@ -234,9 +242,11 @@ def prepare_ES_mappings(preprocessing: bool, analyzer_config: Dict[str, Dict]):
 
 def load_retriever(knowledge_base_path: str = "/data/service-public-france/extracted/",
                    retriever_type: str = "bm25",
-                   preprocessing: bool = False):
+                   preprocessing: bool = False,
+                   elasticsearch_url: str = "localhost"):
     """
     Loads ES if needed and indexes the knowledge_base corpus
+    :param elasticsearch_url: URL of the ES instance (local or other)
     :param preprocessing: Boolean that indicates whether we perform preprocessing or not
     :param knowledge_base_path: PAth of the folder containing the knowledge_base corpus
     :param retriever_type: The type of retriever to be used
@@ -248,16 +258,25 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
         clean_function = preprocess_text
     prepare_ES_mappings(preprocessing=preprocessing, analyzer_config=ANALYZER_DEFAULT)
     retriever = None
+
+    original_url = elasticsearch_url[0]
+    conection_scheme = "https" if "https" in original_url else "http"
+    url = original_url.replace("https://", "")
+    port = int(elasticsearch_url[1])
     try:
         # delete the index to make sure we are not using other docs
-        es = Elasticsearch(['http://localhost:9200/'], verify_certs=True)
+        es = Elasticsearch([original_url])
         es.indices.delete(index='document', ignore=[400, 404])
+
         if retriever_type == "bm25":
 
-            document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+            document_store = ElasticsearchDocumentStore(host=url, username="", password="",
+                                                        scheme=conection_scheme, port=port,
+                                                        index="document",
                                                         search_fields=['question_sparse'],
                                                         text_field='text',
-                                                        custom_mapping=SPARSE_MAPPING)
+                                                        custom_mapping=SPARSE_MAPPING,
+                                                        verify_certs=False)
 
             retriever = ElasticsearchRetriever(document_store=document_store)
 
@@ -270,11 +289,13 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
         elif retriever_type == "sbert":
 
-            document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+            document_store = ElasticsearchDocumentStore(host=elasticsearch_url, username="", password="",
+                                                        index="document",
                                                         search_fields=['question_sparse'],
                                                         embedding_field="question_emb", embedding_dim=512,
                                                         excluded_meta_data=["question_emb"],
-                                                        custom_mapping=SBERT_MAPPING)
+                                                        custom_mapping=SBERT_MAPPING,
+                                                        verify_certs=False)
 
             retriever = EmbeddingRetriever(document_store=document_store,
                                            embedding_model="distiluse-base-multilingual-cased",
@@ -299,11 +320,13 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
         elif retriever_type == "dpr":
 
-            document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+            document_store = ElasticsearchDocumentStore(host=elasticsearch_url, username="", password="",
+                                                        index="document",
                                                         search_fields=['question_sparse'],
                                                         embedding_field="question_emb", embedding_dim=768,
                                                         excluded_meta_data=["question_emb"],
-                                                        custom_mapping=DPR_MAPPING)
+                                                        custom_mapping=DPR_MAPPING,
+                                                        verify_certs=False)
 
             retriever = DensePassageRetriever(document_store=document_store,
                                               query_embedding_model="/data/models/dpr/camembert-facebook-dpr-v2/dpr-question_encoder-fr_qa-camembert",
@@ -412,7 +435,7 @@ if __name__ == '__main__':
     result_file_path = Path("./results/results.csv")
     parameters_grid = list(ParameterGrid(param_grid=parameters))
     all_results = []
-    launch_ES()
+    start_ES(url_port=parameters_grid[0]["elasticsearch_url"])
     for param in tqdm(parameters_grid, desc="GridSearch"):
         # START XP
         run_results = single_run(param)
