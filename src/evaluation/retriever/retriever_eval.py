@@ -101,9 +101,7 @@ def single_run(parameters):
     """
     Queries ES max_k - min_k times, saving at each step the results in a list. At the end plots the line
     showing the results obtained. For now we can only vary k.
-    :param min_k: Minimum retriever-k to test
-    :param max_k: Maximum retriever-k to test
-    :param weighted_precision: Whether to take into account the position of the retrieved result in the accuracy computation
+    :param parameters: Dict with the parameters of this single run
     :return:
     """
     # col names
@@ -130,7 +128,6 @@ def single_run(parameters):
         clean_function = preprocess_text
     # All is good, let's run the experiment
     results = []
-    tqdm.write(str(parameters))
     mean_precision, avg_time, correctly_retrieved, detailed_results_weighted, nb_questions = compute_score(
         retriever=retriever,
         retriever_top_k=k,
@@ -438,6 +435,7 @@ if __name__ == '__main__':
     start_ES(url_port=parameters_grid[0]["elasticsearch_url"])
     for param in tqdm(parameters_grid, desc="GridSearch"):
         # START XP
+        logger.info(f"Current experiment parameters are: {param}")
         run_results = single_run(param)
         all_results.append(run_results)
 
