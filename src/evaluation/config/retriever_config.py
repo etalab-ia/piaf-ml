@@ -1,6 +1,6 @@
 parameters = {
     "k": [1,5],
-    "retriever_type": ["bm25"],
+    "retriever_type": ["sbert"],
     "knowledge_base": ["./data/v12"],
     "test_dataset": ["./data/evaluation-datasets/407_question-fiche_anonym.csv"],
     "weighted_precision": [True],

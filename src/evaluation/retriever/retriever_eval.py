@@ -286,7 +286,8 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
         elif retriever_type == "sbert":
 
-            document_store = ElasticsearchDocumentStore(host=elasticsearch_url, username="", password="",
+            document_store = ElasticsearchDocumentStore(host=url, username="", password="",
+                                                        scheme=conection_scheme, port=port,
                                                         index="document",
                                                         search_fields=['question_sparse'],
                                                         embedding_field="question_emb", embedding_dim=512,
@@ -317,7 +318,8 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
         elif retriever_type == "dpr":
 
-            document_store = ElasticsearchDocumentStore(host=elasticsearch_url, username="", password="",
+            document_store = ElasticsearchDocumentStore(host=url, username="", password="",
+                                                        scheme=conection_scheme, port=port,
                                                         index="document",
                                                         search_fields=['question_sparse'],
                                                         embedding_field="question_emb", embedding_dim=768,
