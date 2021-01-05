@@ -75,7 +75,7 @@ parameters = {
 ```
 3. Run:
 ```bash
-python ./src/evaluation/retriever_25k_eval.py
+python ./src/evaluation/retriever_eval.py
 ```
 4. If ES throws some errors, try re-running it again. Sometimes the docker image takes time to initialize.
 
