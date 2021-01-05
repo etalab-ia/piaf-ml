@@ -87,7 +87,6 @@ def convert_json_to_dicts(dir_path: str,
         text_reader = json_doc["text_reader"] if "text_reader" in json_doc else text
         if clean_func:
             text = clean_func(text)
-
         # TODO: evaluate performances based on text_reader or text in 'text'
         doc_dict = {"text": text_reader,
                     'question_sparse': text,

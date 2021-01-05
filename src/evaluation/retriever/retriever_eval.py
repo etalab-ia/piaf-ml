@@ -1,10 +1,9 @@
 '''
-For now, it loads the config from config retriever_config.py and uses it to start the experiments
+For now, it loads the config from eval_config __init__.py and uses it to start the experiments
 '''
 import json
 import logging
 import os
-import platform
 import pickle
 import subprocess
 import time
@@ -17,8 +16,9 @@ from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.base import BaseRetriever
 from sklearn.model_selection import ParameterGrid
+
+from src.evaluation.config.elasticsearch_mappings import SBERT_MAPPING, DPR_MAPPING, SPARSE_MAPPING, ANALYZER_DEFAULT
 from src.evaluation.config.retriever_config import parameters
-from src.util.convert_json_files_to_dicts import convert_json_files_to_dicts, convert_json_files_v10_to_dicts
 import torch
 
 from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts, preprocess_text
@@ -26,100 +26,15 @@ from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts, p
 seed(42)
 from tqdm import tqdm
 from haystack.retriever.sparse import ElasticsearchRetriever
-from haystack.retriever.dense import EmbeddingRetriever
+from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
 
 import pandas as pd
 import socket
 
-from joblib import Memory
-
-location = '/tmp/'
-memory = Memory(location, verbose=1)
 logger = logging.getLogger(__name__)
 
 GPU_AVAILABLE = torch.cuda.is_available()
 USE_CACHE = True
-
-ANALYZER_DEFAULT = {
-    "analysis": {
-        "filter": {
-            "french_elision": {
-                "type": "elision",
-                "articles_case": True,
-                "articles": [
-                    "l", "m", "t", "qu", "n", "s",
-                    "j", "d", "c", "jusqu", "quoiqu",
-                    "lorsqu", "puisqu"
-                ]
-            },
-            "french_stop": {
-                "type": "stop",
-                "stopwords": "_french_"
-            },
-            "french_stemmer": {
-                "type": "stemmer",
-                "language": "light_french"
-            }
-        },
-        "analyzer": {
-            "default": {
-                "tokenizer": "standard",
-                "filter": [
-                    "french_elision",
-                    "lowercase",
-                    "french_stop",
-                    "french_stemmer"
-                ]
-            }
-        }
-    }
-}
-
-DENSE_MAPPING = {"mappings": {"properties": {
-    "link": {
-        "type": "keyword"
-    },
-    "name": {
-        "type": "keyword"
-    },
-    "question_sparse": {
-        "type": "text"
-    },
-    "question_emb": {
-        "type": "dense_vector",
-        "dims": 512
-    },
-    "text": {
-        "type": "text"
-    },
-    "theme": {
-        "type": "keyword"
-    },
-    "dossier": {
-        "type": "keyword"
-    }
-}}}
-
-SPARSE_MAPPING = {
-    "mappings": {
-        "properties": {
-            "question_sparse": {
-                "type": "text",
-            },
-            "text": {
-                "type": "text"
-            },
-            "theme": {
-                "type": "keyword"
-            },
-            "dossier": {
-                "type": "keyword"
-            }
-        }
-    },
-    "settings": ANALYZER_DEFAULT
-
-}
 
 
 def load_25k_test_set(test_corpus_path: str):
@@ -136,7 +51,7 @@ def load_25k_test_set(test_corpus_path: str):
     df = pd.read_csv(test_corpus_path).fillna("")
     dict_question_fiche = {}
     for row in df.iterrows():
-        question = row[1]["question"]
+        question = row[1]["incoming_message"]
         list_url = [row[1][u] for u in url_cols if row[1][u]]
         id = row[1]['id']
         arbo = {'theme': row[1]['theme'],
@@ -198,21 +113,19 @@ def single_run(parameters):
     k = parameters["k"]
     weighted_precision = parameters["weighted_precision"]
     filter_level = parameters["filter_level"]
-    lemma_preprocessing = parameters["lemma_preprocessing"]
+    preprocessing = parameters["preprocessing"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     # Prepare framework
     test_dataset = load_25k_test_set(test_corpus_path)
     retriever = load_retriever(knowledge_base_path=knowledge_base_path,
                                retriever_type=retriever_type,
-                               preprocessing=lemma_preprocessing)
+                               preprocessing=preprocessing)
 
     if not retriever:
-        raise Exception(("Could not prepare the testing framework!! Exiting :("))
-
+        raise Exception("Could not prepare the testing framework!! Exiting :(")
     clean_function = None
-    if lemma_preprocessing:
+    if preprocessing and retriever_type != "bm25":  # we do not use the preprocessing func if we are using pure ES
         clean_function = preprocess_text
-
     # All is good, let's run the experiment
     results = []
     tqdm.write(str(parameters))
@@ -240,7 +153,7 @@ def single_run(parameters):
     detailed_results_weighted["experiment_id"] = experiment_id
 
     ordered_headers = ["experiment_id",
-                       "knowledge_base", "test_dataset", "lemma_preprocessing", "k", "filter_level", "retriever_type",
+                       "knowledge_base", "test_dataset", "preprocessing", "k", "filter_level", "retriever_type",
                        "nb_documents", "correctly_retrieved", "weighted_precision",
                        "precision", "avg_time_s", "date", "hostname"]
 
@@ -279,21 +192,19 @@ def launch_ES():
             status = subprocess.run(
                 ['docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'], shell=True
             )
+        status = subprocess.run(
+            ['docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'], shell=True
+        )
+        time.sleep(10)
         if status.returncode:
             raise Exception(
-                "Failed to launch Elasticsearch. If you want to connect to an existing Elasticsearch instance"
-                "then set LAUNCH_ELASTICSEARCH in the script to False.")
-        time.sleep(10)
+                "Failed to launch Elasticsearch.")
 
 
 def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
                                 cached_dicts_path: Path = Path("./data/dense_dicts/"),
                                 preprocessing: bool = False):
-    if preprocessing:
-        preprocessing_tag = "preprocessed"
-    else:
-        preprocessing_tag = 'notpreprocessed'
-    cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}_{preprocessing_tag}.pkl")
+    cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}_{preprocessing}.pkl")
     if cached_dicts_name.exists():
         logger.info(f"Found and loading embeddings dict cache: {cached_dicts_name}")
         try:
@@ -310,35 +221,46 @@ def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
 def cache_dict_embeddings(dicts: Dict, knowledge_base_path: Path, retriever_type: str,
                           cached_dicts_path: Path = Path("./data/dense_dicts/"),
                           preprocessing: bool = False):
-    if preprocessing:
-        preprocessing_tag = "preprocessed"
-    else:
-        preprocessing_tag = 'notpreprocessed'
-    cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}_{preprocessing_tag}.pkl")
+    cached_dicts_name = cached_dicts_path / Path(f"{knowledge_base_path.name}_{retriever_type}_{preprocessing}.pkl")
 
     with open(cached_dicts_name, "wb") as cache:
         pickle.dump(dicts, cache)
 
 
+def prepare_ES_mappings(preprocessing: bool, analyzer_config: Dict[str, Dict]):
+    """
+    The ES preprocessor analyser is set by default. If we do not want it, we have to remove it from our mappings
+
+    :param analyzer_config: Configuration to use for the ES preprocessor analyzer
+    :param preprocessing: Whether to use preprocessing or not
+    :return: None
+    """
+    list_mappings = [SBERT_MAPPING, DPR_MAPPING, SPARSE_MAPPING]
+    for mapping in list_mappings:
+        mapping["settings"] = analyzer_config if preprocessing else {}
+
+
 def load_retriever(knowledge_base_path: str = "/data/service-public-france/extracted/",
-                   retriever_type: str = "sparse",
+                   retriever_type: str = "bm25",
                    preprocessing: bool = False):
     """
-    Loads ES if needed (check LAUNCH_ES var above) and indexes the knowledge_base corpus
+    Loads ES if needed and indexes the knowledge_base corpus
+    :param preprocessing: Boolean that indicates whether we perform preprocessing or not
     :param knowledge_base_path: PAth of the folder containing the knowledge_base corpus
     :param retriever_type: The type of retriever to be used
     :return: A Retriever object ready to be queried
     """
-    clean_function = None
-    if preprocessing:
-        clean_function = preprocess_text
 
+    clean_function = None
+    if preprocessing and retriever_type != "bm25":
+        clean_function = preprocess_text
+    prepare_ES_mappings(preprocessing=preprocessing, analyzer_config=ANALYZER_DEFAULT)
     retriever = None
     try:
         # delete the index to make sure we are not using other docs
         es = Elasticsearch(['http://localhost:9200/'], verify_certs=True)
         es.indices.delete(index='document', ignore=[400, 404])
-        if retriever_type == "sparse":
+        if retriever_type == "bm25":
 
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         search_fields=['question_sparse'],
@@ -348,34 +270,33 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
             retriever = ElasticsearchRetriever(document_store=document_store)
 
             dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
-                                          clean_func=clean_function,
                                           retriever=retriever,
                                           compute_embeddings=False)
 
             # Now, let's write the docs to our DB.
             document_store.write_documents(dicts)
-        elif retriever_type == "dense":
 
-            # TODO: change the way embedding_dim is declared as it may vary based on the embedding_model
+        elif retriever_type == "sbert":
 
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         search_fields=['question_sparse'],
                                                         embedding_field="question_emb", embedding_dim=512,
                                                         excluded_meta_data=["question_emb"],
-                                                        custom_mapping=DENSE_MAPPING)
+                                                        custom_mapping=SBERT_MAPPING)
 
             retriever = EmbeddingRetriever(document_store=document_store,
                                            embedding_model="distiluse-base-multilingual-cased",
                                            use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                            pooling_strategy="reduce_max")
-
-            dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
-                                                retriever_type=retriever_type,
-                                                preprocessing=preprocessing)
+            dicts = []
+            if USE_CACHE:
+                dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
+                                                    retriever_type=retriever_type,
+                                                    preprocessing=preprocessing)
             if not dicts:
                 dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
-                                              clean_func=clean_function,
                                               retriever=retriever,
+                                              clean_func=clean_function,
                                               compute_embeddings=True)
 
                 cache_dict_embeddings(dicts=dicts, knowledge_base_path=Path(knowledge_base_path),
@@ -383,10 +304,50 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                       preprocessing=preprocessing)
 
             document_store.write_documents(dicts)
-        return retriever
+
+        elif retriever_type == "dpr":
+
+            document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+                                                        search_fields=['question_sparse'],
+                                                        embedding_field="question_emb", embedding_dim=768,
+                                                        excluded_meta_data=["question_emb"],
+                                                        custom_mapping=DPR_MAPPING)
+
+            retriever = DensePassageRetriever(document_store=document_store,
+                                              query_embedding_model="/data/models/dpr/camembert-facebook-dpr-v2/dpr-question_encoder-fr_qa-camembert",
+                                              passage_embedding_model="/data/models/dpr/camembert-facebook-dpr-v2/dpr-ctx_encoder-fr_qa-camembert",
+                                              use_gpu=GPU_AVAILABLE,
+                                              embed_title=False,
+                                              batch_size=16,
+                                              use_fast_tokenizers=False
+                                              )
+            # TODO: Embed passages check function here
+            dicts = []
+            if USE_CACHE:
+                dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
+                                                    retriever_type=retriever_type,
+                                                    preprocessing=preprocessing)
+
+            if not dicts:
+                dicts = convert_json_to_dicts(dir_path=knowledge_base_path,
+                                              retriever=retriever,
+                                              clean_func=clean_function,
+                                              compute_embeddings=True)
+
+                cache_dict_embeddings(dicts=dicts, knowledge_base_path=Path(knowledge_base_path),
+                                      retriever_type=retriever_type,
+                                      preprocessing=preprocessing)
+
+            # dicts = pickle.load(open("/home/pavel/code/piaf-ml/data/v11_dicts.pkl", "rb"))
+
+            document_store.write_documents(dicts)
+        else:
+            raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr")
+
     except Exception as e:
-        logger.error(f"Failed with error {str(e)}")
-        return
+        logger.error(f"Failed with error: {str(e)}")
+    finally:
+        return retriever
 
 
 def compute_score(retriever: BaseRetriever, retriever_top_k: int,
@@ -433,15 +394,14 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
         precision, results_info = compute_retriever_precision(true_fiche_ids,
                                                               retrieved_results,
                                                               weight_position=weight_position)
-        id = meta['id']
-        results_info['question'] = question
+
         summed_precision += precision
         nb_questions += 1
         if precision:
             found_fiche += 1
-            successes[id] = results_info
+            successes[question] = results_info
         else:
-            errors[id] = results_info
+            errors[question] = results_info
     avg_time = pbar.avg_time
     if avg_time is None:  # quick fix for a bug idk why is happening
         avg_time = 0

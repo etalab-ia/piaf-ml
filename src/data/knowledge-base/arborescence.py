@@ -1,15 +1,11 @@
 """
-Transforms service public france fiches in XML format to txt files.
-It tries to extract the essential content from the fiches.
-It extracts also the category of each fiche (thematique, sous_thematique, dossier, sous_dossier)
-
+This file is used to generate the arborescence.json used to enrich the documents for filtering
 Usage:
-    fiches_xml2txt.py <file_path> <output_path> [options]
+    arborescence.py <file_path> <output_path> [options]
 
 Arguments:
     <file_path>             A path of a single XML fiche or a folder with multiple fiches XML
     <output_path>           A path where to store the extracted info
-    --cores=<n> CORES       Number of cores to use [default: 1:int]
 """
 
 from glob import glob
@@ -301,7 +297,7 @@ def reformat_json(arborescence):
             'data': all_data}
 
 
-def main(doc_files_path, output_path, n_jobs):
+def main(doc_files_path, output_path):
     doc_files_path = Path(doc_files_path)
     output_path = Path(output_path)
     if not doc_files_path.is_dir() and doc_files_path.is_file():
@@ -333,5 +329,4 @@ if __name__ == '__main__':
     parser = argopt(__doc__).parse_args()
     doc_files_path = parser.file_path
     output_path = parser.output_path
-    n_jobs = parser.cores
-    main(doc_files_path=doc_files_path, output_path=output_path, n_jobs=n_jobs)
+    main(doc_files_path=doc_files_path, output_path=output_path)
