@@ -7,6 +7,7 @@ import os
 import pickle
 import subprocess
 import time
+import platform
 from datetime import datetime
 from pathlib import Path
 from random import seed
@@ -18,7 +19,6 @@ from haystack.retriever.base import BaseRetriever
 from sklearn.model_selection import ParameterGrid
 
 from src.evaluation.config.elasticsearch_mappings import SBERT_MAPPING, DPR_MAPPING, SPARSE_MAPPING, ANALYZER_DEFAULT
-from src.evaluation.config.retriever_config import parameters
 import torch
 
 from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts, preprocess_text
@@ -184,9 +184,14 @@ def launch_ES():
     es = Elasticsearch(['http://localhost:9200/'], verify_certs=True)
     if not es.ping():
         logging.info("Starting Elasticsearch ...")
-        status = subprocess.run(
-            ['docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'], shell=True
-        )
+        if platform.system() == 'Windows':
+            status = subprocess.run(
+                'docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'
+            )
+        else:
+            status = subprocess.run(
+                ['docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'], shell=True
+            )
         time.sleep(10)
         if status.returncode:
             raise Exception(
@@ -394,7 +399,7 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
             successes[question] = results_info
         else:
             errors[question] = results_info
-    avg_time = pbar.avg_time
+    #avg_time = pbar.avg_time
     if avg_time is None:  # quick fix for a bug idk why is happening
         avg_time = 0
     pbar.close()

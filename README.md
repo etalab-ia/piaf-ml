@@ -75,7 +75,7 @@ parameters = {
 ```
 3. Run:
 ```bash
-python ./src/evaluation/retriever_25k_eval.py
+python ./src/evaluation/retriever_eval.py
 ```
 4. If ES throws some errors, try re-running it again. Sometimes the docker image takes time to initialize.
 
@@ -158,5 +158,10 @@ Follow README.md on the [PiafAgent repo](https://github.com/etalab-ia/piaf_agent
 * [R. Reynaud](https://github.com/rob192)
 * [G. Santarsieri](https://github.com/giuliasantarsieri)
 * [P. Soriano](https://github.com/psorianom)
+
+**Past Members :**
+
+* [J. Denes](https://github.com/jdenes)
+
 ## Contact
 * Feel free to contact the team at piaf@data.gouv.fr with any questions or if you are interested in contributing!
