@@ -272,8 +272,8 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         search_fields=['question_sparse'],
-                                                        embedding_field="question_emb", embedding_dim=512,
-                                                        excluded_meta_data=["question_emb"],
+                                                        embedding_field="embedding", embedding_dim=512,
+                                                        excluded_meta_data=["embedding"],
                                                         custom_mapping=SBERT_MAPPING)
 
             retriever = EmbeddingRetriever(document_store=document_store,
@@ -301,8 +301,8 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         search_fields=['question_sparse'],
-                                                        embedding_field="question_emb", embedding_dim=768,
-                                                        excluded_meta_data=["question_emb"],
+                                                        embedding_field="embedding", embedding_dim=768,
+                                                        excluded_meta_data=["embedding"],
                                                         custom_mapping=DPR_MAPPING)
 
             retriever = DensePassageRetriever(document_store=document_store,
