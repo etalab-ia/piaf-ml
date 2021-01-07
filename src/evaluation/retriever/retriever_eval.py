@@ -21,6 +21,7 @@ from sklearn.model_selection import ParameterGrid
 from src.evaluation.config.elasticsearch_mappings import SBERT_MAPPING, DPR_MAPPING, SPARSE_MAPPING, ANALYZER_DEFAULT
 import torch
 
+from src.evaluation.config.retriever_config import parameters
 from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts, preprocess_text
 
 seed(42)
@@ -247,7 +248,9 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
     :param retriever_type: The type of retriever to be used
     :return: A Retriever object ready to be queried
     """
-
+    knowledge_base_path = Path(knowledge_base_path)
+    if not knowledge_base_path.exists():
+        raise FileNotFoundError(f"Knowledge base folder {knowledge_base_path} does not exist!")
     clean_function = None
     if preprocessing and retriever_type != "bm25":
         clean_function = preprocess_text
@@ -399,7 +402,7 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
             successes[question] = results_info
         else:
             errors[question] = results_info
-    #avg_time = pbar.avg_time
+    avg_time = pbar.avg_time
     if avg_time is None:  # quick fix for a bug idk why is happening
         avg_time = 0
     pbar.close()
