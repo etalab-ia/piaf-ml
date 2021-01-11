@@ -12,9 +12,10 @@ from farm.utils import initialize_device_settings
 from sklearn.model_selection import ParameterGrid
 
 from src.evaluation.config.retriever_eval_squad_config import parameters
-from src.evaluation.utils.elasticsearch_management import launch_ES
+from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping
 from src.evaluation.utils.preprocess import add_eval_data_from_file
 from src.evaluation.utils.utils_eval import eval_retriever
+from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 
 GPU_AVAILABLE = torch.cuda.is_available()
 
@@ -32,14 +33,16 @@ def single_run(parameters):
     retriever_type = parameters["retriever_type"]
     k = parameters["k"]
     preprocessing = parameters["preprocessing"]
-    mapping_config = parameters['mapping_config']
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     # Prepare framework
+
+    prepare_mapping(SQUAD_MAPPING, preprocessing)
 
     # Connect to Elasticsearch
     document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                 create_index=False, embedding_field="emb",
-                                                embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine')
+                                                embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                custom_mapping=SQUAD_MAPPING)
 
     # Initialize Retriever
     retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
@@ -58,6 +61,10 @@ def single_run(parameters):
 
     # Add evaluation data to Elasticsearch document store
     # We first delete the custom tutorial indices to not have duplicate elements
+    # make sure these indices do not collide with existing ones, the indices will be wiped clean before data is inserted
+    doc_index = "tutorial5_docs"
+    label_index = "tutorial5_labels"
+
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
     docs, labels = add_eval_data_from_file(evaluation_data, retriever_emb)
@@ -77,10 +84,6 @@ def single_run(parameters):
 if __name__ == '__main__':
     result_file_path = Path("./results/results.csv")
     parameters_grid = list(ParameterGrid(param_grid=parameters))
-
-    # make sure these indices do not collide with existing ones, the indices will be wiped clean before data is inserted
-    doc_index = "tutorial5_docs"
-    label_index = "tutorial5_labels"
 
     device, n_gpu = initialize_device_settings(use_cuda=False)
 

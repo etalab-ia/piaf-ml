@@ -3,8 +3,7 @@ parameters = {
     "retriever_type": ["sbert"],
     "squad_dataset": ["./data/evaluation-datasets/fquad_valid_with_impossible_fraction.json"],
     "filter_level": [None],
-    "preprocessing": [False],
-    "mapping_config": ['squad']
+    "preprocessing": [True]
 }
 # rules:
 # corpus and retriever type requires reloading ES indexing
