@@ -52,8 +52,8 @@ DENSE_MAPPING = {
 
 
 document_store = ElasticsearchDocumentStore(host="haystack_elasticsearch_1", username="", password="", index="document",
-                                            embedding_field="question_emb", embedding_dim=512,
-                                            excluded_meta_data=["question_emb"], custom_mapping=DENSE_MAPPING)
+                                            embedding_field="embedding", embedding_dim=512,
+                                            excluded_meta_data=["embedding"], custom_mapping=DENSE_MAPPING)
 retriever = EmbeddingRetriever(document_store=document_store, embedding_model="distiluse-base-multilingual-cased",
                                use_gpu=False, model_format="sentence_transformers")
 

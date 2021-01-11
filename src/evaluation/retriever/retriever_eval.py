@@ -21,6 +21,7 @@ from src.evaluation.config.elasticsearch_mappings import SBERT_MAPPING, DPR_MAPP
 from src.evaluation.utils.elasticsearch_management import launch_ES
 import torch
 
+from src.evaluation.config.retriever_config import parameters
 from src.util.convert_json_to_dictsAndEmbeddings import convert_json_to_dicts, preprocess_text
 
 seed(42)
@@ -230,7 +231,9 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
     :param retriever_type: The type of retriever to be used
     :return: A Retriever object ready to be queried
     """
-
+    knowledge_base_path = Path(knowledge_base_path)
+    if not knowledge_base_path.exists():
+        raise FileNotFoundError(f"Knowledge base folder {knowledge_base_path} does not exist!")
     clean_function = None
     if preprocessing and retriever_type != "bm25":
         clean_function = preprocess_text
@@ -260,8 +263,8 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         search_fields=['question_sparse'],
-                                                        embedding_field="question_emb", embedding_dim=512,
-                                                        excluded_meta_data=["question_emb"],
+                                                        embedding_field="embedding", embedding_dim=512,
+                                                        excluded_meta_data=["embedding"],
                                                         custom_mapping=SBERT_MAPPING)
 
             retriever = EmbeddingRetriever(document_store=document_store,
@@ -289,8 +292,8 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
 
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
                                                         search_fields=['question_sparse'],
-                                                        embedding_field="question_emb", embedding_dim=768,
-                                                        excluded_meta_data=["question_emb"],
+                                                        embedding_field="embedding", embedding_dim=768,
+                                                        excluded_meta_data=["embedding"],
                                                         custom_mapping=DPR_MAPPING)
 
             retriever = DensePassageRetriever(document_store=document_store,
@@ -382,7 +385,7 @@ def compute_score(retriever: BaseRetriever, retriever_top_k: int,
             successes[question] = results_info
         else:
             errors[question] = results_info
-    #avg_time = pbar.avg_time
+    avg_time = pbar.avg_time
     if avg_time is None:  # quick fix for a bug idk why is happening
         avg_time = 0
     pbar.close()
