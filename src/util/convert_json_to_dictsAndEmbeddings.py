@@ -77,7 +77,7 @@ def convert_json_to_dicts(dir_path: str,
             embedding = []
             if compute_embeddings:
                 assert retriever is not None
-                embedding = list(retriever.embed_passages(docs=[Document(text=text)])[0])
+                embedding = retriever.embed_passages(docs=[Document(text=text)])[0]
         else:
             raise Exception(f"Indexing of {path.suffix} files is not currently supported.")
 
