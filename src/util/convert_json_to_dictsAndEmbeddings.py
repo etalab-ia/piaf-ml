@@ -2,10 +2,10 @@ import json
 from pathlib import Path
 from typing import Optional, Callable, Union
 
+from haystack import Document
 from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
 from haystack.retriever.sparse import ElasticsearchRetriever
 from tqdm import tqdm
-from haystack import Document
 import spacy
 
 # if not installed python -m spacy download fr_core_news_sm
@@ -28,7 +28,6 @@ def preprocess_text(text: str):
     doc = NLP(text)
     text = " ".join(t.lemma_.lower() for t in doc if not t.is_stop).replace("\n", " ")
     return text
-
 
 def convert_json_to_dicts(dir_path: str,
                           retriever: Union[EmbeddingRetriever, DensePassageRetriever,
@@ -90,7 +89,7 @@ def convert_json_to_dicts(dir_path: str,
         # TODO: evaluate performances based on text_reader or text in 'text'
         doc_dict = {"text": text_reader,
                     'question_sparse': text,
-                    'embedding': embedding,
+                    'question_emb': embedding,
                     "meta": {"name": path.name,
                              "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
                              'audience': audience,
@@ -100,7 +99,65 @@ def convert_json_to_dicts(dir_path: str,
                              'sous_dossier': sous_dossier}}
         # ES injection fails if embedding is [] while dim = 512, so we need to remove the whole porp
         if not compute_embeddings:
-            doc_dict.pop('embedding')
+            doc_dict.pop('question_emb')
         documents.append(doc_dict)
+
+    return documents
+
+def convert_squad_to_dicts(dir_path: str,
+                          retriever: Union[EmbeddingRetriever, DensePassageRetriever,
+                                           ElasticsearchRetriever],
+                          clean_func: Optional[Callable] = None,
+                          split_paragraphs: bool = False,
+                          compute_embeddings: bool = False):
+    """
+    Convert the contexts of the squad dataset of the given path to Python dicts that can be written to a
+    Document Store.
+
+    :param compute_embeddings:
+    :param retriever:
+    :param squad_path: path for the squad dataset to be written to the database
+    :param clean_func: a custom cleaning function that gets applied to each doc (input: str, output:str)
+    :param split_paragraphs: split text in paragraphs.
+    :return: None
+    """
+    if split_paragraphs:
+        raise Exception(f"Splitting paragraph not currently supported.")
+
+    with open(dir_path, encoding='UTF-8') as f:
+        squad = json.load(f)
+
+    documents = []
+
+    list_articles = squad['data']
+    for document in list_articles:
+        # get all extra fields from document level (e.g. title)
+        meta_doc = {k: v for k, v in document.items() if k not in ("paragraphs", "title")}
+        for paragraph in document['paragraphs']:
+            cur_meta = {"name": document.get("title", None)}
+            # all other fields from paragraph level
+            meta_paragraph = {k: v for k, v in paragraph.items() if k not in ("qas", "context")}
+            cur_meta.update(meta_paragraph)
+            # meta from parent document
+            cur_meta.update(meta_doc)
+
+            text = paragraph['context']
+            embedding = []
+            if compute_embeddings:
+                assert retriever is not None
+                embedding = retriever.embed_passages(docs=[Document(text=text)])[0]
+
+            text_reader = paragraph["text_reader"] if "text_reader" in paragraph else text
+            if clean_func:
+                text = clean_func(text)
+
+            doc_dict = {"text": text_reader,
+                        'question_sparse': text,
+                        'question_emb': embedding,
+                        'meta': cur_meta}
+            # ES injection fails if embedding is [] while dim = 512, so we need to remove the whole porp
+            if not compute_embeddings:
+                doc_dict.pop('question_emb')
+            documents.append(doc_dict)
 
     return documents

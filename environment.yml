@@ -1,4 +1,4 @@
-name: piaf-ml
+yname: piaf-ml
 channels:
   - defaults
 dependencies:
