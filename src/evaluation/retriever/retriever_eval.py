@@ -5,20 +5,20 @@ import json
 import logging
 import os
 import pickle
-import subprocess
-import time
-import platform
+import hashlib
+
 from datetime import datetime
 from pathlib import Path
 from random import seed
 from typing import Dict, List, Tuple, Optional, Callable
-import hashlib
+
 from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.base import BaseRetriever
 from sklearn.model_selection import ParameterGrid
 
 from src.evaluation.config.elasticsearch_mappings import SBERT_MAPPING, DPR_MAPPING, SPARSE_MAPPING, ANALYZER_DEFAULT
+from src.evaluation.utils.elasticsearch_management import launch_ES
 import torch
 
 from src.evaluation.config.retriever_config import parameters
@@ -185,23 +185,6 @@ def save_results(result_file_path: Path, all_results: List[Tuple]):
         with open((result_file_path.parent / file_name).as_posix(), "w") as filo:
             json.dump(dic, filo, indent=4, ensure_ascii=False)
 
-
-def launch_ES():
-    es = Elasticsearch(['http://localhost:9200/'], verify_certs=True)
-    if not es.ping():
-        logging.info("Starting Elasticsearch ...")
-        if platform.system() == 'Windows':
-            status = subprocess.run(
-                'docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'
-            )
-        else:
-            status = subprocess.run(
-                ['docker run -d -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'], shell=True
-            )
-        time.sleep(10)
-        if status.returncode:
-            raise Exception(
-                "Failed to launch Elasticsearch.")
 
 
 def load_cached_dict_embeddings(knowledge_base_path: Path, retriever_type: str,
