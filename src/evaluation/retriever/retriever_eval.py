@@ -107,7 +107,7 @@ def single_run(parameters):
     :param weighted_precision: Whether to take into account the position of the retrieved result in the accuracy computation
     :return:
     """
-    # col names
+    # get parameters
     test_corpus_path = Path(parameters["test_dataset"])
     knowledge_base_path = Path(parameters["knowledge_base"])
     retriever_type = parameters["retriever_type"]
@@ -115,12 +115,17 @@ def single_run(parameters):
     weighted_precision = parameters["weighted_precision"]
     filter_level = parameters["filter_level"]
     preprocessing = parameters["preprocessing"]
+    use_cache = parameters["use_cache"]
+
+    # create experiment id
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
+
     # Prepare framework
     test_dataset = load_25k_test_set(test_corpus_path)
     retriever = load_retriever(knowledge_base_path=knowledge_base_path,
                                retriever_type=retriever_type,
-                               preprocessing=preprocessing)
+                               preprocessing=preprocessing,
+                               use_cache=use_cache)
 
     if not retriever:
         raise Exception("Could not prepare the testing framework!! Exiting :(")
@@ -223,9 +228,11 @@ def prepare_ES_mappings(preprocessing: bool, analyzer_config: Dict[str, Dict]):
 
 def load_retriever(knowledge_base_path: str = "/data/service-public-france/extracted/",
                    retriever_type: str = "bm25",
-                   preprocessing: bool = False):
+                   preprocessing: bool = False,
+                   use_cache=False):
     """
     Loads ES if needed and indexes the knowledge_base corpus
+    :param use_cache: Whether to use or not stored embeddings cache (if available)
     :param preprocessing: Boolean that indicates whether we perform preprocessing or not
     :param knowledge_base_path: PAth of the folder containing the knowledge_base corpus
     :param retriever_type: The type of retriever to be used
@@ -272,7 +279,7 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                            use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                            pooling_strategy="reduce_max")
             dicts = []
-            if USE_CACHE:
+            if use_cache:
                 dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
                                                     retriever_type=retriever_type,
                                                     preprocessing=preprocessing)
@@ -302,11 +309,12 @@ def load_retriever(knowledge_base_path: str = "/data/service-public-france/extra
                                               use_gpu=GPU_AVAILABLE,
                                               embed_title=False,
                                               batch_size=16,
-                                              use_fast_tokenizers=False
+                                              use_fast_tokenizers=False,
+                                              similarity_function="cosine"
                                               )
             # TODO: Embed passages check function here
             dicts = []
-            if USE_CACHE:
+            if use_cache:
                 dicts = load_cached_dict_embeddings(knowledge_base_path=Path(knowledge_base_path),
                                                     retriever_type=retriever_type,
                                                     preprocessing=preprocessing)

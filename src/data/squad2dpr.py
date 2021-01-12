@@ -22,9 +22,9 @@ from tqdm import tqdm
 import json
 import random
 import re
-import base64
+
 random.seed(42)
-import binascii
+
 """
 [
     {
@@ -194,12 +194,12 @@ def create_dpr_training_dataset(squad_file_path: Path):
         if idx_article % int(len(squad_data) * 0.5) == 0:
             yield list_DPR
             list_DPR.clear()
-            # list_DPR.clear()
 
     print(f"Number of not added questions : {n_non_added_questions}")
+
+
 def save_complete_dataset(iter_dpr: Iterator, dpr_outpupt_path: Path):
     for list_dpr in iter_dpr:
-        # list_dpr = chunk
         random.shuffle(list_dpr)
 
         dataset_file_name = dpr_outpupt_path / Path(f"DPR_FR_all.json")
