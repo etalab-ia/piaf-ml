@@ -4,13 +4,14 @@ from tqdm import tqdm
 
 from haystack.document_store.base import BaseDocumentStore
 from haystack.retriever.base import BaseRetriever
+from haystack.pipeline import BaseStandardPipeline
 
 logger = logging.getLogger(__name__)
 
 
 def eval_retriever(
     document_store: BaseDocumentStore,
-    retriever: BaseRetriever,
+    pipeline: BaseStandardPipeline,
     label_index: str = "label",
     doc_index: str = "eval_document",
     label_origin: str = "gold_label",
@@ -51,8 +52,6 @@ def eval_retriever(
     # Extract all questions for evaluation
     filters = {"origin": [label_origin]}
 
-    timed_retrieve = retriever.timing(retriever.retrieve)
-
     labels = document_store.get_all_labels_aggregated(index=label_index, filters=filters)
 
     correct_retrievals = 0
@@ -74,7 +73,8 @@ def eval_retriever(
     logger.info("Performing eval queries...")
     if open_domain:
         for question, gold_answers in tqdm(question_label_dict.items()):
-            retrieved_docs = timed_retrieve(question, top_k=top_k, index=doc_index)
+            #retrieved_docs = timed_retrieve(question, top_k=top_k, index=doc_index)
+            retrieved_docs = pipeline.run(query=question, top_k_retriever=top_k)
             if return_preds:
                 predictions.append({"question": question, "retrieved_docs": retrieved_docs})
             # check if correct doc in retrieved docs
@@ -96,14 +96,14 @@ def eval_retriever(
     # Option 2: Strict evaluation by document ids that are listed in the labels
     else:
         for question, gold_ids in tqdm(question_label_dict.items()):
-            retrieved_docs = timed_retrieve(question, top_k=top_k, index=doc_index)
+            retrieved_docs = pipeline.run(query=question, top_k_retriever=top_k)
             if return_preds:
-                predictions.append({"question": question, "retrieved_docs": retrieved_docs})
+                predictions.append({"question": question, "retrieved_docs": retrieved_docs['documents']})
             # check if correct doc in retrieved docs
             found_relevant_doc = False
             relevant_docs_found = 0
             current_avg_precision = 0.0
-            for doc_idx, doc in enumerate(retrieved_docs):
+            for doc_idx, doc in enumerate(retrieved_docs['documents']):
                 for gold_id in gold_ids:
                     if str(doc.id) == gold_id:
                         relevant_docs_found += 1
@@ -129,7 +129,7 @@ def eval_retriever(
         "recall": recall,
         "map": mean_avg_precision,
         "mrr": mean_reciprocal_rank,
-        "retrieve_time": retriever.retrieve_time,
+        #"retrieve_time": retriever.retrieve_time,
         "n_questions": number_of_questions,
         "top_k": top_k
     }

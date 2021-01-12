@@ -7,7 +7,8 @@ from tqdm import tqdm
 
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.sparse import ElasticsearchRetriever
-from haystack.retriever.dense import  EmbeddingRetriever
+from haystack.retriever.dense import EmbeddingRetriever
+from haystack.pipeline import Pipeline
 from farm.utils import initialize_device_settings
 from sklearn.model_selection import ParameterGrid
 
@@ -49,27 +50,34 @@ def single_run(parameters):
     retriever_emb = EmbeddingRetriever(document_store=document_store,
                                        embedding_model="distiluse-base-multilingual-cased",
                                        use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
-                                       pooling_strategy="reduce_mean",
+                                       pooling_strategy="reduce_max",
                                        emb_extraction_layer=-2)
+
+    p = Pipeline()
 
     if retriever_type == 'bm25':
         retriever = retriever_bm25
+        p.add_node(component=retriever, name="ESRetriever", inputs=["Query"])
     elif retriever_type == "sbert":
         retriever = retriever_emb
+        p.add_node(component=retriever, name="SBertRetriever", inputs=["Query"])
     else:
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr")
+
 
     # Add evaluation data to Elasticsearch document store
     # We first delete the custom tutorial indices to not have duplicate elements
     # make sure these indices do not collide with existing ones, the indices will be wiped clean before data is inserted
-    doc_index = "tutorial5_docs"
-    label_index = "tutorial5_labels"
+    doc_index = "document"
+    label_index = "label"
 
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
     docs, labels = add_eval_data_from_file(evaluation_data, retriever_emb)
     document_store.write_documents(docs, index=doc_index)
     document_store.write_labels(labels, index=label_index)
+
+    res = p.run(query="What did Einstein work on?", top_k_retriever=1)
 
     retriever_eval_results = eval_retriever(document_store, retriever, top_k=k, label_index=label_index, doc_index=doc_index)
     ## Retriever Recall is the proportion of questions for which the correct document containing the answer is
@@ -78,7 +86,7 @@ def single_run(parameters):
     ## Retriever Mean Avg Precision rewards retrievers that give relevant documents a higher rank
     print("Retriever Mean Avg Precision:", retriever_eval_results["map"])
 
-    return  retriever_eval_results
+    return retriever_eval_results
 
 
 if __name__ == '__main__':

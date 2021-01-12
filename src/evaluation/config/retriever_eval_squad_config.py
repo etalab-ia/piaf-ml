@@ -1,5 +1,5 @@
 parameters = {
-    "k": [5],
+    "k": [1],
     "retriever_type": ["sbert"],
     "squad_dataset": ["./data/evaluation-datasets/fquad_valid_with_impossible_fraction.json"],
     "filter_level": [None],
