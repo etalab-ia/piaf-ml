@@ -8,17 +8,24 @@ from tqdm import tqdm
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.sparse import ElasticsearchRetriever
 from haystack.retriever.dense import EmbeddingRetriever
+from haystack.reader.transformers import TransformersReader
 from haystack.pipeline import Pipeline
+
 from farm.utils import initialize_device_settings
 from sklearn.model_selection import ParameterGrid
 
-from src.evaluation.config.retriever_eval_squad_config import parameters
+from src.evaluation.config.retriever_reader_eval_squad_config import parameters
 from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping
 from src.evaluation.utils.preprocess import add_eval_data_from_file
-from src.evaluation.utils.utils_eval import eval_retriever
+from src.evaluation.utils.utils_eval import eval_retriever_reader
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 
 GPU_AVAILABLE = torch.cuda.is_available()
+
+if GPU_AVAILABLE:
+    n_gpu = torch.cuda.current_device()
+else:
+    n_gpu = -1
 
 def single_run(parameters):
     """
@@ -32,7 +39,8 @@ def single_run(parameters):
     # col names
     evaluation_data = Path(parameters["squad_dataset"])
     retriever_type = parameters["retriever_type"]
-    k = parameters["k"]
+    k_retriever = parameters["k_retriever"]
+    k_reader = parameters["k_reader"]
     preprocessing = parameters["preprocessing"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     # Prepare framework
@@ -53,17 +61,22 @@ def single_run(parameters):
                                        pooling_strategy="reduce_max",
                                        emb_extraction_layer=-2)
 
+    reader = TransformersReader(model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
+                                tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
+                                use_gpu=n_gpu,top_k_per_candidate=k_reader)
+
     p = Pipeline()
 
     if retriever_type == 'bm25':
         retriever = retriever_bm25
-        p.add_node(component=retriever, name="ESRetriever", inputs=["Query"])
+        p.add_node(component=retriever, name="Retriever", inputs=["Query"])
     elif retriever_type == "sbert":
         retriever = retriever_emb
-        p.add_node(component=retriever, name="SBertRetriever", inputs=["Query"])
+        p.add_node(component=retriever, name="Retriever", inputs=["Query"])
     else:
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr")
 
+    p.add_node(component=reader, name='reader', inputs=['Retriever'])
 
     # Add evaluation data to Elasticsearch document store
     # We first delete the custom tutorial indices to not have duplicate elements
@@ -77,12 +90,12 @@ def single_run(parameters):
     document_store.write_documents(docs, index=doc_index)
     document_store.write_labels(labels, index=label_index)
 
-    retriever_eval_results = eval_retriever(document_store=document_store, pipeline=p, top_k=k, label_index=label_index, doc_index=doc_index)
-    ## Retriever Recall is the proportion of questions for which the correct document containing the answer is
-    ## among the correct documents
-    print("Retriever Recall:", retriever_eval_results["recall"])
-    ## Retriever Mean Avg Precision rewards retrievers that give relevant documents a higher rank
-    print("Retriever Mean Avg Precision:", retriever_eval_results["map"])
+    retriever_eval_results = eval_retriever_reader(document_store=document_store, pipeline=p, top_k_reader=k_reader,
+                                                   top_k_retriever=k_retriever, label_index=label_index,
+                                                   doc_index=doc_index)
+
+    print("Reader Accuracy:", retriever_eval_results["reader_topk_accuracy"])
+    print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])
 
     return retriever_eval_results
 
