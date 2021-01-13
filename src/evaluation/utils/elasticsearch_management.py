@@ -30,6 +30,7 @@ def launch_ES():
         logging.info("Elasticsearch found !")
         logging.info("Deleting indices")
         es.indices.delete(index='document', ignore=[400, 404])
+        es.indices.delete(index='label', ignore=[400, 404])
 
 def prepare_mapping (mapping, preprocessing):
     if not preprocessing:
