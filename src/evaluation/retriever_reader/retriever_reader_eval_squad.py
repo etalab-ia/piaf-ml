@@ -86,7 +86,7 @@ def single_run(parameters):
 
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
-    docs, labels = add_eval_data_from_file(evaluation_data, retriever_emb)
+    docs, labels = add_eval_data_from_file(evaluation_data, retriever_emb) #TODO : changer pour la fonction de haystack
     document_store.write_documents(docs, index=doc_index)
     document_store.write_labels(labels, index=label_index)
 
