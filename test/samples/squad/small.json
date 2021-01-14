@@ -1,0 +1,691 @@
+{
+  "data": [
+    {
+      "title": "Sport",
+      "categorie": "Sport",
+      "paragraphs": [
+        {
+          "context": "Les d\u00e9penses des m\u00e9nages repr\u00e9sentent plus de 50 % de ces montants (14,2 milliards d'euros en 2003 et 12 milliards d'euros en 2019), contre 7,9 milliards d'euros pour les collectivit\u00e9s locales, 3,2 pour l'\u00c9tat, et 2,2 pour les entreprises. Parmi les d\u00e9penses sportives des m\u00e9nages en 2003, 3,7 milliards sont consacr\u00e9s aux v\u00eatements de sport et chaussures, 2 aux biens durables, 2,7 aux autres biens et 5,8 aux services. Le Minist\u00e8re de la Jeunesse et des Sports estime \u00e0 100 000 (58 % d'hommes pour 42 % de femmes) le nombre de salari\u00e9s travaillant pour le secteur sportif en France pour quelque 20 000 employeurs.",
+          "qas": [
+            {
+              "question": "Combien de personnes travaillent au minist\u00e8re des sports",
+              "id": "p140295443291664",
+              "answers": [
+                {
+                  "text": "100 000",
+                  "answer_start": 472
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Combien d'employeurs",
+              "id": "p140295443291520",
+              "answers": [
+                {
+                  "text": "20 000",
+                  "answer_start": 597
+                },
+                {
+                  "text": "20 000",
+                  "answer_start": 597
+                },
+                {
+                  "text": "20 000",
+                  "answer_start": 597
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quel part du budget des m\u00e9nages",
+              "id": "p140295443291376",
+              "answers": [
+                {
+                  "text": "50",
+                  "answer_start": 46
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quel montant en 2003",
+              "id": "p140295443291088",
+              "answers": [
+                {
+                  "text": "14,2 milliards d'euros",
+                  "answer_start": 68
+                },
+                {
+                  "text": "14,2 milliards",
+                  "answer_start": 68
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quel montant en 2019",
+              "id": "p140295443290872",
+              "answers": [
+                {
+                  "text": "12 milliards",
+                  "answer_start": 102
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Jakob B\u00f6hme",
+      "categorie": "Religion",
+      "paragraphs": [
+        {
+          "context": "D'apr\u00e8s son premier biographe, Abraham von Frankenberg, B\u00f6hme aurait v\u00e9cu, d\u00e8s l'enfance, des \u00e9pisodes surnaturels, telle cette entr\u00e9e dans une caverne creus\u00e9e sous le mont Landeskrone o\u00f9 il aurait d\u00e9couvert, sans y toucher, un monceau d'argent. Quoi qu'il en soit de l'historicit\u00e9 de ce r\u00e9cit initiatique, il est bient\u00f4t relay\u00e9 par un autre \u00e9pisode \u00e9trange qui eut lieu durant l'apprentissage du jeune cordonnier : apr\u00e8s avoir achet\u00e9 des souliers, un \u00e9tranger \u00e0 la mine impressionnante lui pr\u00e9dit, en termes religieux, une destin\u00e9e et une mission exceptionnelles.",
+          "qas": [
+            {
+              "question": "Qui a \u00e9t\u00e9 t\u00e9moin de miracles",
+              "id": "p139938845686736",
+              "answers": [
+                {
+                  "text": "B\u00f6hme",
+                  "answer_start": 56
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Que trouve t on sous le mont Landeskrone",
+              "id": "p139938845686592",
+              "answers": [
+                {
+                  "text": "un monceau d'argent",
+                  "answer_start": 225
+                },
+                {
+                  "text": "une caverne",
+                  "answer_start": 140
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Qui est vou\u00e9 \u00e0 un avenir hors du commun",
+              "id": "p139938845686448",
+              "answers": [
+                {
+                  "text": "B\u00f6hme",
+                  "answer_start": 56
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Un \u00e9venement bizarre a eu lieu \u00e0 quel moment",
+              "id": "p139939097698808",
+              "answers": [
+                {
+                  "text": "durant l'apprentissage",
+                  "answer_start": 371
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Qui a fait l'acquisition de chaussures",
+              "id": "p139938859029200",
+              "answers": [
+                {
+                  "text": "un \u00e9tranger",
+                  "answer_start": 449
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        },
+        {
+          "context": "Jakob B\u00f6hme est n\u00e9 le 8 mars 1575, dans le hameau du Alt-Seidenberg (Vieux Seidenbourg), \u00e0 une lieue et demie de G\u00f6rlitz, en Haute-Lusace, aujourd'hui Zgorzelec (Pologne). Ses parents appartiennent \u00e0 la paysannerie mais jouissent gr\u00e2ce \u00e0 la carri\u00e8re du grand-p\u00e8re, Ambroise B\u00f6hme, d'une relative aisance et d'un certain niveau de culture. Aussi envoient-ils leur fils \u00e0 l'\u00e9cole, o\u00f9 il apprend \u00e0 lire, \u00e9crire et compter, ainsi que des rudiments de latin; comme sa constitution fragile l'emp\u00eache de travailler la terre, ils le destinent \u00e0 l'artisanat de la cordonnerie.",
+          "qas": [
+            {
+              "question": "Qui est de constitution fragile ?",
+              "id": "p139939097698880",
+              "answers": [
+                {
+                  "text": "Jakob B\u00f6hme",
+                  "answer_start": 0
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Qui est le grand-p\u00e8re de Jakob",
+              "id": "p139938845687384",
+              "answers": [
+                {
+                  "text": "Ambroise B\u00f6hme",
+                  "answer_start": 265
+                },
+                {
+                  "text": "Ambroise B\u00f6hme",
+                  "answer_start": 265
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Les parents de Jakob sont des personnes riches",
+              "id": "p139938845687528",
+              "answers": [
+                {
+                  "text": "relative aisance",
+                  "answer_start": 287
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Qui est scolaris\u00e9 pour apprendre",
+              "id": "p139938845687456",
+              "answers": [
+                {
+                  "text": "leur fils",
+                  "answer_start": 358
+                },
+                {
+                  "text": "Jakob B\u00f6hme",
+                  "answer_start": 0
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Comment s'appelait Zgorzelec il y a environ 500 ans",
+              "id": "p139939097701976",
+              "answers": [
+                {
+                  "text": "G\u00f6rlitz",
+                  "answer_start": 113
+                },
+                {
+                  "text": "hameau du Alt-Seidenberg",
+                  "answer_start": 43
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        },
+        {
+          "context": "Mais ce r\u00e9gime de travail, combin\u00e9 aux inqui\u00e9tudes g\u00e9n\u00e9r\u00e9es par sa situation sociale, l'\u00e9puise. \u00c0 l'automne, gagn\u00e9 par une forte fi\u00e8vre, il ingurgite une grande quantit\u00e9 d'eau et se met \u00e0 enfler d\u00e9mesur\u00e9ment, au point qu'il faut le rapatrier d'urgence \u00e0 G\u00f6rlitz, aupr\u00e8s de sa femme et de ses proches, le 7 novembre 1624. Se pose alors le probl\u00e8me des derniers sacrements. Certes, depuis juillet, le pasteur Richter n'est plus de ce monde, mais son successeur Nicolaus Thomas se r\u00e9v\u00e8le tout aussi hostile aux th\u00e9ories du th\u00e9osophe. \u00c0 la demande de Tobias Kober, c'est un membre du conseil eccl\u00e9siastique, Elias Dietrich, qui accepte d'administrer le mourant, non sans lui avoir fait passer, au pr\u00e9alable, un \u00e9prouvant examen cat\u00e9ch\u00e9tique.",
+          "qas": [
+            {
+              "question": "En quelle ann\u00e9e Jakob B\u00f6hme tombe-t-il malade ?",
+              "id": "p140295460356960",
+              "answers": [
+                {
+                  "text": "1624",
+                  "answer_start": 315
+                },
+                {
+                  "text": "1624",
+                  "answer_start": 315
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Qui est mort en juillet ?",
+              "id": "p140295443291808",
+              "answers": [
+                {
+                  "text": "Richter",
+                  "answer_start": 407
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quel est le m\u00e9tier de Nicolas Thomas ?",
+              "id": "p140295443291952",
+              "answers": [
+                {
+                  "text": "pasteur",
+                  "answer_start": 399
+                },
+                {
+                  "text": "pasteur",
+                  "answer_start": 399
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Que doit subir Jakob B\u00f6hme avant d\u2019obtenir les derniers sacrements ?",
+              "id": "p140295460357824",
+              "answers": [
+                {
+                  "text": "examen",
+                  "answer_start": 717
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Pourquoi B\u00f6hme enfle-t-il ?",
+              "id": "p140295460357608",
+              "answers": [
+                {
+                  "text": "ingurgite une grande quantit\u00e9 d'eau",
+                  "answer_start": 140
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Guillaume Marie Andr\u00e9 Ferrus",
+      "categorie": "Sciences",
+      "paragraphs": [
+        {
+          "context": "Apr\u00e8s deux ann\u00e9es de stage \u00e0 Brian\u00e7on en qualit\u00e9 d'\u00e9l\u00e8ve officier de sant\u00e9, Guillaume Marie Andr\u00e9 Ferrus part \u00e0 15 ans pour Paris, pour y continuer des \u00e9tudes m\u00e9dicales. Alexis Boyer, chirurgien c\u00e9l\u00e8bre, le prend sous sa protection et le confie \u00e0 Joseph R\u00e9camier. Guillaume Marie Andr\u00e9 Ferrus assiste R\u00e9camier aupr\u00e8s des malades et s'initie aux pratiques de la client\u00e8le. Le 15 f\u00e9vrier 1805, \u00e0 20 ans, il est en possession du dipl\u00f4me de docteur en m\u00e9decine avec une th\u00e8se soutenue le 11 pluviose an XII (31 janvier 1804) sur l'emploi de la suture.",
+          "qas": [
+            {
+              "question": "Combien de temps a dur\u00e9 le stage ?",
+              "id": "p139938845609416",
+              "answers": [
+                {
+                  "text": "deux ann\u00e9es",
+                  "answer_start": 6
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "A quel \u00e2ge Guillaume Marie Andr\u00e9 Ferrus part pour Paris ?",
+              "id": "p139938845606896",
+              "answers": [
+                {
+                  "text": "\u00e0 15 ans",
+                  "answer_start": 110
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quelles \u00e9tudes suit Guillaume ?",
+              "id": "p139938845607256",
+              "answers": [
+                {
+                  "text": "m\u00e9dicales",
+                  "answer_start": 159
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "A quel \u00e2ge obtient il son dipl\u00f4me ?",
+              "id": "p139938845607184",
+              "answers": [
+                {
+                  "text": "\u00e0 20 ans",
+                  "answer_start": 392
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quand a t il soutenu sa th\u00e8se ?",
+              "id": "p139938845607328",
+              "answers": [
+                {
+                  "text": "le 11 pluviose an XII (31 janvier 1804",
+                  "answer_start": 481
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "\u00c9gypte",
+      "categorie": "G\u00e9ographie",
+      "paragraphs": [
+        {
+          "context": "L\u2019air y est particuli\u00e8rement sec et salubre, et seul le Nil fait qu\u2019on n\u2019y retrouve pas totalement le climat saharien. En hiver, la temp\u00e9rature est douce et les gel\u00e9es nocturnes sont exceptionnelles. Mis \u00e0 part les mois de janvier, f\u00e9vrier et mars, parfois assez froids dans le nord, les temp\u00e9ratures moyennes avoisinent 20 \u00b0C sur la c\u00f4te m\u00e9diterran\u00e9enne (maximales 31 \u00b0C) et 28 \u00b0C \u00e0 Assouan (maximales 50 \u00b0C). Dans le d\u00e9sert, les temp\u00e9ratures extr\u00eames sont de rigueur \u2014 incandescent le jour, glacial la nuit.",
+          "qas": [
+            {
+              "question": "Comment l'air est dans le Nil ?",
+              "id": "p139938845606968",
+              "answers": [
+                {
+                  "text": "L\u2019air y est particuli\u00e8rement sec et salubre",
+                  "answer_start": 0
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Comment est la temp\u00e9rature du Nil en hiver ?",
+              "id": "p139938845607112",
+              "answers": [
+                {
+                  "text": "temp\u00e9rature est douce",
+                  "answer_start": 132
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quel mois sont froid dans le NIL ?",
+              "id": "p139938845606248",
+              "answers": [
+                {
+                  "text": "les mois de janvier, f\u00e9vrier et mars",
+                  "answer_start": 211
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Comment sont les temp\u00e9ratures dans le desert du nil ?",
+              "id": "p139938845606752",
+              "answers": [
+                {
+                  "text": "Dans le d\u00e9sert, les temp\u00e9ratures extr\u00eames sont de rigueur",
+                  "answer_start": 411
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Comment sont les temp\u00e9ratures dans le d\u00e9sert du nil la nuit ?",
+              "id": "p139938845606608",
+              "answers": [
+                {
+                  "text": "glacial la nuit",
+                  "answer_start": 493
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Yoweri Museveni",
+      "categorie": "Soci\u00e9t\u00e9",
+      "paragraphs": [
+        {
+          "context": "Dans le droit fil du consensus de Washington, il privatise ainsi l\u2019Uganda Commercial Bank, la \u00ab banque du peuple \u00bb . \u00ab L\u2019Ouganda conna\u00eet une croissance moyenne de 6,5 % dans les ann\u00e9es 1990, et de plus de 7 % dans les ann\u00e9es 2000. Le taux de pauvret\u00e9 est divis\u00e9 par trois en l\u2019espace de vingt ans. La \u00ab perle de l\u2019Afrique \u00bb devient un mod\u00e8le et un laboratoire des politiques lib\u00e9rales appliqu\u00e9es au continent. \u00bb Une classe moyenne se d\u00e9veloppe. Il \u00e9tablit des quotas pour les femmes au Parlement, qui compte en 2016 plus d\u2019un tiers de d\u00e9put\u00e9es (de 1994 \u00e0 2003, Specioza Kazibwe fut sa vice-pr\u00e9sidente).",
+          "qas": [
+            {
+              "question": "Quel pays est surnomm\u00e9 la \"perle de l'Afrique\" ?",
+              "id": "p140295460357536",
+              "answers": [
+                {
+                  "text": "L\u2019Ouganda",
+                  "answer_start": 119
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quelle est la croissance moyenne de l'Ouganda dans les ann\u00e9es 1990 ?",
+              "id": "p140295460357392",
+              "answers": [
+                {
+                  "text": "6,5 % dans",
+                  "answer_start": 163
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Qui fut la vice-pr\u00e9sidente du Parlement ougandais de 1994 \u00e0 2003 ?",
+              "id": "p140295443259256",
+              "answers": [
+                {
+                  "text": "Specioza Kazibwe",
+                  "answer_start": 561
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Comment est surnomm\u00e9e l'Uganda Commercial Bank ?",
+              "id": "p140295443296472",
+              "answers": [
+                {
+                  "text": "banque du peuple",
+                  "answer_start": 96
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quelle est la proportion de femmes dans le Parlement ougandais en 2016 ?",
+              "id": "p140295221347312",
+              "answers": [
+                {
+                  "text": "un tiers",
+                  "answer_start": 523
+                },
+                {
+                  "text": "plus d\u2019un tiers",
+                  "answer_start": 516
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        },
+        {
+          "context": "Depuis qu\u2019il a pris le pouvoir, Museveni maintient un \u00c9tat militaris\u00e9, en s\u2019attachant \u00e0 restaurer la paix dans un pays meurtri par la guerre civile (il r\u00e9ussit \u00e0 mettre fin, en 2006, \u00e0 la gu\u00e9rilla sanguinaire de l'arm\u00e9e de r\u00e9sistance du Seigneur) et \u00e0 faire red\u00e9marrer une \u00e9conomie moribonde. D\u00e8s 1987, il abandonne ses principes marxistes pour passer un accord avec le Fonds mon\u00e9taire international (FMI) et la Banque mondiale, et fait progressivement de l\u2019Ouganda le \u00ab bon \u00e9l\u00e8ve du FMI \u00bb en suivant les recommandations de l\u2019institution financi\u00e8re, avec des r\u00e9sultats plut\u00f4t positifs. ",
+          "qas": [
+            {
+              "question": "Quand s'arr\u00eate la guerre civile en Ouganda ?",
+              "id": "p140295443296616",
+              "answers": [
+                {
+                  "text": "2006",
+                  "answer_start": 177
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quel pays passe un accord avec le FMI en 1987 ?",
+              "id": "p140295443296760",
+              "answers": [
+                {
+                  "text": "Ouganda",
+                  "answer_start": 458
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quelle institution financi\u00e8re fait des recommandations \u00e0 l'Ouganda ?",
+              "id": "p140295443296832",
+              "answers": [
+                {
+                  "text": "FMI",
+                  "answer_start": 401
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Qui abandonne ses principes marxistes en 1987 ?",
+              "id": "p140295443297192",
+              "answers": [
+                {
+                  "text": "Museveni",
+                  "answer_start": 32
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quel groupe menait une gu\u00e9rilla en Ouganda en 2005 ?",
+              "id": "p140295443297336",
+              "answers": [
+                {
+                  "text": "arm\u00e9e de r\u00e9sistance du Seigneur",
+                  "answer_start": 214
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        },
+        {
+          "context": "\u00c9l\u00e8ve chez les anglicans \u00e0 l\u2019\u00e9cole de Ntare, il part faire des \u00e9tudes de sciences et d'\u00e9conomie \u00e0 l\u2019universit\u00e9 de Dar es Salaam en Tanzanie de 1967 \u00e0 1970, pays alors dirig\u00e9 par Julius Nyerere, l\u2019un des principaux repr\u00e9sentants du socialisme africain et qui accueille alors, dans la capitale, nombre de militants anti-colonialistes, des \u00ab gu\u00e9rilleros communistes jusqu\u2019aux sociaux-d\u00e9mocrates \u00bb selon l\u2019historien G\u00e9rard Prunier. Il se familiarise avec les mouvements nationalistes radicaux et se lie d\u2019amiti\u00e9 avec, entre autres, l\u2019historien guyanien Walter Rodney et John Garang, dont il soutiendra, une fois arriv\u00e9 au pouvoir, la gu\u00e9rilla au Soudan au sein de l\u2019Arm\u00e9e populaire de lib\u00e9ration du Soudan (SPLA) . \u00c0 la fac, il pr\u00e9side alors le Front des \u00e9tudiants africains r\u00e9volutionnaires (USARF). Sa th\u00e8se portait sur Frantz Fanon.",
+          "qas": [
+            {
+              "question": "Qui dirigeait la Tanzanie en 1967 ?",
+              "id": "p140295443280304",
+              "answers": [
+                {
+                  "text": "Julius Nyerere",
+                  "answer_start": 178
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Qui est Walter Rodney ?",
+              "id": "p140295443281096",
+              "answers": [
+                {
+                  "text": "historien guyanien",
+                  "answer_start": 530
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Sur qui Yoweri Museveni a fait une th\u00e8se ?",
+              "id": "p140295443280088",
+              "answers": [
+                {
+                  "text": "Frantz Fanon",
+                  "answer_start": 818
+                },
+                {
+                  "text": "Frantz Fanon",
+                  "answer_start": 818
+                },
+                {
+                  "text": "Frantz Fanon",
+                  "answer_start": 818
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Dans quel pays a \u00e9tudi\u00e9 Yoweri Museveni ?",
+              "id": "p140295443280016",
+              "answers": [
+                {
+                  "text": "Tanzanie",
+                  "answer_start": 131
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "O\u00f9 est Dar es Salaam ?",
+              "id": "p140295443281456",
+              "answers": [
+                {
+                  "text": "Tanzanie",
+                  "answer_start": 131
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        },
+        {
+          "context": "Yoweri Kaguta est n\u00e9 \u00e0 Ntungamo, dans sud-ouest de l\u2019Ouganda, dans ce qui constitue encore le royaume d\u2019Ankole, int\u00e9gr\u00e9 au protectorat britannique sur l\u2019Ouganda. Fils d\u2019un riche propri\u00e9taire terrien, il appartient au groupe des Banyankol\u00e9s ; une des ethnies des Himas et Tutsis de la r\u00e9gion des Grands Lacs. Il re\u00e7oit le nom de Museveni (de \u00ab seven \u00bb, \u00ab sept \u00bb en anglais) en hommage au septi\u00e8me bataillon du King's African Rifles, un r\u00e9giment britannique d\u2019infanterie coloniale au sein duquel ont servi des milliers d\u2019Ougandais pendant la Seconde Guerre mondiale.",
+          "qas": [
+            {
+              "question": "Quelle est l'origine du nom Museveni ?",
+              "id": "p140295443281384",
+              "answers": [
+                {
+                  "text": "seven \u00bb, \u00ab sept \u00bb en anglais",
+                  "answer_start": 343
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "De quel pays est le King's African Rifles ?",
+              "id": "p140295443281168",
+              "answers": [
+                {
+                  "text": "britannique",
+                  "answer_start": 444
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Qui est le p\u00e8re de Yoweri Kaguta ?",
+              "id": "p140295443281744",
+              "answers": [
+                {
+                  "text": "un riche propri\u00e9taire terrien",
+                  "answer_start": 169
+                },
+                {
+                  "text": "riche propri\u00e9taire terrien",
+                  "answer_start": 172
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "De quelle nationalit\u00e9 est Yoweri Kaguta ?",
+              "id": "p140295443281888",
+              "answers": [
+                {
+                  "text": "Ouganda",
+                  "answer_start": 53
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "O\u00f9 est l'Ouganda ?",
+              "id": "p140295443282320",
+              "answers": [
+                {
+                  "text": "la r\u00e9gion des Grands Lacs",
+                  "answer_start": 281
+                },
+                {
+                  "text": "r\u00e9gion des Grands Lacs",
+                  "answer_start": 284
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.1"
+}
