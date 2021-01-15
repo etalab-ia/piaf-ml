@@ -1,19 +1,18 @@
+import os
+import sys
+
 import pytest
 import torch
-from haystack.pipeline import Pipeline
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.dense import EmbeddingRetriever
 from haystack.retriever.sparse import ElasticsearchRetriever
 
-import sys, os
-
 sys.path.insert(0, os.path.abspath("./"))
-print(sys.path)
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 
 
 @pytest.fixture
-def GPU_AVAILABLE():
+def gpu_available():
     return torch.cuda.is_available()
 
 
@@ -33,9 +32,9 @@ def retriever_bm25(document_store):
 
 
 @pytest.fixture
-def retriever_emb(document_store, GPU_AVAILABLE):
+def retriever_emb(document_store, gpu_available):
     return EmbeddingRetriever(document_store=document_store,
                               embedding_model="distiluse-base-multilingual-cased",
-                              use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                              use_gpu=gpu_available, model_format="sentence_transformers",
                               pooling_strategy="reduce_max",
                               emb_extraction_layer=-2)
