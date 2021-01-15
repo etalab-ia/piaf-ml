@@ -5,12 +5,17 @@ from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.dense import EmbeddingRetriever
 from haystack.retriever.sparse import ElasticsearchRetriever
 
+import sys, os
+
+sys.path.insert(0, os.path.abspath("./"))
+print(sys.path)
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 
 
 @pytest.fixture
 def GPU_AVAILABLE():
     return torch.cuda.is_available()
+
 
 @pytest.fixture(scope='session')
 def document_store():
@@ -21,18 +26,16 @@ def document_store():
     yield document_store
     document_store.delete_all_documents(index='document')
 
+
 @pytest.fixture
 def retriever_bm25(document_store):
     return ElasticsearchRetriever(document_store=document_store)
 
+
 @pytest.fixture
 def retriever_emb(document_store, GPU_AVAILABLE):
     return EmbeddingRetriever(document_store=document_store,
-                                       embedding_model="distiluse-base-multilingual-cased",
-                                       use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
-                                       pooling_strategy="reduce_max",
-                                       emb_extraction_layer=-2)
-
-
-
-
+                              embedding_model="distiluse-base-multilingual-cased",
+                              use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                              pooling_strategy="reduce_max",
+                              emb_extraction_layer=-2)

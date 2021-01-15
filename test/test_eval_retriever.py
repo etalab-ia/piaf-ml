@@ -12,7 +12,8 @@ def test_add_eval_data(document_store):
     # add eval data (SQUAD format)
     document_store.delete_all_documents(index="test_eval_document")
     document_store.delete_all_documents(index="test_feedback")
-    document_store.add_eval_data(filename=Path("./test/samples/squad/small.json"), doc_index="test_eval_document", label_index="test_feedback")
+    document_store.add_eval_data(filename=Path("./test/samples/squad/small.json").as_posix(),
+                                 doc_index="test_eval_document", label_index="test_feedback")
 
     assert document_store.get_document_count(index="test_eval_document") == 10
     assert document_store.get_label_count(index="test_feedback") == 64
@@ -36,7 +37,7 @@ def test_add_eval_data(document_store):
     # check combination
     assert labels[0].document_id == docs[0].id
     start = labels[0].offset_start_in_doc
-    end = start+len(labels[0].answer)
+    end = start + len(labels[0].answer)
     assert docs[0].text[start:end] == "100 000"
 
     # clean up
@@ -45,8 +46,9 @@ def test_add_eval_data(document_store):
 
 
 @pytest.mark.elasticsearch
-@pytest.mark.parametrize("retriever_type,score_expected", [("bm25", 14/15), ("sbert", 13/15)])
-def test_eval_elastic_retriever(document_store: BaseDocumentStore, retriever_bm25, retriever_emb, retriever_type, score_expected):
+@pytest.mark.parametrize("retriever_type,score_expected", [("bm25", 14 / 15), ("sbert", 13 / 15)])
+def test_eval_elastic_retriever(document_store: BaseDocumentStore, retriever_bm25, retriever_emb, retriever_type,
+                                score_expected):
     doc_index = "document"
     label_index = "label"
 
@@ -63,19 +65,18 @@ def test_eval_elastic_retriever(document_store: BaseDocumentStore, retriever_bm2
     # add eval data (SQUAD format)
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
-    document_store.add_eval_data(filename=Path("./test/samples/squad/tiny.json"), doc_index=doc_index, label_index=label_index)
+    document_store.add_eval_data(filename=Path("./test/samples/squad/tiny.json").as_posix(), doc_index=doc_index,
+                                 label_index=label_index)
     document_store.update_embeddings(retriever_emb, index=doc_index)
-    assert document_store.get_document_count(index=doc_index) == 3 # number of contexts
-    assert document_store.get_label_count(index=label_index) == 18 # number of answers
-
+    assert document_store.get_document_count(index=doc_index) == 3  # number of contexts
+    assert document_store.get_label_count(index=label_index) == 18  # number of answers
 
     # eval retriever
-    retriever_eval_results = eval_retriever(document_store=document_store, pipeline=p, top_k=3, label_index=label_index, doc_index=doc_index)
+    retriever_eval_results = eval_retriever(document_store=document_store, pipeline=p, top_k=3, label_index=label_index,
+                                            doc_index=doc_index)
     assert retriever_eval_results["recall"] == 1.0
     assert retriever_eval_results["mrr"] == score_expected
-
 
     # clean up
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
-
