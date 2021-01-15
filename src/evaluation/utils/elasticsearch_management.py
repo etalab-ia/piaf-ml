@@ -3,7 +3,6 @@ import time
 import platform
 import logging
 
-import torch
 from elasticsearch import Elasticsearch
 
 port = '9200'

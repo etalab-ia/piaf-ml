@@ -1,0 +1,203 @@
+{
+  "data": [
+    {
+      "title": "Yoweri Museveni",
+      "categorie": "Soci\u00e9t\u00e9",
+      "paragraphs": [
+        {
+          "context": "Dans le droit fil du consensus de Washington, il privatise ainsi l\u2019Uganda Commercial Bank, la \u00ab banque du peuple \u00bb . \u00ab L\u2019Ouganda conna\u00eet une croissance moyenne de 6,5 % dans les ann\u00e9es 1990, et de plus de 7 % dans les ann\u00e9es 2000. Le taux de pauvret\u00e9 est divis\u00e9 par trois en l\u2019espace de vingt ans. La \u00ab perle de l\u2019Afrique \u00bb devient un mod\u00e8le et un laboratoire des politiques lib\u00e9rales appliqu\u00e9es au continent. \u00bb Une classe moyenne se d\u00e9veloppe. Il \u00e9tablit des quotas pour les femmes au Parlement, qui compte en 2016 plus d\u2019un tiers de d\u00e9put\u00e9es (de 1994 \u00e0 2003, Specioza Kazibwe fut sa vice-pr\u00e9sidente).",
+          "qas": [
+            {
+              "question": "Quel pays est surnomm\u00e9 la \"perle de l'Afrique\" ?",
+              "id": "p140295460357536",
+              "answers": [
+                {
+                  "text": "L\u2019Ouganda",
+                  "answer_start": 119
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quelle est la croissance moyenne de l'Ouganda dans les ann\u00e9es 1990 ?",
+              "id": "p140295460357392",
+              "answers": [
+                {
+                  "text": "6,5 % dans",
+                  "answer_start": 163
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Qui fut la vice-pr\u00e9sidente du Parlement ougandais de 1994 \u00e0 2003 ?",
+              "id": "p140295443259256",
+              "answers": [
+                {
+                  "text": "Specioza Kazibwe",
+                  "answer_start": 561
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Comment est surnomm\u00e9e l'Uganda Commercial Bank ?",
+              "id": "p140295443296472",
+              "answers": [
+                {
+                  "text": "banque du peuple",
+                  "answer_start": 96
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quelle est la proportion de femmes dans le Parlement ougandais en 2016 ?",
+              "id": "p140295221347312",
+              "answers": [
+                {
+                  "text": "un tiers",
+                  "answer_start": 523
+                },
+                {
+                  "text": "plus d\u2019un tiers",
+                  "answer_start": 516
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        },
+        {
+          "context": "Depuis qu\u2019il a pris le pouvoir, Museveni maintient un \u00c9tat militaris\u00e9, en s\u2019attachant \u00e0 restaurer la paix dans un pays meurtri par la guerre civile (il r\u00e9ussit \u00e0 mettre fin, en 2006, \u00e0 la gu\u00e9rilla sanguinaire de l'arm\u00e9e de r\u00e9sistance du Seigneur) et \u00e0 faire red\u00e9marrer une \u00e9conomie moribonde. D\u00e8s 1987, il abandonne ses principes marxistes pour passer un accord avec le Fonds mon\u00e9taire international (FMI) et la Banque mondiale, et fait progressivement de l\u2019Ouganda le \u00ab bon \u00e9l\u00e8ve du FMI \u00bb en suivant les recommandations de l\u2019institution financi\u00e8re, avec des r\u00e9sultats plut\u00f4t positifs. ",
+          "qas": [
+            {
+              "question": "Quand s'arr\u00eate la guerre civile en Ouganda ?",
+              "id": "p140295443296616",
+              "answers": [
+                {
+                  "text": "2006",
+                  "answer_start": 177
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quel pays passe un accord avec le FMI en 1987 ?",
+              "id": "p140295443296760",
+              "answers": [
+                {
+                  "text": "Ouganda",
+                  "answer_start": 458
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quelle institution financi\u00e8re fait des recommandations \u00e0 l'Ouganda ?",
+              "id": "p140295443296832",
+              "answers": [
+                {
+                  "text": "FMI",
+                  "answer_start": 401
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Qui abandonne ses principes marxistes en 1987 ?",
+              "id": "p140295443297192",
+              "answers": [
+                {
+                  "text": "Museveni",
+                  "answer_start": 32
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Quel groupe menait une gu\u00e9rilla en Ouganda en 2005 ?",
+              "id": "p140295443297336",
+              "answers": [
+                {
+                  "text": "arm\u00e9e de r\u00e9sistance du Seigneur",
+                  "answer_start": 214
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        },
+        {
+          "context": "\u00c9l\u00e8ve chez les anglicans \u00e0 l\u2019\u00e9cole de Ntare, il part faire des \u00e9tudes de sciences et d'\u00e9conomie \u00e0 l\u2019universit\u00e9 de Dar es Salaam en Tanzanie de 1967 \u00e0 1970, pays alors dirig\u00e9 par Julius Nyerere, l\u2019un des principaux repr\u00e9sentants du socialisme africain et qui accueille alors, dans la capitale, nombre de militants anti-colonialistes, des \u00ab gu\u00e9rilleros communistes jusqu\u2019aux sociaux-d\u00e9mocrates \u00bb selon l\u2019historien G\u00e9rard Prunier. Il se familiarise avec les mouvements nationalistes radicaux et se lie d\u2019amiti\u00e9 avec, entre autres, l\u2019historien guyanien Walter Rodney et John Garang, dont il soutiendra, une fois arriv\u00e9 au pouvoir, la gu\u00e9rilla au Soudan au sein de l\u2019Arm\u00e9e populaire de lib\u00e9ration du Soudan (SPLA) . \u00c0 la fac, il pr\u00e9side alors le Front des \u00e9tudiants africains r\u00e9volutionnaires (USARF). Sa th\u00e8se portait sur Frantz Fanon.",
+          "qas": [
+            {
+              "question": "Qui dirigeait la Tanzanie en 1967 ?",
+              "id": "p140295443280304",
+              "answers": [
+                {
+                  "text": "Julius Nyerere",
+                  "answer_start": 178
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Qui est Walter Rodney ?",
+              "id": "p140295443281096",
+              "answers": [
+                {
+                  "text": "historien guyanien",
+                  "answer_start": 530
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Sur qui Yoweri Museveni a fait une th\u00e8se ?",
+              "id": "p140295443280088",
+              "answers": [
+                {
+                  "text": "Frantz Fanon",
+                  "answer_start": 818
+                },
+                {
+                  "text": "Frantz Fanon",
+                  "answer_start": 818
+                },
+                {
+                  "text": "Frantz Fanon",
+                  "answer_start": 818
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "Dans quel pays a \u00e9tudi\u00e9 Yoweri Museveni ?",
+              "id": "p140295443280016",
+              "answers": [
+                {
+                  "text": "Tanzanie",
+                  "answer_start": 131
+                }
+              ],
+              "is_impossible": false
+            },
+            {
+              "question": "O\u00f9 est Dar es Salaam ?",
+              "id": "p140295443281456",
+              "answers": [
+                {
+                  "text": "Tanzanie",
+                  "answer_start": 131
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.1"
+}

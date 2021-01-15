@@ -75,9 +75,7 @@ def single_run(parameters):
     document_store.delete_all_documents(index=label_index)
     document_store.add_eval_data(evaluation_data, doc_index=doc_index, label_index=label_index)
     document_store.update_embeddings(retriever_emb, index=doc_index)
-    #docs, labels = add_eval_data_from_file(evaluation_data, retriever_emb)
-    #document_store.write_documents(docs, index=doc_index)
-    #document_store.write_labels(labels, index=label_index)
+
 
     retriever_eval_results = eval_retriever(document_store=document_store, pipeline=p, top_k=k, label_index=label_index, doc_index=doc_index)
     ## Retriever Recall is the proportion of questions for which the correct document containing the answer is

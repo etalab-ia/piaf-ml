@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 from haystack.document_store.base import BaseDocumentStore
 from haystack.retriever.base import BaseRetriever
-from haystack.pipeline import BaseStandardPipeline
+from haystack.pipeline import Pipeline
 from haystack.eval import eval_counts_reader, calculate_reader_metrics, calculate_average_precision_and_reciprocal_rank
 
 logger = logging.getLogger(__name__)
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def eval_retriever(
     document_store: BaseDocumentStore,
-    pipeline: BaseStandardPipeline,
+    pipeline: Pipeline,
     label_index: str = "label",
     doc_index: str = "eval_document",
     label_origin: str = "gold_label",
@@ -31,15 +31,14 @@ def eval_retriever(
     questions = [label.question for label in labels_agg]
     found_answers = [pipeline.run(query=q, top_k_retriever=top_k_retriever) for q in questions]"""
 
-    correct_retrievals = 0
-    summed_avg_precision = 0.0
-    summed_reciprocal_rank = 0.0
-
     # Collect questions and corresponding answers/document_ids in a dict
-    question_label_dict = {}
+    question_label_dict_list =[]
     for label in labels:
         deduplicated_doc_ids = list(set([str(x) for x in label.multiple_document_ids]))
-        question_label_dict[label.question] = deduplicated_doc_ids
+        question_label_dict = {}
+        question_label_dict['query'] = label.question
+        question_label_dict['gold_ids'] = deduplicated_doc_ids
+        question_label_dict_list.append(question_label_dict)
 
 
     predictions = []
@@ -62,11 +61,23 @@ def eval_retriever(
     # Option 1: Open-domain evaluation by checking if the answer string is in the retrieved docs
     logger.info("Performing eval queries...")
 
-    for question, gold_ids in tqdm(question_label_dict.items()):
+    retrieved_docs_list =[pipeline.run(query=question["query"], top_k_retriever=top_k, index=doc_index) for question in question_label_dict_list]
+
+    metrics = get_retriever_metrics(retrieved_docs_list,question_label_dict_list)
+
+    logger.info((f"For {metrics['correct_retrievals']} out of {metrics['number_of_questions']} questions ({metrics['recall']:.2%}), the answer was in"
+                 f" the top-{top_k} candidate passages selected by the retriever."))
+
+    return metrics
+
+def get_retriever_metrics(retrieved_docs_list,question_label_dict_list):
+    correct_retrievals = 0
+    summed_avg_precision = 0.0
+    summed_reciprocal_rank = 0.0
+
+    for question, retrieved_docs in tqdm(zip(question_label_dict_list,retrieved_docs_list)):
+        gold_ids = question['gold_ids']
         number_relevant_docs = len(gold_ids)
-        retrieved_docs = pipeline.run(query=question, top_k_retriever=top_k)
-        if return_preds:
-            predictions.append({"question": question, "retrieved_docs": retrieved_docs['documents']})
         # check if correct doc in retrieved docs
         found_relevant_doc = False
         relevant_docs_found = 0
@@ -74,9 +85,8 @@ def eval_retriever(
         for doc_idx, doc in enumerate(retrieved_docs['documents']):
             if str(doc.id) in gold_ids:
                 relevant_docs_found += 1
-                print('relevant_docs_found:' + str(relevant_docs_found))
                 if not found_relevant_doc:
-                    print('correct_retrievals:' + str(correct_retrievals))
+                    correct_retrievals += 1
                     summed_reciprocal_rank += 1 / (doc_idx + 1)
                 current_avg_precision += relevant_docs_found / (doc_idx + 1)
                 found_relevant_doc = True
@@ -85,34 +95,28 @@ def eval_retriever(
         if found_relevant_doc:
             all_relevant_docs = len(set(gold_ids))
             summed_avg_precision += current_avg_precision / all_relevant_docs
+
     # Metrics
-    number_of_questions = len(question_label_dict)
+    number_of_questions = len(question_label_dict_list)
     recall = correct_retrievals / number_of_questions
     mean_reciprocal_rank = summed_reciprocal_rank / number_of_questions
     mean_avg_precision = summed_avg_precision / number_of_questions
-
-    logger.info((f"For {correct_retrievals} out of {number_of_questions} questions ({recall:.2%}), the answer was in"
-                 f" the top-{top_k} candidate passages selected by the retriever."))
 
     metrics =  {
         "recall": recall,
         "map": mean_avg_precision,
         "mrr": mean_reciprocal_rank,
-        #"retrieve_time": retriever.retrieve_time,
-        "n_questions": number_of_questions,
-        "top_k": top_k
+        "correct_retrievals" : correct_retrievals,
+        "number_of_questions": number_of_questions
     }
 
-    if return_preds:
-        return {"metrics": metrics, "predictions": predictions}
-    else:
-        return metrics
+    return metrics
 
 
 
 def eval_retriever_reader(
         document_store: BaseDocumentStore,
-        pipeline: BaseStandardPipeline,
+        pipeline: Pipeline,
         top_k_reader: int,
         top_k_retriever: int,
         label_index: str = "label",

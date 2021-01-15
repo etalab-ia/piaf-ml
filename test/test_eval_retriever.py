@@ -2,7 +2,9 @@ import pytest
 from pathlib import Path
 
 from haystack.document_store.base import BaseDocumentStore
-from haystack.finder import Finder
+from haystack.pipeline import Pipeline
+
+from src.evaluation.utils.utils_eval import eval_retriever
 
 
 @pytest.mark.elasticsearch
@@ -41,26 +43,39 @@ def test_add_eval_data(document_store):
     document_store.delete_all_documents(index="test_eval_document")
     document_store.delete_all_documents(index="test_feedback")
 
-"""
+
 @pytest.mark.elasticsearch
-@pytest.mark.parametrize("document_store", ["elasticsearch"], indirect=True)
-@pytest.mark.parametrize("open_domain", [True, False])
-@pytest.mark.parametrize("retriever", ["elasticsearch"], indirect=True)
-def test_eval_elastic_retriever(document_store: BaseDocumentStore, open_domain, retriever):
+@pytest.mark.parametrize("retriever_type,score_expected", [("bm25", 14/15), ("sbert", 13/15)])
+def test_eval_elastic_retriever(document_store: BaseDocumentStore, retriever_bm25, retriever_emb, retriever_type, score_expected):
+    doc_index = "document"
+    label_index = "label"
+
+    p = Pipeline()
+    if retriever_type == 'bm25':
+        retriever = retriever_bm25
+        p.add_node(component=retriever, name="ESRetriever", inputs=["Query"])
+    elif retriever_type == "sbert":
+        retriever = retriever_emb
+        p.add_node(component=retriever, name="SBertRetriever", inputs=["Query"])
+    else:
+        raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr")
+
     # add eval data (SQUAD format)
-    document_store.delete_all_documents(index="test_eval_document")
-    document_store.delete_all_documents(index="test_feedback")
-    document_store.add_eval_data(filename="samples/squad/tiny.json", doc_index="test_eval_document", label_index="test_feedback")
-    assert document_store.get_document_count(index="test_eval_document") == 2
+    document_store.delete_all_documents(index=doc_index)
+    document_store.delete_all_documents(index=label_index)
+    document_store.add_eval_data(filename=Path("./test/samples/squad/tiny.json"), doc_index=doc_index, label_index=label_index)
+    document_store.update_embeddings(retriever_emb, index=doc_index)
+    assert document_store.get_document_count(index=doc_index) == 3 # number of contexts
+    assert document_store.get_label_count(index=label_index) == 18 # number of answers
+
 
     # eval retriever
-    results = retriever.eval(top_k=1, label_index="test_feedback", doc_index="test_eval_document", open_domain=open_domain)
-    assert results["recall"] == 1.0
-    assert results["mrr"] == 1.0
-    if not open_domain:
-        assert results["map"] == 1.0
+    retriever_eval_results = eval_retriever(document_store=document_store, pipeline=p, top_k=3, label_index=label_index, doc_index=doc_index)
+    assert retriever_eval_results["recall"] == 1.0
+    assert retriever_eval_results["mrr"] == score_expected
+
 
     # clean up
-    document_store.delete_all_documents(index="test_eval_document")
-    document_store.delete_all_documents(index="test_feedback")"""
+    document_store.delete_all_documents(index=doc_index)
+    document_store.delete_all_documents(index=label_index)
 
