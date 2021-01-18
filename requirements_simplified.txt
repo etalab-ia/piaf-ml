@@ -29,7 +29,7 @@ sentence-transformers
 # chardet # Installed as dependency for requests
 # click # Installed as dependency for sacremoses, flask, databricks-cli, uvicorn, mlflow, nltk
 # cloudpickle # Installed as dependency for mlflow
-# coverage # Installed as dependency for farm-haystack
+## coverage # Installed as dependency for farm-haystack
 # cycler # Installed as dependency for matplotlib
 # cymem # Installed as dependency for preshed, spacy, thinc
 # databricks-cli # Installed as dependency for mlflow
