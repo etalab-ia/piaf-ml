@@ -2,7 +2,6 @@ argopt
 construct
 cython
 farm-haystack
-fr-core-news-sm
 ipywidgets
 jupyter-console
 pefile
