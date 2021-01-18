@@ -27,9 +27,9 @@ def test_add_eval_data(document_store):
     # test labels
     labels = document_store.get_all_labels(index="test_feedback")
     assert labels[0].answer == "100 000"
-    assert labels[0].no_answer == False
-    assert labels[0].is_correct_answer == True
-    assert labels[0].is_correct_document == True
+    assert labels[0].no_answer is False
+    assert labels[0].is_correct_answer is True
+    assert labels[0].is_correct_document is True
     assert labels[0].question == 'Combien de personnes travaillent au ministère des sports'
     assert labels[0].origin == "gold_label"
     assert labels[0].offset_start_in_doc == 472

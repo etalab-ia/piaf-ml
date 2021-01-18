@@ -1,0 +1,169 @@
+argopt
+construct
+cython
+farm-haystack
+fr-core-news-sm
+ipywidgets
+jupyter-console
+pefile
+pip-chill
+pytest
+python-ptrace
+qtconsole
+seaborn
+sentence-transformers
+# alembic # Installed as dependency for mlflow
+# aniso8601 # Installed as dependency for flask-restplus
+# appdirs # Installed as dependency for virtualenv
+# argon2-cffi # Installed as dependency for notebook
+# async-generator # Installed as dependency for nbclient
+# attrs # Installed as dependency for jsonschema, pytest
+# backcall # Installed as dependency for ipython
+# bleach # Installed as dependency for nbconvert
+# blis # Installed as dependency for spacy, thinc
+# boto3 # Installed as dependency for farm
+# botocore # Installed as dependency for s3transfer, boto3
+# catalogue # Installed as dependency for spacy, thinc
+# certifi # Installed as dependency for elastic-apm, matplotlib, elasticsearch, requests
+# cffi # Installed as dependency for argon2-cffi
+# chardet # Installed as dependency for requests
+# click # Installed as dependency for sacremoses, flask, databricks-cli, uvicorn, mlflow, nltk
+# cloudpickle # Installed as dependency for mlflow
+# coverage # Installed as dependency for farm-haystack
+# cycler # Installed as dependency for matplotlib
+# cymem # Installed as dependency for preshed, spacy, thinc
+# databricks-cli # Installed as dependency for mlflow
+# decorator # Installed as dependency for ipython, networkx, traitlets
+# defusedxml # Installed as dependency for nbconvert
+# dill # Installed as dependency for farm
+# distlib # Installed as dependency for virtualenv
+# docker # Installed as dependency for mlflow
+# docutils # Installed as dependency for botocore
+# dotmap # Installed as dependency for farm
+# elastic-apm # Installed as dependency for farm-haystack
+# elasticsearch # Installed as dependency for farm-haystack
+# entrypoints # Installed as dependency for mlflow, nbconvert
+# faiss-cpu # Installed as dependency for farm-haystack
+# farm # Installed as dependency for farm-haystack
+# fastapi # Installed as dependency for farm-haystack
+# filelock # Installed as dependency for tox, transformers, virtualenv
+# flask # Installed as dependency for flask-restplus, mlflow, flask-cors, farm
+# flask-cors # Installed as dependency for farm
+# flask-restplus # Installed as dependency for farm
+# future # Installed as dependency for torch, pefile
+# gitdb # Installed as dependency for gitpython
+# gitpython # Installed as dependency for mlflow
+# gunicorn # Installed as dependency for farm-haystack, mlflow
+# h11 # Installed as dependency for uvicorn
+# h5py # Installed as dependency for keras
+# httptools # Installed as dependency for farm-haystack, uvicorn
+# idna # Installed as dependency for requests
+# importlib-metadata # Installed as dependency for virtualenv, pluggy, jsonschema, tox, catalogue, pytest
+# iniconfig # Installed as dependency for pytest
+# ipykernel # Installed as dependency for ipywidgets, qtconsole, jupyter-console, notebook
+# ipython # Installed as dependency for ipykernel, ipywidgets, jupyter-console
+# ipython-genutils # Installed as dependency for qtconsole, nbformat, notebook, traitlets
+# itsdangerous # Installed as dependency for flask
+# jedi # Installed as dependency for ipython
+# jinja2 # Installed as dependency for flask, nbconvert, notebook
+# jmespath # Installed as dependency for boto3, botocore
+# joblib # Installed as dependency for scikit-learn, nltk, sacremoses
+# jsonschema # Installed as dependency for flask-restplus, nbformat
+# jupyter-client # Installed as dependency for ipykernel, qtconsole, nbclient, notebook, jupyter-console
+# jupyter-core # Installed as dependency for qtconsole, jupyter-client, nbconvert, nbformat, notebook
+# jupyterlab-pygments # Installed as dependency for nbconvert
+# keras # Installed as dependency for seqeval
+# kiwisolver # Installed as dependency for matplotlib
+# langdetect # Installed as dependency for farm-haystack
+# lxml # Installed as dependency for python-docx
+# mako # Installed as dependency for alembic
+# markupsafe # Installed as dependency for jinja2, mako
+# matplotlib # Installed as dependency for seaborn
+# mistune # Installed as dependency for nbconvert
+# mlflow # Installed as dependency for farm
+# more-itertools # Installed as dependency for farm-haystack
+# murmurhash # Installed as dependency for preshed, spacy, thinc
+# nbclient # Installed as dependency for nbconvert
+# nbconvert # Installed as dependency for notebook
+# nbformat # Installed as dependency for ipywidgets, nbclient, nbconvert, notebook
+# nest-asyncio # Installed as dependency for nbclient
+# networkx # Installed as dependency for farm-haystack
+# nltk # Installed as dependency for farm-haystack, sentence-transformers
+# notebook # Installed as dependency for widgetsnbextension
+# numpy # Installed as dependency for sentence-transformers, keras, seaborn, blis, seqeval, scikit-learn, torch, spacy, transformers, matplotlib, pandas, scipy, h5py, mlflow, faiss-cpu, thinc
+# packaging # Installed as dependency for tox, pytest, bleach, transformers
+# pandas # Installed as dependency for farm-haystack, mlflow, seaborn
+# pandocfilters # Installed as dependency for nbconvert
+# parso # Installed as dependency for jedi
+# pexpect # Installed as dependency for ipython
+# pickleshare # Installed as dependency for ipython
+# pillow # Installed as dependency for matplotlib
+# plac # Installed as dependency for spacy, thinc
+# pluggy # Installed as dependency for tox, pytest
+# preshed # Installed as dependency for spacy, thinc
+# prometheus-client # Installed as dependency for notebook
+# prompt-toolkit # Installed as dependency for ipython, jupyter-console
+# protobuf # Installed as dependency for mlflow
+# psutil # Installed as dependency for farm
+# psycopg2-binary # Installed as dependency for farm-haystack
+# ptyprocess # Installed as dependency for pexpect
+# py # Installed as dependency for tox, pytest
+# pycparser # Installed as dependency for cffi
+# pydantic # Installed as dependency for fastapi
+# pygments # Installed as dependency for qtconsole, ipython, nbconvert, jupyterlab-pygments, jupyter-console
+# pyparsing # Installed as dependency for packaging, matplotlib
+# pyrsistent # Installed as dependency for jsonschema
+# python-dateutil # Installed as dependency for jupyter-client, botocore, alembic, matplotlib, pandas, mlflow
+# python-docx # Installed as dependency for farm-haystack
+# python-editor # Installed as dependency for alembic
+# python-multipart # Installed as dependency for farm-haystack
+# pytz # Installed as dependency for flask-restplus, pandas
+# pyyaml # Installed as dependency for mlflow, keras
+# pyzmq # Installed as dependency for qtconsole, notebook, jupyter-client
+# qtpy # Installed as dependency for qtconsole
+# querystring-parser # Installed as dependency for mlflow
+# regex # Installed as dependency for nltk, transformers, sacremoses
+# requests # Installed as dependency for docker, tika, farm, spacy, transformers, databricks-cli, mlflow
+# s3transfer # Installed as dependency for boto3
+# sacremoses # Installed as dependency for transformers
+# scikit-learn # Installed as dependency for sentence-transformers, sklearn
+# scipy # Installed as dependency for sentence-transformers, seaborn, scikit-learn, farm, keras
+# send2trash # Installed as dependency for notebook
+# sentencepiece # Installed as dependency for transformers
+# seqeval # Installed as dependency for farm
+# simplejson # Installed as dependency for mlflow
+# six # Installed as dependency for docker, python-multipart, tox, h5py, flask-restplus, mlflow, construct, argon2-cffi, langdetect, cycler, jsonschema, python-ptrace, querystring-parser, sqlalchemy-utils, traitlets, packaging, flask-cors, virtualenv, protobuf, databricks-cli, bleach, sacremoses, websocket-client, python-dateutil
+# sklearn # Installed as dependency for farm-haystack, farm
+# smmap # Installed as dependency for gitdb
+# spacy # Installed as dependency for fr-core-news-sm
+# sqlalchemy # Installed as dependency for mlflow, sqlalchemy-utils, alembic
+# sqlalchemy-utils # Installed as dependency for farm-haystack
+# sqlparse # Installed as dependency for mlflow
+# srsly # Installed as dependency for spacy, thinc
+# starlette # Installed as dependency for fastapi
+# tabulate # Installed as dependency for databricks-cli
+# terminado # Installed as dependency for notebook
+# testpath # Installed as dependency for nbconvert
+# thinc # Installed as dependency for spacy
+# threadpoolctl # Installed as dependency for scikit-learn
+# tika # Installed as dependency for farm-haystack
+# tokenizers # Installed as dependency for transformers
+# toml # Installed as dependency for tox, pytest
+# torch # Installed as dependency for sentence-transformers, farm
+# tornado # Installed as dependency for ipykernel, notebook, jupyter-client
+# tox # Installed as dependency for farm-haystack
+# tqdm # Installed as dependency for sentence-transformers, farm, spacy, transformers, sacremoses, nltk, thinc
+# traitlets # Installed as dependency for jupyter-core, ipykernel, qtconsole, ipython, jupyter-client, nbclient, nbconvert, nbformat, notebook, ipywidgets
+# transformers # Installed as dependency for sentence-transformers, farm
+# urllib3 # Installed as dependency for elastic-apm, botocore, elasticsearch, requests
+# uvicorn # Installed as dependency for farm-haystack
+# uvloop # Installed as dependency for farm-haystack, uvicorn
+# virtualenv # Installed as dependency for tox
+# wasabi # Installed as dependency for spacy, thinc
+# wcwidth # Installed as dependency for prompt-toolkit
+# webencodings # Installed as dependency for bleach
+# websocket-client # Installed as dependency for docker
+# websockets # Installed as dependency for uvicorn
+# werkzeug # Installed as dependency for flask, farm
+# widgetsnbextension # Installed as dependency for ipywidgets
+# zipp # Installed as dependency for importlib-metadata
