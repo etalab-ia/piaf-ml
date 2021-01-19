@@ -11,15 +11,14 @@ logger = logging.getLogger(__name__)
 
 
 def eval_retriever(
-    document_store: BaseDocumentStore,
-    pipeline: Pipeline,
-    label_index: str = "label",
-    doc_index: str = "eval_document",
-    label_origin: str = "gold_label",
-    top_k: int = 10,
-    return_preds: bool = False,
+        document_store: BaseDocumentStore,
+        pipeline: Pipeline,
+        label_index: str = "label",
+        doc_index: str = "eval_document",
+        label_origin: str = "gold_label",
+        top_k: int = 10,
+        return_preds: bool = False,
 ) -> dict:
-
     # Extract all questions for evaluation
     filters = {"origin": [label_origin]}
 
@@ -32,14 +31,13 @@ def eval_retriever(
     found_answers = [pipeline.run(query=q, top_k_retriever=top_k_retriever) for q in questions]"""
 
     # Collect questions and corresponding answers/document_ids in a dict
-    question_label_dict_list =[]
+    question_label_dict_list = []
     for label in labels:
         deduplicated_doc_ids = list(set([str(x) for x in label.multiple_document_ids]))
         question_label_dict = {}
         question_label_dict['query'] = label.question
         question_label_dict['gold_ids'] = deduplicated_doc_ids
         question_label_dict_list.append(question_label_dict)
-
 
     predictions = []
     """
@@ -61,21 +59,24 @@ def eval_retriever(
     # Option 1: Open-domain evaluation by checking if the answer string is in the retrieved docs
     logger.info("Performing eval queries...")
 
-    retrieved_docs_list =[pipeline.run(query=question["query"], top_k_retriever=top_k, index=doc_index) for question in question_label_dict_list]
+    retrieved_docs_list = [pipeline.run(query=question["query"], top_k_retriever=top_k, index=doc_index) for question in
+                           question_label_dict_list]
 
-    metrics = get_retriever_metrics(retrieved_docs_list,question_label_dict_list)
+    metrics = get_retriever_metrics(retrieved_docs_list, question_label_dict_list)
 
-    logger.info((f"For {metrics['correct_retrievals']} out of {metrics['number_of_questions']} questions ({metrics['recall']:.2%}), the answer was in"
-                 f" the top-{top_k} candidate passages selected by the retriever."))
+    logger.info((
+                    f"For {metrics['correct_retrievals']} out of {metrics['number_of_questions']} questions ({metrics['recall']:.2%}), the answer was in"
+                    f" the top-{top_k} candidate passages selected by the retriever."))
 
     return metrics
 
-def get_retriever_metrics(retrieved_docs_list,question_label_dict_list):
+
+def get_retriever_metrics(retrieved_docs_list, question_label_dict_list):
     correct_retrievals = 0
     summed_avg_precision = 0.0
     summed_reciprocal_rank = 0.0
 
-    for question, retrieved_docs in tqdm(zip(question_label_dict_list,retrieved_docs_list)):
+    for question, retrieved_docs in tqdm(zip(question_label_dict_list, retrieved_docs_list)):
         gold_ids = question['gold_ids']
         number_relevant_docs = len(gold_ids)
         # check if correct doc in retrieved docs
@@ -102,16 +103,15 @@ def get_retriever_metrics(retrieved_docs_list,question_label_dict_list):
     mean_reciprocal_rank = summed_reciprocal_rank / number_of_questions
     mean_avg_precision = summed_avg_precision / number_of_questions
 
-    metrics =  {
+    metrics = {
         "recall": recall,
         "map": mean_avg_precision,
         "mrr": mean_reciprocal_rank,
-        "correct_retrievals" : correct_retrievals,
+        "correct_retrievals": correct_retrievals,
         "number_of_questions": number_of_questions
     }
 
     return metrics
-
 
 
 def eval_retriever_reader(
@@ -139,14 +139,13 @@ def eval_retriever_reader(
 
     # extract all questions for evaluation
     filters = {"origin": [label_origin]}
-    #labels = document_store.get_all_labels(index=label_index, filters=filters)
+    # labels = document_store.get_all_labels(index=label_index, filters=filters)
     labels_agg = document_store.get_all_labels_aggregated(index=label_index, filters=filters)
-
 
     questions = [label.question for label in labels_agg]
     predicted_answers_list = [pipeline.run(query=q, top_k_retriever=top_k_retriever) for q in questions]
 
-    metric_counts={}
+    metric_counts = {}
     metric_counts["correct_no_answers_topk"] = 0
     metric_counts["correct_readings_topk"] = 0
     metric_counts["exact_matches_topk"] = 0
@@ -161,19 +160,11 @@ def eval_retriever_reader(
     metric_counts["exact_matches_topk_has_answer"] = 0
     metric_counts["summed_f1_topk_has_answer"] = 0
     metric_counts["number_of_no_answer"] = 0
-    for question, predicted_answers in zip(labels_agg,predicted_answers_list):
-        metric_counts = eval_counts_reader(question,predicted_answers,metric_counts)
-    metrics = calculate_reader_metrics(metric_counts,len(predicted_answers))
+    for question, predicted_answers in zip(labels_agg, predicted_answers_list):
+        metric_counts = eval_counts_reader(question, predicted_answers, metric_counts)
+    metrics = calculate_reader_metrics(metric_counts, len(predicted_answers))
 
     return metrics
-
-
-
-
-
-
-
-
 
 
 """
