@@ -86,9 +86,8 @@ def single_run(parameters):
 
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
-    docs, labels = add_eval_data_from_file(evaluation_data, retriever_emb) #TODO : changer pour la fonction de haystack
-    document_store.write_documents(docs, index=doc_index)
-    document_store.write_labels(labels, index=label_index)
+    document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index)
+    document_store.update_embeddings(retriever_emb, index=doc_index)
 
     retriever_eval_results = eval_retriever_reader(document_store=document_store, pipeline=p, top_k_reader=k_reader,
                                                    top_k_retriever=k_retriever, label_index=label_index,
@@ -113,6 +112,8 @@ if __name__ == '__main__':
     for param in tqdm(parameters_grid, desc="GridSearch"):
         # START XP
         run_results = single_run(param)
+        print(run_results)
         all_results.append(run_results)
 
     #save_results(result_file_path=result_file_path, all_results=all_results)
+    print(all_results)
