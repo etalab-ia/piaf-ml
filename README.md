@@ -1,4 +1,4 @@
-r# PIAF ML
+# PIAF ML
 This project is conducted by the [Lab IA](https://www.etalab.gouv.fr/datasciences-et-intelligence-artificielle) at [Etalab](https://www.etalab.gouv.fr/).  
 The aim of the Lab IA is to help the french administration to modernize its services by the use of modern AI techniques.  
 Other Lab IA projects can be found at the [main GitHub repo](https://github.com/etalab-ia/). In particular, the repository for the PIAF annotator can be found [here](https://github.com/etalab/piaf)
