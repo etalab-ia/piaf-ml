@@ -222,7 +222,7 @@ def get_arborescence(arborescence, fiche_id):
                                     if level_5_dict['id'] == fiche_id:
                                         return get_arbo(arbo)
                             except:
-                                print('hello')
+                                print('You should not be here')
 
 
 def try_get_text(root: Element, tag: str) -> str:
@@ -371,7 +371,7 @@ def run(doc_path: Path, output_path: Path, path_arbo: Path, as_json: bool):
     has_chapitres = True
     has_cases = True
     with open(path_arbo) as file:
-        arborescence = json.load(file)
+        arborescence_file = json.load(file)
     try:
         tqdm.write(f"Extracting info from {doc_path}")
         tree = ET.parse(doc_path)
@@ -380,7 +380,7 @@ def run(doc_path: Path, output_path: Path, path_arbo: Path, as_json: bool):
         introduction_text = try_get_text(root, "Introduction")
         situations = list(root.iter("Situation"))
         fiche_id = re.search('[a-zA-Z0-9]*(?=\.xml)', str(doc_path)).group()
-        arborescence = get_arborescence(arborescence, fiche_id)
+        arborescence = get_arborescence(arborescence_file, fiche_id)
 
         if not situations:
             #     tqdm.write(f"\tFile {doc_path} has no situations !")
@@ -446,17 +446,21 @@ def run(doc_path: Path, output_path: Path, path_arbo: Path, as_json: bool):
         return 0
 
 
-def run_fiche_as_one(doc_path: Path, output_path: Path, as_json: bool):
+def run_fiche_as_one(doc_path: Path,  path_arbo: Path, output_path: Path, as_json: bool):
     global ERROR_COUNT
     fiche_text = ""
 
     try:
         tqdm.write(f"Extracting info from {doc_path}")
+        with open(path_arbo) as file:
+            arborescence_file = json.load(file)
         tree = ET.parse(doc_path)
         root = tree.getroot()
         fiche_title = list(list(root.iter("Publication"))[0])[0].text
         fiche_text += treat_no_situation_fiche(root)
-        arborescence = get_arborescence(root)
+        fiche_id = re.search('[a-zA-Z0-9]*(?=\.xml)', str(doc_path)).group()
+
+        arborescence = get_arborescence(arborescence_file, fiche_id)
 
         save_fiche_as_one(doc_path=doc_path,
                           fiche_title=fiche_title,
@@ -491,7 +495,7 @@ def main(doc_files_path: str, output_path: str, path_arbo: str, as_json: bool, n
         for doc_path in tqdm(doc_paths):
             tqdm.write(f"Converting file {doc_path}")
             if as_one:
-                job_output.append(run_fiche_as_one(doc_path, output_path, as_json))
+                job_output.append(run_fiche_as_one(doc_path, path_arbo, output_path, as_json))
             else:
                 job_output.append(run(doc_path, output_path, path_arbo, as_json))
     else:
