@@ -15,8 +15,8 @@ def test_add_eval_data(document_store):
     document_store.add_eval_data(filename=Path("./test/samples/squad/small.json").as_posix(),
                                  doc_index="test_eval_document", label_index="test_feedback")
 
-    assert document_store.get_document_count(index="test_eval_document") == 10
-    assert document_store.get_label_count(index="test_feedback") == 64
+    assert document_store.get_document_count(index="test_eval_document") == 11
+    assert document_store.get_label_count(index="test_feedback") == 65
 
     # test documents
     docs = document_store.get_all_documents(index="test_eval_document")
