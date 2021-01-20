@@ -3,7 +3,6 @@ import logging
 from tqdm import tqdm
 
 from haystack.document_store.base import BaseDocumentStore
-from haystack.retriever.base import BaseRetriever
 from haystack.pipeline import Pipeline
 from haystack.eval import eval_counts_reader, calculate_reader_metrics, calculate_average_precision_and_reciprocal_rank
 

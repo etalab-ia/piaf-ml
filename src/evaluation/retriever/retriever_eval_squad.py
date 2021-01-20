@@ -14,11 +14,11 @@ from sklearn.model_selection import ParameterGrid
 
 from src.evaluation.config.retriever_eval_squad_config import parameters
 from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping
-from src.evaluation.utils.preprocess import add_eval_data_from_file
 from src.evaluation.utils.utils_eval import eval_retriever
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 
 GPU_AVAILABLE = torch.cuda.is_available()
+
 
 def single_run(parameters):
     """
@@ -64,7 +64,6 @@ def single_run(parameters):
     else:
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr")
 
-
     # Add evaluation data to Elasticsearch document store
     # We first delete the custom tutorial indices to not have duplicate elements
     # make sure these indices do not collide with existing ones, the indices will be wiped clean before data is inserted
@@ -73,15 +72,17 @@ def single_run(parameters):
 
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
-    document_store.add_eval_data(evaluation_data, doc_index=doc_index, label_index=label_index)
+    document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index)
     document_store.update_embeddings(retriever_emb, index=doc_index)
 
-
-    retriever_eval_results = eval_retriever(document_store=document_store, pipeline=p, top_k=k, label_index=label_index, doc_index=doc_index)
-    ## Retriever Recall is the proportion of questions for which the correct document containing the answer is
-    ## among the correct documents
+    retriever_eval_results = eval_retriever(document_store=document_store, pipeline=p,
+                                            top_k=k,
+                                            label_index=label_index,
+                                            doc_index=doc_index)
+    # Retriever Recall is the proportion of questions for which the correct document containing the answer is
+    # among the correct documents
     print("Retriever Recall:", retriever_eval_results["recall"])
-    ## Retriever Mean Avg Precision rewards retrievers that give relevant documents a higher rank
+    # Retriever Mean Avg Precision rewards retrievers that give relevant documents a higher rank
     print("Retriever Mean Avg Precision:", retriever_eval_results["map"])
 
     return retriever_eval_results
@@ -102,4 +103,4 @@ if __name__ == '__main__':
         run_results = single_run(param)
         all_results.append(run_results)
 
-    #save_results(result_file_path=result_file_path, all_results=all_results)
+    # save_results(result_file_path=result_file_path, all_results=all_results)
