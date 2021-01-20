@@ -300,17 +300,17 @@ def reformat_json(arborescence):
 def main(doc_files_path, output_path):
     doc_files_path = Path(doc_files_path)
     output_path = Path(output_path)
-    if not doc_files_path.is_dir() and doc_files_path.is_file():
-        doc_paths = [doc_files_path]
-    else:
-        # go through the F files that contains the arbo
-        doc_paths_F = glob(doc_files_path.as_posix() + "/**/F*.xml", recursive=True)
-        doc_paths_F = [Path(p) for p in doc_paths_F]
-        # go through the N files that contains the arbo
-        doc_paths_N = glob(doc_files_path.as_posix() + "/**/N*.xml", recursive=True)
-        doc_paths_N = [Path(p) for p in doc_paths_N]
-    if not doc_paths_N:
-        raise Exception(f"Path {doc_paths} not found")
+    # if not doc_files_path.is_dir() and doc_files_path.is_file():
+    #     doc_paths = [doc_files_path]
+    # else:
+    # go through the F files that contains the arbo
+    doc_paths_F = glob(doc_files_path.as_posix() + "/**/F*.xml", recursive=True)
+    doc_paths_F = [Path(p) for p in doc_paths_F]
+    # go through the N files that contains the arbo
+    doc_paths_N = glob(doc_files_path.as_posix() + "/**/N*.xml", recursive=True)
+    doc_paths_N = [Path(p) for p in doc_paths_N]
+    # if not doc_paths_N:
+    #     raise Exception(f"Path {doc_paths} not found")
 
     path = output_path / 'arborescence.json'
     arborescence = fill_arborescence_with_N_files(doc_paths_N)
