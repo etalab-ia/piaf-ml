@@ -1,8 +1,8 @@
 parameters = {
-    "k_retriever": [10],
-    "k_reader": [3],
-    "retriever_type": ["sbert"],
-    "squad_dataset": ["./data/evaluation-datasets/fquad_eval.json"],
+    "k_retriever": [1],
+    "k_reader": [1],
+    "retriever_type": ["bm25"],
+    "squad_dataset": ["./data/evaluation_datasets/fquad_eval.json"],
     "filter_level": [None],
     "preprocessing": [True]
 }

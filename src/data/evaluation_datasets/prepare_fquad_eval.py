@@ -67,9 +67,9 @@ def add_is_impossible (fquad):
 def remove_answers_from_kb(fquad):
     for article in fquad['data']:
         for paragraph in article['paragraphs']:
-            for qas in paragraph['qas']:
-                for answer in qas['answers']:
-                    answer['text'] = ""
+            for qa in paragraph['qas']:
+                qa['answers'] = []
+                qa['is_impossible'] = True
     return fquad
 
 def merge(kb_fquad, test_fquad):
@@ -86,12 +86,19 @@ def merge(kb_fquad, test_fquad):
                     for qas in paragraph['qas']:
                         if qas['question'] in existing_questions:
                             index_qas = existing_questions.index(qas['question'])
-                            for answer in qas['answers']:
-                                existing_texts = [answer['text'] for answer in kb_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas'][index_qas]['answers']]
-                                if answer['text'] not in existing_texts:
-                                    existing_answers = modified_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas'][index_qas]['answers']
-                                    existing_answers.append(answer)
-                                    modified_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas'][index_qas]['answers'] = existing_answers
+                            modified_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas'][index_qas]['answers'] = qas['answers']
+                            modified_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas'][index_qas]['is_impossible'] = False
+                            # for answer in qas['answers']:
+                            #     existing_texts = [answer['text'] for answer in kb_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas'][index_qas]['answers']]
+                            #     if answer['text'] not in existing_texts:
+                            #         existing_answers = modified_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas'][index_qas]['answers']
+                            #         existing_answers.append(answer)
+                            #         # if an answer is added, remove the empty answers from the knowledge base
+                            #         for existing_answer in existing_answers:
+                            #             if existing_answer['text'] == "":
+                            #                 existing_answers.remove(existing_answer)
+                            #         modified_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas'][index_qas]['answers'] = existing_answers
+                            #         modified_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas'][index_qas]['is_impossible'] = False
                         else:
                             existing_qas = modified_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas'][index_qas]
                             existing_qas.append(qas)
@@ -105,7 +112,7 @@ def merge(kb_fquad, test_fquad):
             existing_data.append(article)
             modified_fquad['data'] = existing_data
 
-    return  modified_fquad
+    return modified_fquad
 
 def save_dataset(modified_fquad, name='fquad_eval'):
     res_file = Path('./data/evaluation-datasets') / (name + '.json')
@@ -114,7 +121,7 @@ def save_dataset(modified_fquad, name='fquad_eval'):
 
 
 
-def main(file_kb_fquad,file_test_fquad):
+def main(file_kb_fquad,file_test_fquad, name='fquad_eval'):
     with open(file_kb_fquad, encoding='UTF-8') as f_kb:
         kb_fquad = json.load(f_kb)
 
@@ -128,11 +135,11 @@ def main(file_kb_fquad,file_test_fquad):
     modified_fquad = merge(kb_fquad, test_fquad)
 
     #todo: add a merging of the different paragraphs
-    save_dataset(modified_fquad, name='fquad_eval')
+    save_dataset(modified_fquad, name)
 
 if __name__ == '__main__':
-    file_kb_fquad = Path('./data/evaluation-datasets/fquad_train.json')
-    file_test_fquad = Path('./data/evaluation-datasets/fquad_valid.json')
+    file_kb_fquad = Path('./data/evaluation_datasets/fquad_train.json')
+    file_test_fquad = Path('./data/evaluation_datasets/fquad_valid.json')
 
     main(file_kb_fquad,file_test_fquad)
 

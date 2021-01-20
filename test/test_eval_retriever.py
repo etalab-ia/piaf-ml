@@ -5,6 +5,7 @@ from haystack.document_store.base import BaseDocumentStore
 from haystack.pipeline import Pipeline
 
 from src.evaluation.utils.utils_eval import eval_retriever
+from src.data.evaluation_datasets import prepare_fquad_eval
 
 
 @pytest.mark.elasticsearch
@@ -44,6 +45,21 @@ def test_add_eval_data(document_store):
     document_store.delete_all_documents(index="test_eval_document")
     document_store.delete_all_documents(index="test_feedback")
 
+
+def test_prepare_fquad_eval(document_store):
+    # add eval data (SQUAD format)
+    document_store.delete_all_documents(index="test_eval_document")
+    document_store.delete_all_documents(index="test_feedback")
+    prepare_fquad_eval.main(Path("./test/samples/squad/small.json"), Path("./test/samples/squad/tiny.json"), name='small')
+    document_store.add_eval_data(filename=Path("./data/evaluation-datasets/small.json").as_posix(),
+                                 doc_index="test_eval_document", label_index="test_feedback")
+
+    assert document_store.get_document_count(index="test_eval_document") == 11
+    assert document_store.get_label_count(index="test_feedback") == 54
+
+    # clean up
+    document_store.delete_all_documents(index="test_eval_document")
+    document_store.delete_all_documents(index="test_feedback")
 
 @pytest.mark.elasticsearch
 @pytest.mark.parametrize("retriever_type,score_expected", [("bm25", 14 / 15), ("sbert", 13 / 15)])
