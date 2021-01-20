@@ -1,8 +1,8 @@
 parameters = {
-    "k_retriever": [1],
-    "k_reader": [2],
+    "k_retriever": [10],
+    "k_reader": [3],
     "retriever_type": ["sbert"],
-    "squad_dataset": ["./data/evaluation-datasets/fquad_valid_with_impossible_fraction.json"],
+    "squad_dataset": ["./data/evaluation-datasets/fquad_eval.json"],
     "filter_level": [None],
     "preprocessing": [True]
 }

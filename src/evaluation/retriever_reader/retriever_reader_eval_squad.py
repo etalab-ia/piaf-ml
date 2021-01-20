@@ -113,6 +113,8 @@ if __name__ == '__main__':
     for param in tqdm(parameters_grid, desc="GridSearch"):
         # START XP
         run_results = single_run(param)
+        print(run_results)
         all_results.append(run_results)
 
     #save_results(result_file_path=result_file_path, all_results=all_results)
+    print(all_results)

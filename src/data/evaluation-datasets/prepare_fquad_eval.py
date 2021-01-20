@@ -108,7 +108,7 @@ def merge(kb_fquad, test_fquad):
     return  modified_fquad
 
 def save_dataset(modified_fquad, name='fquad_eval'):
-    res_file = Path('./data/knowledge-base') / (name + '.json')
+    res_file = Path('./data/evaluation-datasets') / (name + '.json')
     with open(res_file, 'w', encoding='UTF-8') as f:
         json.dump(modified_fquad,f)
 
@@ -131,8 +131,8 @@ def main(file_kb_fquad,file_test_fquad):
     save_dataset(modified_fquad, name='fquad_eval')
 
 if __name__ == '__main__':
-    file_kb_fquad = Path('./data/knowledge-base/fquad_train.json')
-    file_test_fquad = Path('./data/knowledge-base/fquad_valid.json')
+    file_kb_fquad = Path('./data/evaluation-datasets/fquad_train.json')
+    file_test_fquad = Path('./data/evaluation-datasets/fquad_valid.json')
 
     main(file_kb_fquad,file_test_fquad)
 
