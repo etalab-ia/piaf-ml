@@ -74,6 +74,7 @@ def test_eval_elastic_retriever(document_store: BaseDocumentStore, retriever_bm2
     # eval retriever
     retriever_eval_results = eval_retriever(document_store=document_store, pipeline=p, top_k=3, label_index=label_index,
                                             doc_index=doc_index)
+
     assert retriever_eval_results["recall"] == 1.0
     assert retriever_eval_results["mrr"] == score_expected
 
