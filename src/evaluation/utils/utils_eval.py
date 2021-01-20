@@ -1,12 +1,27 @@
+import json
 import logging
+from pathlib import Path
+from typing import List, Tuple, Dict
 
+import pandas as pd
+from haystack.document_store.base import BaseDocumentStore
+from haystack.eval import eval_counts_reader, calculate_reader_metrics
+from haystack.pipeline import Pipeline
 from tqdm import tqdm
 
-from haystack.document_store.base import BaseDocumentStore
-from haystack.pipeline import Pipeline
-from haystack.eval import eval_counts_reader, calculate_reader_metrics, calculate_average_precision_and_reciprocal_rank
-
 logger = logging.getLogger(__name__)
+
+
+def save_results(result_file_path: Path, results_list: List[Dict]):
+    df_results = pd.DataFrame(results_list)
+    if result_file_path.exists():
+        df_old = pd.read_csv(result_file_path)
+        df_results = pd.concat([df_old, df_results])
+    else:
+        if not result_file_path.parent.exists():
+            result_file_path.parent.mkdir()
+    with open(result_file_path.as_posix(), "w") as filo:
+        df_results.to_csv(filo, index=False)
 
 
 def eval_retriever(
@@ -64,8 +79,8 @@ def eval_retriever(
     metrics = get_retriever_metrics(retrieved_docs_list, question_label_dict_list)
 
     logger.info((
-                    f"For {metrics['correct_retrievals']} out of {metrics['number_of_questions']} questions ({metrics['recall']:.2%}), the answer was in"
-                    f" the top-{top_k} candidate passages selected by the retriever."))
+        f"For {metrics['correct_retrievals']} out of {metrics['number_of_questions']} questions ({metrics['recall']:.2%}), the answer was in"
+        f" the top-{top_k} candidate passages selected by the retriever."))
 
     return metrics
 

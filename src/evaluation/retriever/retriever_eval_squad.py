@@ -1,33 +1,27 @@
 import hashlib
-import logging
-import torch
-
+import socket
+from datetime import datetime
 from pathlib import Path
+
+from farm.utils import initialize_device_settings
+from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
+from haystack.pipeline import Pipeline
+from haystack.retriever.dense import EmbeddingRetriever
+from haystack.retriever.sparse import ElasticsearchRetriever
+from sklearn.model_selection import ParameterGrid
 from tqdm import tqdm
 
-from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
-from haystack.retriever.sparse import ElasticsearchRetriever
-from haystack.retriever.dense import EmbeddingRetriever
-from haystack.pipeline import Pipeline
-from farm.utils import initialize_device_settings
-from sklearn.model_selection import ParameterGrid
-
+from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.config.retriever_eval_squad_config import parameters
 from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping
-from src.evaluation.utils.utils_eval import eval_retriever
-from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
-
-GPU_AVAILABLE = torch.cuda.is_available()
+from src.evaluation.utils.utils_eval import eval_retriever, save_results
 
 
 def single_run(parameters):
     """
-    Queries ES max_k - min_k times, saving at each step the results in a list. At the end plots the line
-    showing the results obtained. For now we can only vary k.
-    :param min_k: Minimum retriever-k to test
-    :param max_k: Maximum retriever-k to test
-    :param weighted_precision: Whether to take into account the position of the retrieved result in the accuracy computation
-    :return:
+    Runs a grid search config
+    :param parameters: A dict with diverse config options
+    :return: A dict with the results obtained running the experiment with these parameters
     """
     # col names
     evaluation_data = Path(parameters["squad_dataset"])
@@ -37,29 +31,29 @@ def single_run(parameters):
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     # Prepare framework
 
-    prepare_mapping(SQUAD_MAPPING, preprocessing)
+    p = Pipeline()
 
-    # Connect to Elasticsearch
-    document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
-                                                create_index=False, embedding_field="emb",
-                                                embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
-                                                custom_mapping=SQUAD_MAPPING)
+    prepare_mapping(SQUAD_MAPPING, preprocessing, embedding_dimension=512)
 
-    # Initialize Retriever
-    retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
-    retriever_emb = EmbeddingRetriever(document_store=document_store,
+    if retriever_type == 'bm25':
+
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+                                                    create_index=False, embedding_field="emb",
+                                                    embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                    custom_mapping=SQUAD_MAPPING)
+        retriever = ElasticsearchRetriever(document_store=document_store)
+        p.add_node(component=retriever, name="ESRetriever", inputs=["Query"])
+
+    elif retriever_type == "sbert":
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+                                                    create_index=False, embedding_field="emb",
+                                                    embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                    custom_mapping=SQUAD_MAPPING)
+        retriever = EmbeddingRetriever(document_store=document_store,
                                        embedding_model="distiluse-base-multilingual-cased",
                                        use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                        pooling_strategy="reduce_max",
-                                       emb_extraction_layer=-2)
-
-    p = Pipeline()
-
-    if retriever_type == 'bm25':
-        retriever = retriever_bm25
-        p.add_node(component=retriever, name="ESRetriever", inputs=["Query"])
-    elif retriever_type == "sbert":
-        retriever = retriever_emb
+                                       emb_extraction_layer=-1)
         p.add_node(component=retriever, name="SBertRetriever", inputs=["Query"])
     else:
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr")
@@ -73,7 +67,9 @@ def single_run(parameters):
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
     document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index)
-    document_store.update_embeddings(retriever_emb, index=doc_index)
+
+    if retriever_type in ["sbert", "dpr"]:
+        document_store.update_embeddings(retriever, index=doc_index)
 
     retriever_eval_results = eval_retriever(document_store=document_store, pipeline=p,
                                             top_k=k,
@@ -85,6 +81,10 @@ def single_run(parameters):
     # Retriever Mean Avg Precision rewards retrievers that give relevant documents a higher rank
     print("Retriever Mean Avg Precision:", retriever_eval_results["map"])
 
+    retriever_eval_results.update(parameters)
+    retriever_eval_results.update({"date": datetime.today().strftime('%Y-%m-%d_%H-%M-%S'),
+                                   "hostname": socket.gethostname(),
+                                   "experiment_id": experiment_id})
     return retriever_eval_results
 
 
@@ -92,9 +92,8 @@ if __name__ == '__main__':
     result_file_path = Path("./results/results.csv")
     parameters_grid = list(ParameterGrid(param_grid=parameters))
 
-    device, n_gpu = initialize_device_settings(use_cuda=False)
-
-    logger = logging.getLogger(__name__)
+    device, n_gpu = initialize_device_settings(use_cuda=True)
+    GPU_AVAILABLE = 1 if device == "gpu" else 0
 
     all_results = []
     launch_ES()
@@ -103,4 +102,4 @@ if __name__ == '__main__':
         run_results = single_run(param)
         all_results.append(run_results)
 
-    # save_results(result_file_path=result_file_path, all_results=all_results)
+    save_results(result_file_path=result_file_path, results_list=all_results)
