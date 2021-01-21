@@ -17,12 +17,12 @@ from typing import List, Dict, Iterator
 from argopt import argopt
 from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
+from haystack.preprocessor.preprocessor import PreProcessor
 from haystack.retriever.sparse import ElasticsearchRetriever
 from tqdm import tqdm
 import json
 import random
 import re
-
 random.seed(42)
 
 """
@@ -161,6 +161,7 @@ def create_dpr_training_dataset(squad_file_path: Path):
     list_DPR = []
     n_questions = 0
     n_non_added_questions = 0
+    preprocessor = PreProcessor(split_length=100)
     for idx_article, article in enumerate(tqdm(squad_data[:], unit="article")):
         article_title = article["title"]
         for paragraph in article["paragraphs"]:
@@ -174,7 +175,7 @@ def create_dpr_training_dataset(squad_file_path: Path):
                 positive_ctxs = [{
                     "title": f"{article_title}_{i}",
                     "text": c
-                } for i, c in enumerate(limit_context_size(question["answers"], context))]
+                } for i, c in enumerate(preprocessor.clean({"text":question["answers"], context))]
 
                 if not hard_negative_ctxs or not positive_ctxs:
                     logging.error(
