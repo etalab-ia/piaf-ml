@@ -161,8 +161,7 @@ def create_dpr_training_dataset(squad_file_path: Path):
     list_DPR = []
     n_questions = 0
     n_non_added_questions = 0
-    preprocessor = PreProcessor(split_length=100)
-    for idx_article, article in enumerate(tqdm(squad_data[:], unit="article")):
+    for idx_article, article in enumerate(tqdm(squad_data[:100], unit="article")):
         article_title = article["title"]
         for paragraph in article["paragraphs"]:
             context = paragraph["context"]
@@ -175,7 +174,8 @@ def create_dpr_training_dataset(squad_file_path: Path):
                 positive_ctxs = [{
                     "title": f"{article_title}_{i}",
                     "text": c
-                } for i, c in enumerate(preprocessor.clean({"text":question["answers"], context))]
+                # } for i, c in enumerate(limit_context_size(question["answers"], context))]
+                } for i, c in enumerate([preprocessor.clean({"text": context}) for answer in question["answers"]])]
 
                 if not hard_negative_ctxs or not positive_ctxs:
                     logging.error(
@@ -226,7 +226,7 @@ def get_hard_negative_context(retriever: ElasticsearchRetriever, question: str, 
         retrieved_doc_text = retrieved_doc.text
         if answer.lower() in retrieved_doc_text.lower():
             continue
-        list_hard_neg_ctxs.append({"title": retrieved_doc_id, "text": retrieved_doc_text[:n_chars]})
+        list_hard_neg_ctxs.append({"title": retrieved_doc_id, "text": preprocessor.clean({"text":retrieved_doc_text})})
 
     return list_hard_neg_ctxs
 
@@ -263,6 +263,8 @@ def main(squad_file_path: Path, dpr_output_path: Path):
 
 if __name__ == '__main__':
     parser = argopt(__doc__).parse_args()
+    preprocessor = PreProcessor(split_length=100)
+
     squad_file_path = Path(parser.squad_file_path)
     dpr_output_path = Path(parser.dpr_output_path)
     main(squad_file_path=squad_file_path, dpr_output_path=dpr_output_path)
