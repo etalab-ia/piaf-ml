@@ -698,7 +698,7 @@
               "id": "w",
               "answers": [
               ],
-              "is_impossible": false
+              "is_impossible": true
             }            
           ]
         }
