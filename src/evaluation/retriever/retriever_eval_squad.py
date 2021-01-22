@@ -51,7 +51,7 @@ def single_run(parameters):
 
     if retriever_type == 'bm25':
 
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
@@ -59,7 +59,7 @@ def single_run(parameters):
         p.add_node(component=retriever, name="ESRetriever", inputs=["Query"])
 
     elif retriever_type == "sbert":
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
@@ -75,8 +75,8 @@ def single_run(parameters):
     # Add evaluation data to Elasticsearch document store
     # We first delete the custom tutorial indices to not have duplicate elements
     # make sure these indices do not collide with existing ones, the indices will be wiped clean before data is inserted
-    doc_index = "document"
-    label_index = "label"
+    doc_index = "document_xp"
+    label_index = "label_xp"
 
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
