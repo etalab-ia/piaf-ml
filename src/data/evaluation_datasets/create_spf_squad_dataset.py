@@ -134,13 +134,6 @@ def create_squad_dataset(spf_fiches_folder: Path,
                 'id': fiche_id
             })
 
-        # if fiche_id not in non_answered_question_fiches_ids:
-        #     question = ""
-        # if fiche_id in non_answered_question_fiches_ids:  # this fiche is a question fiche without answer
-        #     question = squad_dict["title"]
-        # else:
-        #     question
-
         squad_dict["paragraphs"] = [
             {
                 "context": fiche_content["text"],
