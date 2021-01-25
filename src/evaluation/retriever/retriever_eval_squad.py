@@ -8,7 +8,7 @@ from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.pipeline import Pipeline
 from haystack.retriever.dense import EmbeddingRetriever
 from haystack.retriever.sparse import ElasticsearchRetriever
-from haystack.retriever.dense import DensePassageRetriever
+from haystack.preprocessor.preprocessor import PreProcessor
 from sklearn.model_selection import ParameterGrid
 from tqdm import tqdm
 
@@ -29,6 +29,9 @@ def single_run(parameters):
     retriever_type = parameters["retriever_type"]
     k = parameters["k"]
     preprocessing = parameters["preprocessing"]
+    split_by=parameters["split_by"]
+    split_length = parameters["split_length"]
+    split_respect_sentence_boundary = parameters["split_respect_sentence_boundary"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     # Prepare framework
 
@@ -36,9 +39,19 @@ def single_run(parameters):
 
     prepare_mapping(SQUAD_MAPPING, preprocessing, embedding_dimension=512)
 
+    preprocessor = PreProcessor(
+        clean_empty_lines=False,
+        clean_whitespace=False,
+        clean_header_footer=False,
+        split_by=split_by,
+        split_length=split_length,
+        split_overlap=0, #this must be set to 0 at the data of writting this: 22 01 2021
+        split_respect_sentence_boundary=split_respect_sentence_boundary
+    )
+
     if retriever_type == 'bm25':
 
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
@@ -46,7 +59,7 @@ def single_run(parameters):
         p.add_node(component=retriever, name="ESRetriever", inputs=["Query"])
 
     elif retriever_type == "sbert":
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
@@ -62,12 +75,12 @@ def single_run(parameters):
     # Add evaluation data to Elasticsearch document store
     # We first delete the custom tutorial indices to not have duplicate elements
     # make sure these indices do not collide with existing ones, the indices will be wiped clean before data is inserted
-    doc_index = "document"
-    label_index = "label"
+    doc_index = "document_xp"
+    label_index = "label_xp"
 
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
-    document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index)
+    document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index, preprocessor=preprocessor)
 
     if retriever_type in ["sbert", "dpr"]:
         document_store.update_embeddings(retriever, index=doc_index)
