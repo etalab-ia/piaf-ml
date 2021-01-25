@@ -8,6 +8,7 @@ from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.pipeline import Pipeline
 from haystack.retriever.dense import EmbeddingRetriever
 from haystack.retriever.sparse import ElasticsearchRetriever
+from haystack.retriever.dense import DensePassageRetriever
 from sklearn.model_selection import ParameterGrid
 from tqdm import tqdm
 
