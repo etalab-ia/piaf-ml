@@ -71,7 +71,7 @@ def single_run(parameters):
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = ElasticsearchRetriever(document_store=document_store)
-        p.add_node(component=retriever, name="ESRetriever", inputs=["Query"])
+        p.add_node(component=retriever, name="Retriever", inputs=["Query"])
 
     elif retriever_type == "sbert":
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
@@ -83,14 +83,14 @@ def single_run(parameters):
                                        use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                        pooling_strategy="reduce_max",
                                        emb_extraction_layer=-1)
-        p.add_node(component=retriever, name="SBertRetriever", inputs=["Query"])
+        p.add_node(component=retriever, name="Retriever", inputs=["Query"])
     else:
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr")
 
 
     reader = TransformersReader(model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
                                 tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
-                                use_gpu=n_gpu,top_k_per_candidate=k_reader)
+                                use_gpu=gpu_id,top_k_per_candidate=k_reader)
 
     p.add_node(component=reader, name='reader', inputs=['Retriever'])
 
@@ -128,6 +128,11 @@ if __name__ == '__main__':
 
     device, n_gpu = initialize_device_settings(use_cuda=True)
     GPU_AVAILABLE = 1 if device == "gpu" else 0
+
+    if GPU_AVAILABLE:
+        gpu_id = torch.cuda.current_device()
+    else:
+        gpu_id = -1
 
     all_results = []
     launch_ES()

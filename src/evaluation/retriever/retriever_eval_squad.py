@@ -109,6 +109,7 @@ if __name__ == '__main__':
     device, n_gpu = initialize_device_settings(use_cuda=True)
     GPU_AVAILABLE = 1 if device == "gpu" else 0
 
+
     all_results = []
     launch_ES()
     for param in tqdm(parameters_grid, desc="GridSearch"):
