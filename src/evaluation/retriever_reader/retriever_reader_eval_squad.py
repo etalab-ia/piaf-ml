@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.sparse import ElasticsearchRetriever
-from haystack.retriever.dense import EmbeddingRetriever
+from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
 from haystack.reader.transformers import TransformersReader
 from haystack.preprocessor.preprocessor import PreProcessor
 from haystack.pipeline import Pipeline
@@ -22,12 +22,6 @@ from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_map
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 
-GPU_AVAILABLE = torch.cuda.is_available()
-
-if GPU_AVAILABLE:
-    n_gpu = torch.cuda.current_device()
-else:
-    n_gpu = -1
 
 def single_run(parameters):
     """
@@ -48,7 +42,6 @@ def single_run(parameters):
     split_length = parameters["split_length"]
     split_respect_sentence_boundary = parameters["split_respect_sentence_boundary"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
-    # Prepare framework
 
     p = Pipeline()
 
@@ -60,7 +53,7 @@ def single_run(parameters):
         clean_header_footer=False,
         split_by=split_by,
         split_length=split_length,
-        split_overlap=0, #this must be set to 0 at the data of writting this: 22 01 2021
+        split_overlap=0,  # this must be set to 0 at the data of writting this: 22 01 2021
         split_respect_sentence_boundary=split_respect_sentence_boundary
     )
 
@@ -84,13 +77,30 @@ def single_run(parameters):
                                        pooling_strategy="reduce_max",
                                        emb_extraction_layer=-1)
         p.add_node(component=retriever, name="Retriever", inputs=["Query"])
+    elif retriever_type == "dpr":
+        prepare_mapping(SQUAD_MAPPING, preprocessing, embedding_dimension=768)
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
+                                                    create_index=False, embedding_field="emb",
+                                                    excluded_meta_data=["emb"], similarity='cosine',
+                                                    custom_mapping=SQUAD_MAPPING)
+        retriever = DensePassageRetriever(document_store=document_store,
+                                          query_embedding_model="etalab-ia/dpr-question_encoder-fr_qa-camembert",
+                                          passage_embedding_model="etalab-ia/dpr-ctx_encoder-fr_qa-camembert",
+                                          use_gpu=GPU_AVAILABLE,
+                                          embed_title=False,
+                                          batch_size=16,
+                                          use_fast_tokenizers=False,
+                                          similarity_function="dot_product"
+                                          )
+
+        p.add_node(component=retriever, name="Retriever", inputs=["Query"])
+
     else:
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr")
 
-
     reader = TransformersReader(model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
                                 tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
-                                use_gpu=gpu_id,top_k_per_candidate=k_reader)
+                                use_gpu=gpu_id, top_k_per_candidate=k_reader)
 
     p.add_node(component=reader, name='reader', inputs=['Retriever'])
 
@@ -127,7 +137,7 @@ if __name__ == '__main__':
     parameters_grid = list(ParameterGrid(param_grid=parameters))
 
     device, n_gpu = initialize_device_settings(use_cuda=True)
-    GPU_AVAILABLE = 1 if device == "gpu" else 0
+    GPU_AVAILABLE = True if device == "gpu" else False
 
     if GPU_AVAILABLE:
         gpu_id = torch.cuda.current_device()
