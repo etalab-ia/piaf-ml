@@ -72,8 +72,10 @@ def create_squad_dataset(spf_fiches_folder: Path,
     spf_data = []
     for fiche_id in non_question_fiches + all_questions_fiches:
         fiche_content = dict_spf_jsons[fiche_id]
-        # if fiche_id in all_questions_fiches:
-        #     print("stop!")  # we will add question fiches at the end
+        if fiche_id in non_question_fiches:
+            context = fiche_content["text"]
+        else:
+            context = dict_question_spf[fiche_id]["paragraphs"][0]["context"]
         squad_dict = {"link": fiche_content["link"]}
 
         if len(fiche_content["text"]) < 30:
@@ -92,13 +94,12 @@ def create_squad_dataset(spf_fiches_folder: Path,
                 'reference': squad_dict["title"],
                 'id': fiche_id
             })
-
         squad_dict["paragraphs"] = [
             {
-                "context": fiche_content["text"],
+                "context": context,
                 "qas": [
                     {
-                        "question": "" if fiche_id not in non_answered_question_fiches_ids else squad_dict["title"],
+                        "question": "" if fiche_id in non_question_fiches else squad_dict["title"],
                         "answers": [
                             {"answer_start": -1, "text": ""}] if fiche_id not in answered_questions_fiches_ids else
                         dict_question_spf[fiche_id]["paragraphs"][0]["qas"][0]["answers"],
