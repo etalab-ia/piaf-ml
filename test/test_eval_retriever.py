@@ -3,6 +3,7 @@ from pathlib import Path
 
 from haystack.document_store.base import BaseDocumentStore
 from haystack.pipeline import Pipeline
+from haystack.preprocessor.preprocessor import PreProcessor
 
 from src.evaluation.utils.utils_eval import eval_retriever
 from src.data.evaluation_datasets import prepare_fquad_eval
@@ -45,6 +46,45 @@ def test_add_eval_data(document_store):
     document_store.delete_all_documents(index="test_eval_document")
     document_store.delete_all_documents(index="test_feedback")
 
+
+@pytest.mark.elasticsearch
+def test_add_eval_data_with_preprocessor(document_store, preprocessor):
+    # add eval data (SQUAD format)
+    document_store.delete_all_documents(index="test_eval_document")
+    document_store.delete_all_documents(index="test_feedback")
+    document_store.add_eval_data(filename=Path("./test/samples/squad/small.json").as_posix(),
+                                 doc_index="test_eval_document", label_index="test_feedback",
+                                 preprocessor=preprocessor)
+
+    assert document_store.get_document_count(index="test_eval_document") == 46
+    assert document_store.get_label_count(index="test_feedback") == 65
+
+    # test documents
+    docs = document_store.get_all_documents(index="test_eval_document")
+    assert docs[0].text[:10] == "Les dépens"
+    assert docs[0].meta["name"] == "Sport"
+    assert len(docs[0].meta.keys()) == 4
+    assert docs[2].meta["_split_offset"] == 421
+
+    # test labels
+    labels = document_store.get_all_labels(index="test_feedback")
+    assert labels[0].answer == "100 000"
+    assert labels[0].no_answer is False
+    assert labels[0].is_correct_answer is True
+    assert labels[0].is_correct_document is True
+    assert labels[0].question == 'Combien de personnes travaillent au ministère des sports'
+    assert labels[0].origin == "gold_label"
+    assert labels[0].offset_start_in_doc == 51
+
+    # check combination
+    assert labels[0].document_id == docs[2].id
+    start = labels[0].offset_start_in_doc
+    end = start + len(labels[0].answer)
+    assert docs[2].text[start:end] == "100 000"
+
+    # clean up
+    document_store.delete_all_documents(index="test_eval_document")
+    document_store.delete_all_documents(index="test_feedback")
 
 def test_prepare_fquad_eval(document_store):
     # add eval data (SQUAD format)

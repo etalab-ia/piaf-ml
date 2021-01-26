@@ -9,6 +9,7 @@ from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.dense import EmbeddingRetriever
 from haystack.retriever.sparse import ElasticsearchRetriever
+from haystack.preprocessor.preprocessor import PreProcessor
 
 sys.path.insert(0, os.path.abspath("./"))
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
@@ -40,6 +41,21 @@ def elasticsearch_fixture():
 @pytest.fixture
 def gpu_available():
     return torch.cuda.is_available()
+
+
+@pytest.fixture(scope='session')
+def preprocessor():
+    # test with preprocessor
+    preprocessor = PreProcessor(
+        clean_empty_lines=False,
+        clean_whitespace=False,
+        clean_header_footer=False,
+        split_by="word",
+        split_length=50,
+        split_overlap=0, #this must be set to 0 at the data of writting this: 22 01 2021
+        split_respect_sentence_boundary=True
+    )
+    return preprocessor
 
 
 @pytest.fixture(scope='session')
