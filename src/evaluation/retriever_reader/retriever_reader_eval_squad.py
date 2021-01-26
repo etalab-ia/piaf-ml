@@ -2,6 +2,7 @@ import hashlib
 import logging
 import torch
 import socket
+import time
 from datetime import datetime
 
 from pathlib import Path
@@ -108,14 +109,19 @@ def single_run(parameters):
     if retriever_type in ["sbert", "dpr"]:
         document_store.update_embeddings(retriever, index=doc_index)
 
+
+    start = time.time()
     retriever_eval_results = eval_retriever_reader(document_store=document_store, pipeline=p,
                                                    top_k_retriever=k_retriever, label_index=label_index)
+    end = time.time()
+    time_per_label = (end - start) / document_store.get_label_count(index=label_index)
 
     print("Reader Accuracy:", retriever_eval_results["reader_topk_accuracy"])
     print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])
 
     retriever_eval_results.update(parameters)
-    retriever_eval_results.update({"date": datetime.today().strftime('%Y-%m-%d_%H-%M-%S'),
+    retriever_eval_results.update({"time_per_label":time_per_label,
+                                   "date": datetime.today().strftime('%Y-%m-%d_%H-%M-%S'),
                                    "hostname": socket.gethostname(),
                                    "experiment_id": experiment_id})
 
