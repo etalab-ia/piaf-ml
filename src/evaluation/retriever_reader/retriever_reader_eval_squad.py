@@ -102,7 +102,7 @@ def single_run(parameters):
 
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
-    document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index)
+    document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index, preprocessor=preprocessor)
 
     if retriever_type in ["sbert", "dpr"]:
         document_store.update_embeddings(retriever, index=doc_index)
