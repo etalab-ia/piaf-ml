@@ -1,8 +1,8 @@
 parameters = {
     "k_retriever": [3,15],
-    "k_reader": [1,3,5],
+    "k_reader": [3,5,10],
     "retriever_type": ["bm25"],
-    "squad_dataset": ["./data/evaluation-datasets/spf_squad.json"],
+    "squad_dataset": ["./data/evaluation-datasets/spf_squad.json", "data/evaluation-datasets/spf_squad.json"],
     "filter_level": [None],
     "preprocessing": [True],
     "split_by": ["word"], #Can be "word", "sentence", or "passage"
