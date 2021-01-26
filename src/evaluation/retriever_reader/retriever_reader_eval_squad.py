@@ -108,9 +108,8 @@ def single_run(parameters):
     if retriever_type in ["sbert", "dpr"]:
         document_store.update_embeddings(retriever, index=doc_index)
 
-    retriever_eval_results = eval_retriever_reader(document_store=document_store, pipeline=p, top_k_reader=k_reader,
-                                                   top_k_retriever=k_retriever, label_index=label_index,
-                                                   doc_index=doc_index)
+    retriever_eval_results = eval_retriever_reader(document_store=document_store, pipeline=p,
+                                                   top_k_retriever=k_retriever, label_index=label_index)
 
     print("Reader Accuracy:", retriever_eval_results["reader_topk_accuracy"])
     print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])

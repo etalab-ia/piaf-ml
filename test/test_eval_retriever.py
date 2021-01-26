@@ -3,7 +3,6 @@ from pathlib import Path
 
 from haystack.document_store.base import BaseDocumentStore
 from haystack.pipeline import Pipeline
-from haystack.preprocessor.preprocessor import PreProcessor
 
 from src.evaluation.utils.utils_eval import eval_retriever
 from src.data.evaluation_datasets import prepare_fquad_eval

@@ -7,6 +7,7 @@ import pytest
 import torch
 from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
+from haystack.reader.transformers import TransformersReader
 from haystack.retriever.dense import EmbeddingRetriever
 from haystack.retriever.sparse import ElasticsearchRetriever
 from haystack.preprocessor.preprocessor import PreProcessor
@@ -28,7 +29,7 @@ def elasticsearch_fixture():
             shell=True
         )
         status = subprocess.run(
-            ['docker run -d --name haystack_test_elastic -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.9.2'],
+            ['docker run -d --name haystack_test_elastic -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'],
             shell=True
         )
         if status.returncode:
@@ -41,6 +42,14 @@ def elasticsearch_fixture():
 @pytest.fixture
 def gpu_available():
     return torch.cuda.is_available()
+
+@pytest.fixture
+def gpu_id(gpu_available):
+    if gpu_available:
+        gpu_id = torch.cuda.current_device()
+    else:
+        gpu_id = -1
+    return gpu_id
 
 
 @pytest.fixture(scope='session')
@@ -67,6 +76,14 @@ def document_store(elasticsearch_fixture):
     yield document_store
     document_store.delete_all_documents(index='document')
 
+
+@pytest.fixture
+def reader(gpu_id):
+    k_reader = 3
+    reader = TransformersReader(model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
+                                tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
+                                use_gpu=gpu_id,top_k_per_candidate=k_reader)
+    return reader
 
 @pytest.fixture
 def retriever_bm25(document_store):
