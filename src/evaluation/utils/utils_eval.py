@@ -131,10 +131,8 @@ def get_retriever_metrics(retrieved_docs_list, question_label_dict_list):
 def eval_retriever_reader(
         document_store: BaseDocumentStore,
         pipeline: Pipeline,
-        top_k_reader: int,
         top_k_retriever: int,
         label_index: str = "label",
-        doc_index: str = "document",
         label_origin: str = "gold_label",
 ):
     """
@@ -159,7 +157,15 @@ def eval_retriever_reader(
     questions = [label.question for label in labels_agg]
     predicted_answers_list = [pipeline.run(query=q, top_k_retriever=top_k_retriever) for q in questions]
 
+    # quick renaming fix to match with haystack.eval.eval_counts_reader, this might be due to preprocessing
+    #TODO : check this
+    for predicted_answers in predicted_answers_list:
+        for answer in predicted_answers['answers']:
+            answer["offset_start_in_doc"] = answer["offset_start"]
+            answer["offset_end_in_doc"] = answer["offset_end"]
+
     metric_counts = {}
+    metric_counts["correct_no_answers_top1"] = 0
     metric_counts["correct_no_answers_topk"] = 0
     metric_counts["correct_readings_topk"] = 0
     metric_counts["exact_matches_topk"] = 0
@@ -176,8 +182,8 @@ def eval_retriever_reader(
     metric_counts["number_of_no_answer"] = 0
     for question, predicted_answers in zip(labels_agg, predicted_answers_list):
         metric_counts = eval_counts_reader(question, predicted_answers, metric_counts)
-    metrics = calculate_reader_metrics(metric_counts, len(predicted_answers))
-
+    metrics = calculate_reader_metrics(metric_counts, len(predicted_answers_list))
+    metrics.update(metric_counts)
     return metrics
 
 

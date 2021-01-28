@@ -7,7 +7,6 @@ parameters = {
     "split_by": ["word"], #Can be "word", "sentence", or "passage"
     "split_length":[200],
     "split_respect_sentence_boundary": [True]
-
 }
 # rules:
 # corpus and retriever type requires reloading ES indexing
