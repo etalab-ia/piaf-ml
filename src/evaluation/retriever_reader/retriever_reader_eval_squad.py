@@ -30,6 +30,7 @@ if GPU_AVAILABLE:
 else:
     n_gpu = -1
 
+
 def single_run(parameters):
     """
     Queries ES max_k - min_k times, saving at each step the results in a list. At the end plots the line
@@ -61,7 +62,7 @@ def single_run(parameters):
         clean_header_footer=False,
         split_by=split_by,
         split_length=split_length,
-        split_overlap=0, #this must be set to 0 at the data of writting this: 22 01 2021
+        split_overlap=0,  # this must be set to 0 at the data of writting this: 22 01 2021
         split_respect_sentence_boundary=split_respect_sentence_boundary
     )
 
@@ -88,10 +89,9 @@ def single_run(parameters):
     else:
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr")
 
-
     reader = TransformersReader(model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
                                 tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
-                                use_gpu=gpu_id,top_k_per_candidate=k_reader)
+                                use_gpu=gpu_id, top_k_per_candidate=k_reader)
 
     p.add_node(component=reader, name='reader', inputs=['Retriever'])
 
@@ -109,7 +109,6 @@ def single_run(parameters):
     if retriever_type in ["sbert", "dpr"]:
         document_store.update_embeddings(retriever, index=doc_index)
 
-
     start = time.time()
     retriever_eval_results = eval_retriever_reader(document_store=document_store, pipeline=p,
                                                    top_k_retriever=k_retriever, label_index=label_index)
@@ -120,7 +119,7 @@ def single_run(parameters):
     print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])
 
     retriever_eval_results.update(parameters)
-    retriever_eval_results.update({"time_per_label":time_per_label,
+    retriever_eval_results.update({"time_per_label": time_per_label,
                                    "date": datetime.today().strftime('%Y-%m-%d_%H-%M-%S'),
                                    "hostname": socket.gethostname(),
                                    "experiment_id": experiment_id})
@@ -145,6 +144,5 @@ if __name__ == '__main__':
     for param in tqdm(parameters_grid, desc="GridSearch"):
         # START XP
         run_results = single_run(param)
-        all_results.append(run_results)
-
-    save_results(result_file_path=result_file_path, results_list=all_results)
+        # all_results.append(run_results)
+        save_results(result_file_path=result_file_path, results_list=run_results)
