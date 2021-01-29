@@ -6,8 +6,7 @@ parameters = {
     "filter_level": [None],
     "preprocessing": [True],
     "split_by": ["word"], #Can be "word", "sentence", or "passage"
-    "split_length":[100,200,500,1000],
-    "split_respect_sentence_boundary": [True]
+    "split_length":[200,500,1000]
 }
 # rules:
 # corpus and retriever type requires reloading ES indexing

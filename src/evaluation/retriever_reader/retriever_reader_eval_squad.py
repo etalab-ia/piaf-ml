@@ -48,7 +48,6 @@ def single_run(parameters):
     preprocessing = parameters["preprocessing"]
     split_by = parameters["split_by"]
     split_length = parameters["split_length"]
-    split_respect_sentence_boundary = parameters["split_respect_sentence_boundary"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     # Prepare framework
 
@@ -63,7 +62,7 @@ def single_run(parameters):
         split_by=split_by,
         split_length=split_length,
         split_overlap=0,  # this must be set to 0 at the data of writting this: 22 01 2021
-        split_respect_sentence_boundary=split_respect_sentence_boundary
+        split_respect_sentence_boundary=False #the support for this will soon be removed : 29 01 2021
     )
 
     if retriever_type == 'bm25':
