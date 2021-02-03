@@ -151,12 +151,17 @@ if __name__ == '__main__':
 
     all_results = []
     launch_ES()
-    for param in tqdm(parameters_grid, desc="GridSearch"):
+    for param in tqdm(parameters_grid, desc="GridSearch", unit="config"):
         add_extra_params(param)
-        with mlflow.start_run() as run:
-            mlflow.log_params(param)
-            # START XP
-            run_results = single_run(param)
-            mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
-        run_results.update(param)
-        save_results(result_file_path=result_file_path, results_list=run_results)
+        tqdm.write(f"Doing run with config : {param}")
+        try:
+            with mlflow.start_run() as run:
+                mlflow.log_params(param)
+                # START XP
+                run_results = single_run(param)
+                mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
+            run_results.update(param)
+            save_results(result_file_path=result_file_path, results_list=run_results)
+        except:
+            Exception(f"Could not run this config: {param}")
+            continue
