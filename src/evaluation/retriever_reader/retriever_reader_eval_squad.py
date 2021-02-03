@@ -23,14 +23,6 @@ from src.evaluation.utils.mlflow_management import prepare_databricks
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 import mlflow
-# from dotenv import load_dotenv
-# load_dotenv()
-# if os.getenv("DATABRICKS_EXPERIMENT"):
-#     mlflow.set_tracking_uri("databricks")
-#     mlflow.set_experiment(os.getenv("DATABRICKS_EXPERIMENT"))
-#     tqdm.write(f"MLflow tracking to databricks {os.getenv('DATABRICKS_EXPERIMENT')}")
-# else:
-#     tqdm.write(f"MLflow tracking to local mlruns folder")
 
 prepare_databricks()
 
@@ -73,7 +65,7 @@ def single_run(parameters):
         split_by=split_by,
         split_length=split_length,
         split_overlap=0,  # this must be set to 0 at the data of writting this: 22 01 2021
-        split_respect_sentence_boundary=False #the support for this will soon be removed : 29 01 2021
+        split_respect_sentence_boundary=False  # the support for this will soon be removed : 29 01 2021
     )
 
     if retriever_type == 'bm25':
@@ -136,8 +128,8 @@ def single_run(parameters):
 
 def add_extra_params(dict_params: dict):
     extra_parameters = {
-     "date": datetime.today().strftime('%Y-%m-%d_%H-%M-%S'),
-     "hostname": socket.gethostname()
+        "date": datetime.today().strftime('%Y-%m-%d_%H-%M-%S'),
+        "hostname": socket.gethostname()
     }
 
     dict_params.update(extra_parameters)
