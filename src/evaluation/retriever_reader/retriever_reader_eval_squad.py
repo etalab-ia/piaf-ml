@@ -1,5 +1,4 @@
 import hashlib
-import logging
 import torch
 import socket
 import time
@@ -20,8 +19,12 @@ from sklearn.model_selection import ParameterGrid
 
 from src.evaluation.config.retriever_reader_eval_squad_config import parameters
 from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping
+from src.evaluation.utils.mlflow_management import prepare_databricks
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
+import mlflow
+
+prepare_databricks()
 
 GPU_AVAILABLE = torch.cuda.is_available()
 
@@ -48,7 +51,7 @@ def single_run(parameters):
     preprocessing = parameters["preprocessing"]
     split_by = parameters["split_by"]
     split_length = parameters["split_length"]
-    experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
+
     # Prepare framework
 
     p = Pipeline()
@@ -62,13 +65,14 @@ def single_run(parameters):
         split_by=split_by,
         split_length=split_length,
         split_overlap=0,  # this must be set to 0 at the data of writting this: 22 01 2021
-        split_respect_sentence_boundary=False #the support for this will soon be removed : 29 01 2021
+        split_respect_sentence_boundary=False  # the support for this will soon be removed : 29 01 2021
     )
 
     if retriever_type == 'bm25':
 
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
                                                     create_index=False, embedding_field="emb",
+                                                    scheme="",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = ElasticsearchRetriever(document_store=document_store)
@@ -117,13 +121,20 @@ def single_run(parameters):
     print("Reader Accuracy:", retriever_eval_results["reader_topk_accuracy"])
     print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])
 
-    retriever_eval_results.update(parameters)
-    retriever_eval_results.update({"time_per_label": time_per_label,
-                                   "date": datetime.today().strftime('%Y-%m-%d_%H-%M-%S'),
-                                   "hostname": socket.gethostname(),
-                                   "experiment_id": experiment_id})
+    retriever_eval_results.update({"time_per_label": time_per_label})
 
     return retriever_eval_results
+
+
+def add_extra_params(dict_params: dict):
+    extra_parameters = {
+        "date": datetime.today().strftime('%Y-%m-%d_%H-%M-%S'),
+        "hostname": socket.gethostname()
+    }
+
+    dict_params.update(extra_parameters)
+    experiment_id = hashlib.md5(str(dict_params).encode("utf-8")).hexdigest()[:4]
+    dict_params.update({"experiment_id": experiment_id})
 
 
 if __name__ == '__main__':
@@ -131,7 +142,7 @@ if __name__ == '__main__':
     parameters_grid = list(ParameterGrid(param_grid=parameters))
 
     device, n_gpu = initialize_device_settings(use_cuda=True)
-    GPU_AVAILABLE = 1 if device == "gpu" else 0
+    GPU_AVAILABLE = 1 if device.type == "cuda" else 0
 
     if GPU_AVAILABLE:
         gpu_id = torch.cuda.current_device()
@@ -141,7 +152,11 @@ if __name__ == '__main__':
     all_results = []
     launch_ES()
     for param in tqdm(parameters_grid, desc="GridSearch"):
-        # START XP
-        run_results = single_run(param)
-        # all_results.append(run_results)
+        add_extra_params(param)
+        with mlflow.start_run() as run:
+            mlflow.log_params(param)
+            # START XP
+            run_results = single_run(param)
+            mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
+        run_results.update(param)
         save_results(result_file_path=result_file_path, results_list=run_results)
