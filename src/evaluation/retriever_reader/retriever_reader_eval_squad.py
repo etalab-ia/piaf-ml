@@ -19,21 +19,20 @@ from sklearn.model_selection import ParameterGrid
 
 from src.evaluation.config.retriever_reader_eval_squad_config import parameters
 from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping
+from src.evaluation.utils.mlflow_management import prepare_databricks
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
-import os
 import mlflow
-if os.getenv("DATABRICKS_EXPERIMENT"):
-    mlflow.set_tracking_uri("databricks")
-    mlflow.set_experiment(os.getenv("DATABRICKS_EXPERIMENT"))
-    tqdm.write(f"MLflow tracking to databricks {os.getenv('DATABRICKS_EXPERIMENT')}")
-else:
-    tqdm.write(f"MLflow tracking to local mlruns folder")
+# from dotenv import load_dotenv
+# load_dotenv()
+# if os.getenv("DATABRICKS_EXPERIMENT"):
+#     mlflow.set_tracking_uri("databricks")
+#     mlflow.set_experiment(os.getenv("DATABRICKS_EXPERIMENT"))
+#     tqdm.write(f"MLflow tracking to databricks {os.getenv('DATABRICKS_EXPERIMENT')}")
+# else:
+#     tqdm.write(f"MLflow tracking to local mlruns folder")
 
-
-
-
-
+prepare_databricks()
 
 GPU_AVAILABLE = torch.cuda.is_available()
 
