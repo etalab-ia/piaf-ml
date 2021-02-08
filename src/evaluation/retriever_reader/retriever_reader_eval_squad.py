@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.sparse import ElasticsearchRetriever
-from haystack.retriever.dense import EmbeddingRetriever
+from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
 from haystack.reader.transformers import TransformersReader
 from haystack.preprocessor.preprocessor import PreProcessor
 from haystack.pipeline import Pipeline
@@ -92,23 +92,24 @@ def single_run(parameters):
                                        emb_extraction_layer=-1)
         p.add_node(component=retriever, name="Retriever", inputs=["Query"])
     elif retriever_type == "dpr":
-        raise NotImplementedError("DPR is still not working :(")
-        # prepare_mapping(SQUAD_MAPPING, preprocessing, embedding_dimension=768)
-        # document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
-        #                                             create_index=False, embedding_field="emb",
-        #                                             excluded_meta_data=["emb"], similarity='cosine',
-        #                                             custom_mapping=SQUAD_MAPPING)
-        # retriever = DensePassageRetriever(document_store=document_store,
-        #                                   query_embedding_model="/home/pavel/data/models/dpr/camembert-facebook-dpr-v2/dpr-question_encoder-fr_qa-camembert",
-        #                                   passage_embedding_model="/home/pavel/data/models/dpr/camembert-facebook-dpr-v2/dpr-ctx_encoder-fr_qa-camembert",
-        #                                   use_gpu=GPU_AVAILABLE,
-        #                                   embed_title=False,
-        #                                   batch_size=16,
-        #                                   use_fast_tokenizers=False,
-        #                                   similarity_function="cosine"
-        #                                   )
-        #
-        # p.add_node(component=retriever, name="Retriever", inputs=["Query"])
+        # raise NotImplementedError("DPR is still not working :(")
+        prepare_mapping(SQUAD_MAPPING, preprocessing, embedding_dimension=768)
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
+                                                    create_index=False, embedding_field="emb",
+                                                    excluded_meta_data=["emb"], similarity='cosine',
+                                                    custom_mapping=SQUAD_MAPPING)
+        retriever = DensePassageRetriever(document_store=document_store,
+                                          query_embedding_model="/home/pavel/data/models/dpr/camembert-facebook-dpr-v2/dpr-question_encoder-fr_qa-camembert",
+                                          passage_embedding_model="/home/pavel/data/models/dpr/camembert-facebook-dpr-v2/dpr-ctx_encoder-fr_qa-camembert",
+                                          use_gpu=GPU_AVAILABLE,
+                                          embed_title=False,
+                                          batch_size=16,
+                                          use_fast_tokenizers=False,
+                                          infer_tokenizer_classes=True,
+                                          similarity_function="cosine"
+                                          )
+
+        p.add_node(component=retriever, name="Retriever", inputs=["Query"])
 
     else:
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr")
