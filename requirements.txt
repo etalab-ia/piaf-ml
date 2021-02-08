@@ -158,7 +158,7 @@ websocket-client==0.57.0
 Werkzeug==0.16.1
 widgetsnbextension==3.5.1
 wrapt==1.12.1
-
+python-dotenv
 argopt
 matplotlib
 pytest

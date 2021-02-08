@@ -1,7 +1,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Union
 
 import pandas as pd
 from haystack.document_store.base import BaseDocumentStore
@@ -12,7 +12,10 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 
-def save_results(result_file_path: Path, results_list: List[Dict]):
+def save_results(result_file_path: Path, results_list: Union[Dict, List[Dict]]):
+    if not isinstance(results_list, list):
+        results_list = [results_list]
+
     df_results = pd.DataFrame(results_list)
     if result_file_path.exists():
         df_old = pd.read_csv(result_file_path)
@@ -131,10 +134,8 @@ def get_retriever_metrics(retrieved_docs_list, question_label_dict_list):
 def eval_retriever_reader(
         document_store: BaseDocumentStore,
         pipeline: Pipeline,
-        top_k_reader: int,
         top_k_retriever: int,
         label_index: str = "label",
-        doc_index: str = "document",
         label_origin: str = "gold_label",
 ):
     """

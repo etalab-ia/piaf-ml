@@ -143,3 +143,4 @@ src/data/notebooks/data/
 data/vosdroits-latest
 output/
 cached_dense_dicts/
+.env
