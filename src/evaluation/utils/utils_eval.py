@@ -156,13 +156,14 @@ def eval_retriever_reader(
     filters = {"origin": [label_origin]}
     # labels = document_store.get_all_labels(index=label_index, filters=filters)
     labels_agg = document_store.get_all_labels_aggregated(index=label_index, filters=filters)
-    labels_agg = [l for l in labels_agg if l.question]
+    labels_agg = [label for label in labels_agg if label.question]
 
     questions = [label.question for label in labels_agg]
     predicted_answers_list = [pipeline.run(query=q, top_k_retriever=top_k_retriever) for q in questions]
-
+    assert len(questions) == len(predicted_answers_list), f"Number of questions is not the same number of predicted" \
+                                                          f"answers"
     # quick renaming fix to match with haystack.eval.eval_counts_reader, this might be due to preprocessing
-    #TODO : check this
+    # TODO : check this
     for predicted_answers in predicted_answers_list:
         for answer in predicted_answers['answers']:
             answer["offset_start_in_doc"] = answer["offset_start"]
