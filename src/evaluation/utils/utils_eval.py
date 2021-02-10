@@ -156,8 +156,9 @@ def eval_retriever_reader(
     filters = {"origin": [label_origin]}
     # labels = document_store.get_all_labels(index=label_index, filters=filters)
     labels_agg = document_store.get_all_labels_aggregated(index=label_index, filters=filters)
+    labels_agg = [l for l in labels_agg if l.question]
 
-    questions = [label.question for label in labels_agg if label.question]
+    questions = [label.question for label in labels_agg]
     predicted_answers_list = [pipeline.run(query=q, top_k_retriever=top_k_retriever) for q in questions]
 
     # quick renaming fix to match with haystack.eval.eval_counts_reader, this might be due to preprocessing
