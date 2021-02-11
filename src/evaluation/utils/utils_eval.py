@@ -50,31 +50,11 @@ def eval_retriever(
     # Collect questions and corresponding answers/document_ids in a dict
     question_label_dict_list = []
     for label in labels:
+        if not label.question:
+            continue
         deduplicated_doc_ids = list(set([str(x) for x in label.multiple_document_ids]))
-        question_label_dict = {}
-        question_label_dict['query'] = label.question
-        question_label_dict['gold_ids'] = deduplicated_doc_ids
+        question_label_dict = {'query': label.question, 'gold_ids': deduplicated_doc_ids}
         question_label_dict_list.append(question_label_dict)
-
-    predictions = []
-    """
-    confusion_matrix_documents = 0
-    for i in range(top_k_reader+1):
-        pred_docs = []
-        for answer, true_docs_ids in zip(found_answers, true_docs_ids_list):
-            pred_docs_id = answer['answers'][i]['document_id']
-            print(pred_docs_id)
-            print(true_docs_ids)
-            if pred_docs_id in true_docs_ids:
-                print('OK')
-                pred_docs.append(1)
-            else:
-                pred_docs.append(0)
-        confusion_matrix_documents += confusion_matrix([1 for i in range(len(true_answers_list))], pred_docs)
-    confusion_matrix_documents = confusion_matrix_documents / top_k_reader"""
-
-    # Option 1: Open-domain evaluation by checking if the answer string is in the retrieved docs
-    logger.info("Performing eval queries...")
 
     retrieved_docs_list = [pipeline.run(query=question["query"], top_k_retriever=top_k, index=doc_index) for question in
                            question_label_dict_list]
@@ -158,7 +138,7 @@ def eval_retriever_reader(
     labels_agg = document_store.get_all_labels_aggregated(index=label_index, filters=filters)
     labels_agg = [label for label in labels_agg if label.question]
 
-    questions = [label.question for label in labels_agg if label.question]
+    questions = [label.question for label in labels_agg]
     predicted_answers_list = [pipeline.run(query=q, top_k_retriever=top_k_retriever) for q in questions]
     assert len(questions) == len(predicted_answers_list), f"Number of questions is not the same number of predicted" \
                                                           f"answers"
