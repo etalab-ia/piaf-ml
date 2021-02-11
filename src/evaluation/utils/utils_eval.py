@@ -158,7 +158,7 @@ def eval_retriever_reader(
     labels_agg = document_store.get_all_labels_aggregated(index=label_index, filters=filters)
     labels_agg = [label for label in labels_agg if label.question]
 
-    questions = [label.question for label in labels_agg]
+    questions = [label.question for label in labels_agg if label.question]
     predicted_answers_list = [pipeline.run(query=q, top_k_retriever=top_k_retriever) for q in questions]
     assert len(questions) == len(predicted_answers_list), f"Number of questions is not the same number of predicted" \
                                                           f"answers"
