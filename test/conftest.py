@@ -62,7 +62,7 @@ def preprocessor():
         split_by="word",
         split_length=50,
         split_overlap=0, #this must be set to 0 at the data of writting this: 22 01 2021
-        split_respect_sentence_boundary=True
+        split_respect_sentence_boundary=False
     )
     return preprocessor
 
