@@ -53,6 +53,7 @@ For now, the main use of this repo is for evaluation. The goal of the evaluation
 4. Install requirements. Two options are available based on your prefered configuration: 
 * Using pip:
 `pip install -r requirements.txt`
+on Windows : `pip install -r requirements.txt -f https://download.pytorch.org/whl/torch_stable.html`
 
 * Using conda
 `conda env create --name envname --file=environment.yml`

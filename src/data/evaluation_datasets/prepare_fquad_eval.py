@@ -44,11 +44,9 @@ def merge(kb_fquad, test_fquad):
                             modified_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas'][index_qas][
                                 'is_impossible'] = False
                         else:
-                            existing_qas = modified_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas'][
-                                index_qas]
+                            existing_qas = modified_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas']
                             existing_qas.append(qas)
-                            modified_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas'][
-                                index_qas] = existing_qas
+                            modified_fquad['data'][index_title]['paragraphs'][index_paragraph]['qas'] = existing_qas
                 else:
                     existing_paragraphs = modified_fquad['data'][index_title]['paragraphs']
                     existing_paragraphs.append(paragraph)
@@ -86,7 +84,7 @@ def main(file_kb_fquad, file_test_fquad, name='fquad_eval'):
 
 
 if __name__ == '__main__':
-    file_kb_fquad = Path('./data/evaluation_datasets/fquad_train.json')
-    file_test_fquad = Path('./data/evaluation_datasets/fquad_valid.json')
+    file_kb_fquad = Path("./test/samples/squad/small.json")
+    file_test_fquad = Path("./test/samples/squad/tiny.json")
 
-    main(file_kb_fquad, file_test_fquad)
+    main(file_kb_fquad, file_test_fquad, name = 'test')
