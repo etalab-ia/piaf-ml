@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    runtime: nvidia
+    depends_on:
+      - elasticsearch
+    init: true
+    environment:
+      # See rest_api/config.py for more variables that you can configure here.
+      - DB_HOST=elasticsearch
+    volumes:
+      # Forwards the local Docker socket to the container.
+      #- /var/run/docker.sock:/var/run/docker-host.sock 
+      # Update this to wherever you want VS Code to mount the folder of your project
+      - .:/workspace #:cached
+    entrypoint: python3
+    command: -m src.evaluation.retriever_reader.retriever_reader_eval_squad
+
+    # Uncomment the next four lines if you will use a ptrace-based debuggers like C++, Go, and Rust.
+    # cap_add:
+    #  - SYS_PTRACE
+    # security_opt:
+    #   - seccomp:unconfined
+
+    # Uncomment the next line to use a non-root user for all processes.
+    # user: vscode
+
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+
+  elasticsearch:
+    # This will start an empty elasticsearch instance (so you have to add your documents yourself)
+    #image: "elasticsearch:7.6.1"
+    # If you want a demo image instead that is "ready-to-query" with some indexed Game of Thrones articles:
+    image: "elasticsearch:7.6.2"
+    ports:
+      - 9200:9200
+    environment:
+      - discovery.type=single-node
