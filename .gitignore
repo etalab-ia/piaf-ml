@@ -134,6 +134,8 @@ dmypy.json
 .pytype/
 .idea/
 
+.vscode/
+
 results/
 
 # specific project folders
