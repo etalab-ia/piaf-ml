@@ -48,6 +48,7 @@ def single_run(parameters):
     retriever_type = parameters["retriever_type"]
     k_retriever = parameters["k_retriever"]
     k_reader = parameters["k_reader"]
+    k_display = parameters["k_display"]
     preprocessing = parameters["preprocessing"]
     split_by = parameters["split_by"]
     split_length = parameters["split_length"]
@@ -107,14 +108,15 @@ def single_run(parameters):
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
     document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index,
-                                 preprocessor=preprocessor)
+                                  preprocessor=preprocessor)
 
     if retriever_type in ["sbert", "dpr"]:
         document_store.update_embeddings(retriever, index=doc_index)
 
     start = time.time()
     retriever_eval_results = eval_retriever_reader(document_store=document_store, pipeline=p,
-                                                   top_k_retriever=k_retriever, label_index=label_index)
+                                                   k_retriever=k_retriever, k_display=k_display,
+                                                   label_index=label_index)
     end = time.time()
     time_per_label = (end - start) / document_store.get_label_count(index=label_index)
 
