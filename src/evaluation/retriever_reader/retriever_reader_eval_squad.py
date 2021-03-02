@@ -19,12 +19,12 @@ from sklearn.model_selection import ParameterGrid
 
 from src.evaluation.config.retriever_reader_eval_squad_config import parameters
 from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping
-from src.evaluation.utils.mlflow_management import prepare_databricks
+from src.evaluation.utils.mlflow_management import prepare_mlflow_server
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 import mlflow
 
-prepare_databricks()
+prepare_mlflow_server()
 
 GPU_AVAILABLE = torch.cuda.is_available()
 
@@ -164,6 +164,7 @@ if __name__ == '__main__':
                 mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
             run_results.update(param)
             save_results(result_file_path=result_file_path, results_list=run_results)
-        except:
+        except Exception as e:
             Exception(f"Could not run this config: {param}")
+            tqdm.write(f"Error:{e}")
             continue
