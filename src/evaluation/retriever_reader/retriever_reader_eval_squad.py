@@ -153,11 +153,13 @@ if __name__ == '__main__':
 
     all_results = []
     launch_ES()
-    for param in tqdm(parameters_grid, desc="GridSearch", unit="config"):
+    mlflow.set_experiment(Path(__file__).name)
+    for idx, param in enumerate(tqdm(parameters_grid, desc="GridSearch", unit="config")):
         add_extra_params(param)
         tqdm.write(f"Doing run with config : {param}")
         try:
-            with mlflow.start_run() as run:
+            with mlflow.start_run(run_name=str(idx)) as run:
+
                 mlflow.log_params(param)
                 # START XP
                 run_results = single_run(param)
