@@ -27,9 +27,6 @@ def launch_ES():
                 "Failed to launch Elasticsearch.")
     else:
         logging.info("Elasticsearch found !")
-        logging.info("Deleting indices")
-        es.indices.delete(index='document', ignore=[400, 404])
-        es.indices.delete(index='label', ignore=[400, 404])
 
 def prepare_mapping (mapping, preprocessing, embedding_dimension=512):
     mapping["mappings"]["properties"]["emb"]["dims"] = embedding_dimension
