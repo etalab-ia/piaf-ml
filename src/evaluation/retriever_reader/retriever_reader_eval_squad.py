@@ -47,8 +47,8 @@ def single_run(parameters):
     evaluation_data = Path(parameters["squad_dataset"])
     retriever_type = parameters["retriever_type"]
     k_retriever = parameters["k_retriever"]
-    k_reader = parameters["k_reader"]
-    k_display = parameters["k_display"]
+    k_reader_per_candidate = parameters["k_reader_per_candidate"]
+    k_reader_total = parameters["k_reader_total"]
     preprocessing = parameters["preprocessing"]
     split_by = parameters["split_by"]
     split_length = parameters["split_length"]
@@ -91,7 +91,7 @@ def single_run(parameters):
 
     reader = TransformersReader(model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
                                 tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
-                                use_gpu=gpu_id, top_k_per_candidate=k_reader)
+                                use_gpu=gpu_id, top_k_per_candidate=k_reader_per_candidate)
 
     p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
 
@@ -111,7 +111,7 @@ def single_run(parameters):
 
     start = time.time()
     retriever_eval_results = eval_retriever_reader(document_store=document_store, pipeline=p,
-                                                   k_retriever=k_retriever, k_display=k_display,
+                                                   k_retriever=k_retriever, k_reader_total=k_reader_total,
                                                    label_index=label_index)
     end = time.time()
     time_per_label = (end - start) / document_store.get_label_count(index=label_index)

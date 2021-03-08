@@ -1,7 +1,7 @@
 parameters = {
     "k_retriever": [1],
-    "k_reader": [1],
-    "k_display": [1],
+    "k_reader_per_candidate": [10],
+    "k_reader_total": [1],
     "retriever_type": ["bm25"],
     "squad_dataset": ["/home/pavel/code/piaf-ml/test/samples/squad/tiny.json"],
     "filter_level": [None],
