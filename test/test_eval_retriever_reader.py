@@ -7,7 +7,7 @@ from haystack.pipeline import Pipeline
 from src.evaluation.utils.utils_eval import eval_retriever_reader
 
 @pytest.mark.elasticsearch
-@pytest.mark.parametrize("k_display", [10, 1])
+@pytest.mark.parametrize("k_reader_total", [10, 1])
 def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retriever_bm25, reader, k_reader_total):
     doc_index = "document"
     label_index = "label"
