@@ -12,7 +12,7 @@ from haystack.retriever.sparse import ElasticsearchRetriever
 from haystack.retriever.dense import EmbeddingRetriever
 from haystack.reader.transformers import TransformersReader
 from haystack.preprocessor.preprocessor import PreProcessor
-from haystack.pipeline import Pipeline
+from haystack.pipeline import Pipeline, ExtractiveQAPipeline
 
 from farm.utils import initialize_device_settings
 from sklearn.model_selection import ParameterGrid
@@ -55,8 +55,6 @@ def single_run(parameters):
 
     # Prepare framework
 
-    p = Pipeline()
-
     prepare_mapping(SQUAD_MAPPING, preprocessing, embedding_dimension=512)
 
     preprocessor = PreProcessor(
@@ -77,7 +75,6 @@ def single_run(parameters):
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = ElasticsearchRetriever(document_store=document_store)
-        p.add_node(component=retriever, name="Retriever", inputs=["Query"])
 
     elif retriever_type == "sbert":
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
@@ -89,7 +86,6 @@ def single_run(parameters):
                                        use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                        pooling_strategy="reduce_max",
                                        emb_extraction_layer=-1)
-        p.add_node(component=retriever, name="Retriever", inputs=["Query"])
     else:
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr")
 
@@ -97,7 +93,7 @@ def single_run(parameters):
                                 tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
                                 use_gpu=gpu_id, top_k_per_candidate=k_reader)
 
-    p.add_node(component=reader, name='reader', inputs=['Retriever'])
+    p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
 
     # Add evaluation data to Elasticsearch document store
     # We first delete the custom tutorial indices to not have duplicate elements

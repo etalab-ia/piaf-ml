@@ -6,8 +6,8 @@ parameters = {
     "squad_dataset": ["/home/pavel/code/piaf-ml/test/samples/squad/tiny.json"],
     "filter_level": [None],
     "preprocessing": [True],
-    "split_by": ["word"], #Can be "word", "sentence", or "passage"
-    "split_length":[1000],
+    "split_by": ["word"],  # Can be "word", "sentence", or "passage"
+    "split_length": [1000],
     "experiment_name": ["dev"]
 }
 # rules:
