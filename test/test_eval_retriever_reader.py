@@ -7,8 +7,8 @@ from haystack.pipeline import Pipeline
 from src.evaluation.utils.utils_eval import eval_retriever_reader
 
 @pytest.mark.elasticsearch
-@pytest.mark.parametrize("k_display", [10, 1])
-def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retriever_bm25, reader, k_display):
+@pytest.mark.parametrize("k_reader_total", [10, 1])
+def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retriever_bm25, reader, k_reader_total):
     doc_index = "document"
     label_index = "label"
 
@@ -28,10 +28,10 @@ def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retrie
     # eval retriever
     k_retriever = 3
     retriever_eval_results = eval_retriever_reader(document_store=document_store, pipeline=p,
-                                                   k_retriever=k_retriever, k_display=k_display,
+                                                   k_retriever=k_retriever, k_reader_total=k_reader_total,
                                                    label_index=label_index)
 
-    if k_display == 10:
+    if k_reader_total == 10:
         assert retriever_eval_results["correct_readings_top1"] == 12
         assert retriever_eval_results["correct_readings_topk"] == 15
         assert retriever_eval_results["correct_readings_top1_has_answer"] == 12
@@ -40,7 +40,7 @@ def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retrie
         assert retriever_eval_results["exact_matches_topk"] == 8
         assert retriever_eval_results['reader_topk_accuracy'] == 0.9375 #15/16
         assert retriever_eval_results['reader_topk_accuracy_has_answer'] == 1.0 #15/15
-    elif k_display == 1:
+    elif k_reader_total == 1:
         assert retriever_eval_results["correct_readings_top1"] == retriever_eval_results["correct_readings_topk"]
         assert retriever_eval_results["correct_readings_top1_has_answer"] == retriever_eval_results["correct_readings_topk_has_answer"]
         assert retriever_eval_results["exact_matches_top1"] == retriever_eval_results["exact_matches_topk"]
