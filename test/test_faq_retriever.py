@@ -31,10 +31,10 @@ def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retrie
                                                    k_retriever=k_retriever,
                                                    label_index=label_index)
 
-    assert retriever_eval_results["correct_readings_top1"] == 5
-    assert retriever_eval_results["correct_readings_topk"] == 8
-    assert retriever_eval_results['reader_topk_accuracy'] == 8/9
-    assert retriever_eval_results['reader_top1_accuracy'] == 5/9
+    assert retriever_eval_results["correct_readings_top1"] == 7
+    assert retriever_eval_results["correct_readings_topk"] == 9
+    assert retriever_eval_results['reader_topk_accuracy'] == 1.
+    assert retriever_eval_results['reader_top1_accuracy'] == 7/9
 
 
     # clean up
