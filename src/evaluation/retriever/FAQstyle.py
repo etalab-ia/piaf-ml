@@ -13,8 +13,7 @@ from tqdm import tqdm
 
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.config.FAQstyle_config import parameters
-
-
+from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping
 from src.evaluation.utils.utils_eval import eval_faq_pipeline, save_results
 from src.evaluation.utils.FAQEmbeddingRetriever import FAQEmbeddingRetriever
 from src.evaluation.utils.FAQPipeline import FAQPipeline
@@ -80,11 +79,9 @@ def single_run(parameters):
     retriever_eval_results = eval_faq_pipeline(document_store=document_store, pipeline=p,
                                                    k_retriever=k_retriever,
                                                    label_index=label_index)
-    # Retriever Recall is the proportion of questions for which the correct document containing the answer is
-    # among the correct documents
-    print("Retriever Recall:", retriever_eval_results["recall"])
-    # Retriever Mean Avg Precision rewards retrievers that give relevant documents a higher rank
-    print("Retriever Mean Avg Precision:", retriever_eval_results["map"])
+
+    print("Reader Accuracy:", retriever_eval_results["reader_topk_accuracy"])
+    print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])
 
     retriever_eval_results.update(parameters)
     retriever_eval_results.update({"date": datetime.today().strftime('%Y-%m-%d_%H-%M-%S'),
