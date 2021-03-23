@@ -28,40 +28,26 @@ def single_run(parameters):
     """
     # col names
     evaluation_data = Path(parameters["squad_dataset"])
-    retriever_type = parameters["retriever_type"]
     k_retriever = parameters["k_retriever"]
     preprocessing = parameters["preprocessing"]
-    split_by=parameters["split_by"]
-    split_length = parameters["split_length"]
-    split_respect_sentence_boundary = parameters["split_respect_sentence_boundary"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
+
     # Prepare framework
-
-
     prepare_mapping(SQUAD_MAPPING, preprocessing, embedding_dimension=512)
 
     doc_index = "document_faq"
     label_index = "label_faq"
 
-    if retriever_type == 'bm25':
+    document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
+                                                create_index=False, embedding_field="emb",
+                                                embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                custom_mapping=SQUAD_MAPPING)
 
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
-                                                    create_index=False, embedding_field="emb",
-                                                    embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
-                                                    custom_mapping=SQUAD_MAPPING)
-        retriever = ElasticsearchRetriever(document_store=document_store)
-    elif retriever_type == "sbert":
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
-                                                    create_index=False, embedding_field="emb",
-                                                    embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
-                                                    custom_mapping=SQUAD_MAPPING)
-        retriever = FAQEmbeddingRetriever(document_store=document_store,
-                                       embedding_model="distiluse-base-multilingual-cased",
-                                       use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
-                                       pooling_strategy="reduce_max",
-                                       emb_extraction_layer=-1)
-    else:
-        raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr")
+    retriever = FAQEmbeddingRetriever(document_store=document_store,
+                                   embedding_model="distiluse-base-multilingual-cased",
+                                   use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                                   pooling_strategy="reduce_max",
+                                   emb_extraction_layer=-1)
 
     p = FAQPipeline(retriever)
 
@@ -73,8 +59,7 @@ def single_run(parameters):
     document_store.delete_all_documents(index=label_index)
     document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index)
 
-    if retriever_type in ["sbert", "dpr"]:
-        document_store.update_embeddings(retriever, index=doc_index)
+    document_store.update_embeddings(retriever, index=doc_index)
 
     retriever_eval_results = eval_faq_pipeline(document_store=document_store, pipeline=p,
                                                    k_retriever=k_retriever,
