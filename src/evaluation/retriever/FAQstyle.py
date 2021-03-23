@@ -13,7 +13,8 @@ from tqdm import tqdm
 
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.config.FAQstyle_config import parameters
-from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping
+
+
 from src.evaluation.utils.utils_eval import eval_faq_pipeline, save_results
 from src.evaluation.utils.FAQEmbeddingRetriever import FAQEmbeddingRetriever
 from src.evaluation.utils.FAQPipeline import FAQPipeline

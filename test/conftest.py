@@ -12,8 +12,10 @@ from haystack.retriever.dense import EmbeddingRetriever
 from haystack.retriever.sparse import ElasticsearchRetriever
 from haystack.preprocessor.preprocessor import PreProcessor
 
-sys.path.insert(0, os.path.abspath("./"))
+from src.evaluation.utils.FAQEmbeddingRetriever import FAQEmbeddingRetriever
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
+
+sys.path.insert(0, os.path.abspath("./"))
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -97,3 +99,11 @@ def retriever_emb(document_store, gpu_available):
                               use_gpu=gpu_available, model_format="sentence_transformers",
                               pooling_strategy="reduce_max",
                               emb_extraction_layer=-1)
+
+@pytest.fixture
+def retriever_faq(document_store, gpu_available):
+    return FAQEmbeddingRetriever(document_store=document_store,
+                                      embedding_model="distiluse-base-multilingual-cased",
+                                      use_gpu=gpu_available, model_format="sentence_transformers",
+                                      pooling_strategy="reduce_max",
+                                      emb_extraction_layer=-1)
