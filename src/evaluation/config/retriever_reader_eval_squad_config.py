@@ -1,11 +1,12 @@
 parameters = {
-    "k_retriever": [1],
-    "k_reader_per_candidate": [10],
+    "k_retriever": [3],
+    "k_reader_per_candidate": [1],
     "k_reader_total": [1],
     "retriever_type": ["bm25"],
-    "squad_dataset": ["/home/pavel/code/piaf-ml/test/samples/squad/tiny.json"],
+    "squad_dataset": ["./data/evaluation-datasets/full_spf_squad.json"],
     "filter_level": [None],
     "preprocessing": [True],
+    "boosting" : [True, False], # Can be True or False
     "split_by": ["word"],  # Can be "word", "sentence", or "passage"
     "split_length": [1000],
     "experiment_name": ["dev"]

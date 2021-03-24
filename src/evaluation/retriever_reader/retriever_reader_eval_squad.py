@@ -21,7 +21,7 @@ from src.evaluation.config.retriever_reader_eval_squad_config import parameters
 from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping
 from src.evaluation.utils.mlflow_management import prepare_mlflow_server
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
-from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
+from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING, SQUAD_MAPPING_WITH_TITLE_BOOST
 import mlflow
 
 prepare_mlflow_server()
@@ -52,10 +52,14 @@ def single_run(parameters):
     preprocessing = parameters["preprocessing"]
     split_by = parameters["split_by"]
     split_length = parameters["split_length"]
+    title_boosting = parameters["boosting"]
 
     # Prepare framework
-
-    prepare_mapping(SQUAD_MAPPING, preprocessing, embedding_dimension=512)
+    if title_boosting:
+        MAPPING = SQUAD_MAPPING_WITH_TITLE_BOOST
+    else:
+        MAPPING = SQUAD_MAPPING
+    prepare_mapping(MAPPING, preprocessing, embedding_dimension=512)
 
     preprocessor = PreProcessor(
         clean_empty_lines=False,
@@ -73,14 +77,14 @@ def single_run(parameters):
                                                     create_index=False, embedding_field="emb",
                                                     scheme="",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
-                                                    custom_mapping=SQUAD_MAPPING)
+                                                    custom_mapping=MAPPING)
         retriever = ElasticsearchRetriever(document_store=document_store)
 
     elif retriever_type == "sbert":
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
-                                                    custom_mapping=SQUAD_MAPPING)
+                                                    custom_mapping=MAPPING)
         retriever = EmbeddingRetriever(document_store=document_store,
                                        embedding_model="distiluse-base-multilingual-cased",
                                        use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
@@ -153,16 +157,16 @@ if __name__ == '__main__':
     for idx, param in enumerate(tqdm(parameters_grid, desc="GridSearch", unit="config")):
         add_extra_params(param)
         tqdm.write(f"Doing run with config : {param}")
-        try:
-            with mlflow.start_run(run_name=str(idx)) as run:
+        # try:
+        with mlflow.start_run(run_name=str(idx)) as run:
 
-                mlflow.log_params(param)
-                # START XP
-                run_results = single_run(param)
-                mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
-            run_results.update(param)
-            save_results(result_file_path=result_file_path, results_list=run_results)
-        except Exception as e:
+            mlflow.log_params(param)
+            # START XP
+            run_results = single_run(param)
+            mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
+        run_results.update(param)
+        save_results(result_file_path=result_file_path, results_list=run_results)
+"""        except Exception as e:
             Exception(f"Could not run this config: {param}")
             tqdm.write(f"Error:{e}")
-            continue
+            continue"""
