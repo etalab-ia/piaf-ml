@@ -21,7 +21,7 @@ from src.evaluation.config.retriever_reader_eval_squad_config import parameters
 from src.evaluation.utils.elasticsearch_management import launch_ES, delete_indices, prepare_mapping
 from src.evaluation.utils.mlflow_management import prepare_mlflow_server
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
-from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING, SQUAD_MAPPING_WITH_TITLE_BOOST
+from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 import mlflow
 
 prepare_mlflow_server()
