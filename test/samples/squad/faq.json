@@ -1,0 +1,221 @@
+{
+  "version": "v1.0",
+  "data": [
+    {
+      "title": "Comment faire supprimer un compte Badoo ?",
+      "theme": " Internet",
+      "sous_theme": " Particuliers ",
+      "dossier": "Badoo, site de rencontre, suppression",
+      "id": 0,
+      "paragraphs": [
+        {
+          "context": "Vous disposez d'un compte Badoo : Connectez-vous à votre compte Badoo ;\nAllez dans \"Paramètres\" ;\nDescendez tout en bas de la page où vous pourrez alors cliquer sur \"Supprimer le profil\" ;\nSuivez les instructions données.\nUn compte Badoo a été ouvert en votre nom : sans qu'il soit nécessaire de vous identifier, contactez Badoo.\nSi votre demande n'est pas prise en considération, vous pourrez saisir l'autorité britannique de protection des données, seule compétente pour intervenir.\nAttention : vous devez vous être préalablement adressé(e) à Badoo, en effectuant l'une des procédures indiquées ci-dessus et avoir conservé des justificatifs de vos démarches en réalisant, par exemple, des copies d'écran.",
+          "qas": [
+            {
+              "question": "Je voudrais supprimer mon compte Badoo ?",
+              "answers": [
+                {
+                  "text": "Vous disposez d'un compte Badoo : Connectez-vous à votre compte Badoo ;\nAllez dans \"Paramètres\" ;\nDescendez tout en bas de la page où vous pourrez alors cliquer sur \"Supprimer le profil\" ;\nSuivez les instructions données.\nUn compte Badoo a été ouvert en votre nom : sans qu'il soit nécessaire de vous identifier, contactez Badoo.",
+                  "answer_start": 0
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Un cookie : qu'est-ce que c'est ?",
+      "theme": " Internet",
+      "sous_theme": " Particuliers ",
+      "dossier": "cookie, traceur, tag, internet, site web, bandeau, consentement, information",
+      "id": 1,
+      "paragraphs": [
+        {
+          "context": "Un cookie est un petit fichier informatique, un traceur, déposé et lu par exemple lors de la consultation d'un site internet, de la lecture d'un courrier électronique, de l'installation ou de l'utilisation d'un logiciel ou d'une application mobile et ce, quel que soit le type de terminal utilisé (ordinateur, smartphone, liseuse numérique, console de jeux vidéos connectée à Internet, etc.).\nLe terme de \"cookie\" recouvre par exemple : les cookies HTTP ;\nles cookies \"flash\" ;\nle résultat du calcul d'empreinte dans le cas du \"fingerprinting\" (calcul d'un identifiant unique de la machine basée sur des éléments de sa configuration à des fins de traçage) ;\nles pixels invisibles ou \"web bugs\" ;\ntout autre identifiant généré par un logiciel ou un système d'exploitation, par exemple.\nL'utilisation de ces outils est soumise à votre consentement dès lors qu'ils ne sont pas strictement nécessaires au fonctionnement du site concerné.",
+          "qas": [
+            {
+              "question": "Qu'est-ce qu'un cookie ?",
+              "answers": [
+                {
+                  "text": "Un cookie est un petit fichier informatique, un traceur, déposé et lu par exemple lors de la consultation d'un site internet, de la lecture d'un courrier électronique, de l'installation ou de l'utilisation d'un logiciel ou d'une application mobile et ce, quel que soit le type de terminal utilisé (ordinateur, smartphone, liseuse numérique, console de jeux vidéos connectée à Internet, etc.).",
+                  "answer_start": 0
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Facebook : mon compte a été piraté, la CNIL est-elle compétente ?",
+      "theme": " Internet",
+      "sous_theme": " Particuliers ",
+      "dossier": "",
+      "id": 2,
+      "paragraphs": [
+        {
+          "context": "Non. Le \"piratage\" ou l'intrusion dans des systèmes informatisés relèvent de la compétence exclusive des tribunaux (loi du 5 janvier 1988 dite loi \"Godfrain\").\nFacebook propose plusieurs procédures pour signaler ce types de difficultés.\nEn savoir plus sur le \"piratage\" des comptes des réseaux sociaux ici.",
+          "qas": [
+            {
+              "question": "Que faire si mon compte Facebook a été piraté ?",
+              "answers": [
+                {
+                  "text": "Non. Le \"piratage\" ou l'intrusion dans des systèmes informatisés relèvent de la compétence exclusive des tribunaux (loi du 5 janvier 1988 dite loi \"Godfrain\").",
+                  "answer_start": 0
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Réseaux sociaux : comment supprimer mon compte ?",
+      "theme": " Internet",
+      "sous_theme": " Particuliers ",
+      "dossier": "Facebook, Twitter, Copains d'avant, Viadeo, LinkedIn, internet, réseau social, compte, profil, suppression",
+      "id": 3,
+      "paragraphs": [
+        {
+          "context": "En principe, tous les sites internet vous proposant de créer un compte doivent également vous proposer une procédure pour le supprimer et donc supprimer vos données.\nLe formulaire de suppression se trouve en général dans une rubrique \"Paramètres du compte\" ou \"Gérer mon compte\".\nSi après un délai de 2 mois, votre compte n'a pas été supprimé, vous pouvez adresser une plainte à la CNIL. Joignez à notre formulaire de plainte la copie de votre au courrier au responsable du réseau social et sa réponse éventuelle.",
+          "qas": [
+            {
+              "question": "Puis-je supprimer un compte de réseaux sociaux ?",
+              "answers": [
+                {
+                  "text": "En principe, tous les sites internet vous proposant de créer un compte doivent également vous proposer une procédure pour le supprimer et donc supprimer vos données.\nLe formulaire de suppression se trouve en général dans une rubrique \"Paramètres du compte\" ou \"Gérer mon compte\".",
+                  "answer_start": 0
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Usurpation d'identité sur internet : comment réagir ?",
+      "theme": " Internet",
+      "sous_theme": " Particuliers ",
+      "dossier": "internet, site web, usurpation d'identité, forum, réseau social, Facebook, Copains d'avant",
+      "id": 5,
+      "paragraphs": [
+        {
+          "context": "Si quelqu'un usurpe votre identité en ligne, sur un réseau social par exemple, contactez le service téléphonique d'information de la police nationale Info-escroqueries au 08 11 02 02 17 (prix d'un appel local). Vous y recevrez des conseils sur les démarches à effectuer.\nSi vous souhaitez que la personne qui a usurpé votre identité soit identifiée et poursuivie, déposez une plainte auprès des services de police, de gendarmerie ou du procureur de la République.\nSi des informations ou des propos ont été publiés sur internet en votre nom par l'usurpateur, demandez leur suppression directement au responsable du site.\nEn savoir plus sur l'usurpation d'identité en ligne : ici",
+          "qas": [
+            {
+              "question": "Que dois-je faire si on a usurpé mon identité ?",
+              "answers": [
+                {
+                  "text": "Si quelqu'un usurpe votre identité en ligne, sur un réseau social par exemple, contactez le service téléphonique d'information de la police nationale Info-escroqueries au 08 11 02 02 17 (prix d'un appel local). Vous y recevrez des conseils sur les démarches à effectuer.",
+                  "answer_start": 0
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Réseaux sociaux : peut-on être licencié pour ce qu'on y a écrit ?",
+      "theme": " Internet",
+      "sous_theme": " Particuliers ",
+      "dossier": "Facebook, Twitter, Copains d'avant, Viadeo, LinkedIn, réseau social, internet, salarié, employé, employeur, licenciement, discipline",
+      "id": 7,
+      "paragraphs": [
+        {
+          "context": "Oui.\nDans une affaire concernant trois salariés licenciés pour avoir dénigré leur hiérarchie sur Facebook, un Conseil des prud'hommes a considéré que les propos publiés sur le mur d'un des salariés étaient publics car accessibles aux \"amis d'amis\".\nCes propos ont perdu leur caractère privé du fait qu'ils étaient accessibles à des personnes non concernées par la discussion.\nSoyez donc vigilant lorsque vous publiez des commentaires sur un réseau social !",
+          "qas": [
+            {
+              "question": "Mon employeur peut-il me licencier pour un post Facebook ?",
+              "answers": [
+                {
+                  "text": "Oui.\nDans une affaire concernant trois salariés licenciés pour avoir dénigré leur hiérarchie sur Facebook, un Conseil des prud'hommes a considéré que les propos publiés sur le mur d'un des salariés étaient publics car accessibles aux \"amis d'amis\".",
+                  "answer_start": 0
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Google Streetview : comment faire flouter une image ?",
+      "theme": " Internet",
+      "sous_theme": " Particuliers ",
+      "dossier": "Google, streetview, url, moteur de recherche, photo, maison, voiture, image, vie privée",
+      "id": 10,
+      "paragraphs": [
+        {
+          "context": "Vous avez constaté qu'une image vous concernant (image de vous, de votre enfant, de votre maison, plaque d'immatriculation de votre véhicule, etc.) est visible sur le service Street View de Google ?\nVous pouvez demander à Google de flouter cette partie de l'image. Rendez vous sur l'image concernée sur le site Google Streetview et remplissez le formulaire \"Signalez un problème\" en cliquant sur le lien en bas à droite de la page concernée.\nLa CNIL vous recommande de conserver les pages-écrans correspondant aux différentes étapes de validation de ce formulaire de signalement. Si, à l'issue d'un délai d'un mois, la photographie n'a toujours pas été occultée ou floutée, vous pouvez adresser une plainte à la CNIL.",
+          "qas": [
+            {
+              "question": "Je ne veux pas apparaître sur une image Google Streetview, comment faire ?",
+              "answers": [
+                {
+                  "text": "Vous avez constaté qu'une image vous concernant (image de vous, de votre enfant, de votre maison, plaque d'immatriculation de votre véhicule, etc.) est visible sur le service Street View de Google ?\nVous pouvez demander à Google de flouter cette partie de l'image.",
+                  "answer_start": 0
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Le cloud computing, c'est quoi ?",
+      "theme": " Internet",
+      "sous_theme": " Particuliers ",
+      "dossier": "Cloud, informatique en nuage, serveur distant",
+      "id": 11,
+      "paragraphs": [
+        {
+          "context": "Généralement, on définit le cloud computing comme le fait d'utiliser des ressources informatiques à distance (via internet), par exemple pour sauvegarder des documents, des fichiers, etc. sur des serveurs mis à disposition par un prestataire.\nLe cloud se caractérise par la simplicité d'un service à la demande, le paiement à l'usage, un accès léger depuis tout type de terminal et enfin, par la virtualisation et la mise en commun de ressources qui peuvent être réparties sur le monde entier.",
+          "qas": [
+            {
+              "question": "qu'est ce que le cloud computing ?",
+              "answers": [
+                {
+                  "text": "Généralement, on définit le cloud computing comme le fait d'utiliser des ressources informatiques à distance (via internet), par exemple pour sauvegarder des documents, des fichiers, etc. sur des serveurs mis à disposition par un prestataire.",
+                  "answer_start": 0
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Réseaux sociaux : peut-on demander la suppression du compte d'une personne décédée ?",
+      "theme": " Internet",
+      "sous_theme": " Particuliers ",
+      "dossier": "Facebook, Twitter, Copains d'avant, Viadeo, LinkedIn, réseau social, mort numérique, héritage",
+      "id": 12,
+      "paragraphs": [
+        {
+          "context": "Oui.\nLa loi permet aux héritiers, ayants-droits ou proches d'une personne décédée d'exiger que le décès soit pris en compte dans tout fichier comportant des informations la concernant.\nIls peuvent donc demander la suppression du profil sur un réseau social, en fournissant les justificatifs nécessaires (identité, qualité d'héritier).\nEn l'absence de demande de suppression, le profil d'une personne décédée continue d'exister jusqu'à ce que le responsable du site le désactive pour inactivité.",
+          "qas": [
+            {
+              "question": "Comment supprimer le compte Facebook d'une personne décédée ?",
+              "answers": [
+                {
+                  "text": "Oui.\nLa loi permet aux héritiers, ayants-droits ou proches d'une personne décédée d'exiger que le décès soit pris en compte dans tout fichier comportant des informations la concernant.",
+                  "answer_start": 0
+                }
+              ],
+              "is_impossible": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

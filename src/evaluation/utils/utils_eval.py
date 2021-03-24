@@ -242,3 +242,64 @@ def eval_retriever_reader(
         "seconds_per_query": reader_time / n_queries
     }
     return results"""
+
+
+def eval_titleQA_pipeline (
+        document_store: BaseDocumentStore,
+        pipeline: Pipeline,
+        k_retriever: int,
+        label_index: str = "label",
+        label_origin: str = "gold_label",
+):
+    """
+    Performs evaluation on evaluation documents in the DocumentStore.
+    Returns a dict containing the following metrics:
+          - "EM": Proportion of exact matches of predicted answers with their corresponding correct answers
+          - "f1": Average overlap between predicted answers and their corresponding correct answers
+          - "top_n_accuracy": Proportion of predicted answers that overlap with correct answer
+
+    :param label_origin: the label for the correct answers
+    :param k_retriever: the number of answers to retrieve from the TitleQAPipeline
+    :param pipeline: The titleQAPipeline
+    :param document_store: DocumentStore containing the evaluation documents and the embeddings of the titles
+    :param label_index: Index/Table name where labeled questions are stored
+    """
+
+    # extract all questions for evaluation
+    filters = {"origin": [label_origin]}
+    # labels = document_store.get_all_labels(index=label_index, filters=filters)
+    labels_agg = document_store.get_all_labels_aggregated(index=label_index, filters=filters)
+    labels_agg = [label for label in labels_agg if label.question]
+
+    questions = [label.question for label in labels_agg]
+    predicted_answers_list = [pipeline.run(query=q, top_k_retriever=k_retriever) for q in questions]
+    assert len(questions) == len(predicted_answers_list), f"Number of questions is not the same number of predicted" \
+                                                          f"answers"
+    # quick renaming fix to match with haystack.eval.eval_counts_reader, this might be due to preprocessing
+    # TODO : check this
+    for predicted_answers in predicted_answers_list:
+        for answer in predicted_answers['answers']:
+            answer["offset_start_in_doc"] = 0
+            answer["offset_end_in_doc"] = len(answer['answer'])
+
+    metric_counts = {}
+    metric_counts["correct_no_answers_top1"] = 0
+    metric_counts["correct_no_answers_topk"] = 0
+    metric_counts["correct_readings_topk"] = 0
+    metric_counts["exact_matches_topk"] = 0
+    metric_counts["summed_f1_topk"] = 0
+    metric_counts["correct_readings_top1"] = 0
+    metric_counts["correct_readings_top1_has_answer"] = 0
+    metric_counts["correct_readings_topk_has_answer"] = 0
+    metric_counts["summed_f1_top1"] = 0
+    metric_counts["summed_f1_top1_has_answer"] = 0
+    metric_counts["exact_matches_top1"] = 0
+    metric_counts["exact_matches_top1_has_answer"] = 0
+    metric_counts["exact_matches_topk_has_answer"] = 0
+    metric_counts["summed_f1_topk_has_answer"] = 0
+    metric_counts["number_of_no_answer"] = 0
+    for question, predicted_answers in zip(labels_agg, predicted_answers_list):
+        metric_counts = eval_counts_reader(question, predicted_answers, metric_counts)
+    metrics = calculate_reader_metrics(metric_counts, len(predicted_answers_list))
+    metrics.update(metric_counts)
+    return metrics
