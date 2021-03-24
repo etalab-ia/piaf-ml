@@ -18,7 +18,7 @@ from farm.utils import initialize_device_settings
 from sklearn.model_selection import ParameterGrid
 
 from src.evaluation.config.retriever_reader_eval_squad_config import parameters
-from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping
+from src.evaluation.utils.elasticsearch_management import launch_ES, delete_indices, prepare_mapping
 from src.evaluation.utils.mlflow_management import prepare_mlflow_server
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING, SQUAD_MAPPING_WITH_TITLE_BOOST
@@ -54,6 +54,9 @@ def single_run(parameters):
     split_length = parameters["split_length"]
     title_boosting = parameters["boosting"]
 
+    doc_index = "document_xp"
+    label_index = "label_xp"
+
     # Prepare framework
     if title_boosting:
         MAPPING = SQUAD_MAPPING_WITH_TITLE_BOOST
@@ -73,7 +76,7 @@ def single_run(parameters):
 
     if retriever_type == 'bm25':
 
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp", search_fields=['name',"text"],
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index, search_fields=['name',"text"],
                                                     create_index=False, embedding_field="emb",
                                                     scheme="",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
@@ -81,7 +84,7 @@ def single_run(parameters):
         retriever = ElasticsearchRetriever(document_store=document_store)
 
     elif retriever_type == "sbert":
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp", search_fields=['name',"text"],
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index, search_fields=['name',"text"],
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=MAPPING)
@@ -102,8 +105,6 @@ def single_run(parameters):
     # Add evaluation data to Elasticsearch document store
     # We first delete the custom tutorial indices to not have duplicate elements
     # make sure these indices do not collide with existing ones, the indices will be wiped clean before data is inserted
-    doc_index = "document_xp"
-    label_index = "label_xp"
 
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
@@ -124,6 +125,9 @@ def single_run(parameters):
     print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])
 
     retriever_eval_results.update({"time_per_label": time_per_label})
+
+    #deleted indice for elastic search to make sure mappings are properly passed
+    delete_indices(index=doc_index)
 
     return retriever_eval_results
 
