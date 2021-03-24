@@ -5,18 +5,15 @@ from pathlib import Path
 
 from farm.utils import initialize_device_settings
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
-from haystack.retriever.dense import EmbeddingRetriever
-from haystack.retriever.sparse import ElasticsearchRetriever
-from haystack.preprocessor.preprocessor import PreProcessor
 from sklearn.model_selection import ParameterGrid
 from tqdm import tqdm
 
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
-from src.evaluation.config.FAQstyle_config import parameters
+from src.evaluation.config.title_qa_pipeline_config import parameters
 from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping
-from src.evaluation.utils.utils_eval import eval_faq_pipeline, save_results
-from src.evaluation.utils.FAQEmbeddingRetriever import FAQEmbeddingRetriever
-from src.evaluation.utils.FAQPipeline import FAQPipeline
+from src.evaluation.utils.utils_eval import eval_titleQA_pipeline, save_results
+from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
+from src.evaluation.utils.TitleQAPipeline import TitleQAPipeline
 
 
 
@@ -43,13 +40,13 @@ def single_run(parameters):
                                                 embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                 custom_mapping=SQUAD_MAPPING)
 
-    retriever = FAQEmbeddingRetriever(document_store=document_store,
-                                   embedding_model="distiluse-base-multilingual-cased",
-                                   use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
-                                   pooling_strategy="reduce_max",
-                                   emb_extraction_layer=-1)
+    retriever = TitleEmbeddingRetriever(document_store=document_store,
+                                        embedding_model="distiluse-base-multilingual-cased",
+                                        use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                                        pooling_strategy="reduce_max",
+                                        emb_extraction_layer=-1)
 
-    p = FAQPipeline(retriever)
+    p = TitleQAPipeline(retriever)
 
     # Add evaluation data to Elasticsearch document store
     # We first delete the custom tutorial indices to not have duplicate elements
@@ -61,7 +58,7 @@ def single_run(parameters):
 
     document_store.update_embeddings(retriever, index=doc_index)
 
-    retriever_eval_results = eval_faq_pipeline(document_store=document_store, pipeline=p,
+    retriever_eval_results = eval_titleQA_pipeline(document_store=document_store, pipeline=p,
                                                    k_retriever=k_retriever,
                                                    label_index=label_index)
 

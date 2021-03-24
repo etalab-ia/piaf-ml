@@ -1,13 +1,13 @@
 
-from typing import List, Optional, Dict
+from typing import Optional, Dict
 
 from haystack.retriever.base import BaseRetriever
 from haystack.pipeline import BaseStandardPipeline, Pipeline
 
-class FAQPipeline(BaseStandardPipeline):
+class TitleQAPipeline(BaseStandardPipeline):
     def __init__(self, retriever: BaseRetriever):
         """
-        Initialize a Pipeline for finding similar FAQs using semantic document search.
+        Initialize a Pipeline for finding documents with a title similar to the query using semantic document search.
 
         :param retriever: Retriever instance
         """

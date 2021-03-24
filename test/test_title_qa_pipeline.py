@@ -2,17 +2,16 @@ import pytest
 from pathlib import Path
 
 from haystack.document_store.base import BaseDocumentStore
-from haystack.pipeline import Pipeline
 
-from src.evaluation.utils.utils_eval import eval_faq_pipeline
-from src.evaluation.utils.FAQPipeline import FAQPipeline
+from src.evaluation.utils.utils_eval import eval_titleQA_pipeline
+from src.evaluation.utils.TitleQAPipeline import TitleQAPipeline
 
 @pytest.mark.elasticsearch
 def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retriever_faq):
     doc_index = "document"
     label_index = "label"
 
-    p = FAQPipeline(retriever_faq)
+    p = TitleQAPipeline(retriever_faq)
 
     # add eval data (SQUAD format)
     document_store.delete_all_documents(index=doc_index)
@@ -27,7 +26,7 @@ def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retrie
 
     # eval retriever
     k_retriever = 3
-    retriever_eval_results = eval_faq_pipeline(document_store=document_store, pipeline=p,
+    retriever_eval_results = eval_titleQA_pipeline(document_store=document_store, pipeline=p,
                                                    k_retriever=k_retriever,
                                                    label_index=label_index)
 
