@@ -8,9 +8,9 @@ Other Lab IA projects can be found at the [main GitHub repo](https://github.com/
 PIAF is an Opensource project aiming at providing the community with an easily activable French Question Answering Solution. The first use case of the PIAF project will be 
 
 The objective of this repository is to give tools for the following tasks: 
-* Prepare the data for the knowlgedge base
-* Evaluate the performances of the PIAF stack
-* Experiment different approaches in a contained environment (before prod)
+* **Prepare** the data for the knowlgedge base
+* **Evaluate** the performances of the PIAF stack
+* **Experiment** different approaches in a contained environment (before prod)
 
 
 ### Methods Used
