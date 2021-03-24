@@ -57,7 +57,8 @@ def single_run(parameters):
     doc_index = "document_xp"
     label_index = "label_xp"
 
-    prepare_mapping(SQUAD_MAPPING, preprocessing, embedding_dimension=512)
+    prepare_mapping(mapping=SQUAD_MAPPING, preprocessing=preprocessing, title_boosting_factor=title_boosting_factor,
+                    embedding_dimension=512)
 
     preprocessor = PreProcessor(
         clean_empty_lines=False,
@@ -71,7 +72,8 @@ def single_run(parameters):
 
     if retriever_type == 'bm25':
 
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index, search_fields=['name',"text"],
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
+                                                    search_fields=['name', "text"],
                                                     create_index=False, embedding_field="emb",
                                                     scheme="",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
@@ -79,7 +81,8 @@ def single_run(parameters):
         retriever = ElasticsearchRetriever(document_store=document_store)
 
     elif retriever_type == "sbert":
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index, search_fields=['name',"text"],
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
+                                                    search_fields=['name', "text"],
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
@@ -121,7 +124,7 @@ def single_run(parameters):
 
     retriever_eval_results.update({"time_per_label": time_per_label})
 
-    #deleted indice for elastic search to make sure mappings are properly passed
+    # deleted indice for elastic search to make sure mappings are properly passed
     delete_indices(index=doc_index)
 
     return retriever_eval_results
@@ -158,7 +161,6 @@ if __name__ == '__main__':
         tqdm.write(f"Doing run with config : {param}")
         # try:
         with mlflow.start_run(run_name=str(idx)) as run:
-
             mlflow.log_params(param)
             # START XP
             run_results = single_run(param)
