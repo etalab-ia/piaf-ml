@@ -1,11 +1,7 @@
 from haystack.retriever.dense import EmbeddingRetriever
-
 from typing import List
-
 import numpy as np
-
 from haystack import Document
-
 
 
 class TitleEmbeddingRetriever(EmbeddingRetriever):
