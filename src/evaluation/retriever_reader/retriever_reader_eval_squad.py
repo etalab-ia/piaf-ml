@@ -73,7 +73,7 @@ def single_run(parameters):
 
     if retriever_type == 'bm25':
 
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp", search_fields=['name',"text"],
                                                     create_index=False, embedding_field="emb",
                                                     scheme="",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
@@ -81,7 +81,7 @@ def single_run(parameters):
         retriever = ElasticsearchRetriever(document_store=document_store)
 
     elif retriever_type == "sbert":
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp", search_fields=['name',"text"],
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=MAPPING)
