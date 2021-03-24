@@ -128,25 +128,3 @@ SQUAD_MAPPING = {
     },
     "settings": ANALYZER_DEFAULT
 }
-
-
-SQUAD_MAPPING_WITH_TITLE_BOOST = {
-    "mappings": {
-        "properties": {
-            "name": {
-                "type": "text",
-                "boost": 2
-            },
-            "text": {"type": "text"},
-            "emb": {"type": "dense_vector", "dims": 512}
-        },
-        "dynamic_templates": [
-            {
-                "strings": {
-                    "path_match": "*",
-                    "match_mapping_type": "string",
-                    "mapping": {"type": "keyword"}}}
-        ],
-    },
-    "settings": ANALYZER_DEFAULT
-}

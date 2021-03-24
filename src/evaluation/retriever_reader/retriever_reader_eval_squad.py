@@ -52,17 +52,12 @@ def single_run(parameters):
     preprocessing = parameters["preprocessing"]
     split_by = parameters["split_by"]
     split_length = parameters["split_length"]
-    title_boosting = parameters["boosting"]
+    title_boosting_factor = parameters["boosting"]
 
     doc_index = "document_xp"
     label_index = "label_xp"
 
-    # Prepare framework
-    if title_boosting:
-        MAPPING = SQUAD_MAPPING_WITH_TITLE_BOOST
-    else:
-        MAPPING = SQUAD_MAPPING
-    prepare_mapping(MAPPING, preprocessing, embedding_dimension=512)
+    prepare_mapping(SQUAD_MAPPING, preprocessing, embedding_dimension=512)
 
     preprocessor = PreProcessor(
         clean_empty_lines=False,
@@ -80,14 +75,14 @@ def single_run(parameters):
                                                     create_index=False, embedding_field="emb",
                                                     scheme="",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
-                                                    custom_mapping=MAPPING)
+                                                    custom_mapping=SQUAD_MAPPING)
         retriever = ElasticsearchRetriever(document_store=document_store)
 
     elif retriever_type == "sbert":
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index, search_fields=['name',"text"],
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
-                                                    custom_mapping=MAPPING)
+                                                    custom_mapping=SQUAD_MAPPING)
         retriever = EmbeddingRetriever(document_store=document_store,
                                        embedding_model="distiluse-base-multilingual-cased",
                                        use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
