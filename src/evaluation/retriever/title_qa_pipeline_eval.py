@@ -13,7 +13,7 @@ from src.evaluation.config.title_qa_pipeline_config import parameters
 from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping, delete_indices
 from src.evaluation.utils.utils_eval import eval_titleQA_pipeline, save_results
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
-from src.evaluation.utils.TitleQAPipeline import TitleQAPipeline
+from src.evaluation.utils.custom_pipelines import TitleQAPipeline
 
 
 
