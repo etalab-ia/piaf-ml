@@ -18,7 +18,7 @@ from farm.utils import initialize_device_settings
 from sklearn.model_selection import ParameterGrid
 
 from src.evaluation.config.retriever_reader_eval_squad_config import parameters
-from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping
+from src.evaluation.utils.elasticsearch_management import launch_ES, delete_indices, prepare_mapping
 from src.evaluation.utils.mlflow_management import prepare_mlflow_server
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
@@ -52,10 +52,13 @@ def single_run(parameters):
     preprocessing = parameters["preprocessing"]
     split_by = parameters["split_by"]
     split_length = parameters["split_length"]
+    title_boosting_factor = parameters["boosting"]
 
-    # Prepare framework
+    doc_index = "document_xp"
+    label_index = "label_xp"
 
-    prepare_mapping(SQUAD_MAPPING, preprocessing, embedding_dimension=512)
+    prepare_mapping(mapping=SQUAD_MAPPING, preprocessing=preprocessing, title_boosting_factor=title_boosting_factor,
+                    embedding_dimension=512)
 
     preprocessor = PreProcessor(
         clean_empty_lines=False,
@@ -69,7 +72,8 @@ def single_run(parameters):
 
     if retriever_type == 'bm25':
 
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
+                                                    search_fields=['name', "text"],
                                                     create_index=False, embedding_field="emb",
                                                     scheme="",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
@@ -77,7 +81,8 @@ def single_run(parameters):
         retriever = ElasticsearchRetriever(document_store=document_store)
 
     elif retriever_type == "sbert":
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
+                                                    search_fields=['name', "text"],
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
@@ -98,8 +103,6 @@ def single_run(parameters):
     # Add evaluation data to Elasticsearch document store
     # We first delete the custom tutorial indices to not have duplicate elements
     # make sure these indices do not collide with existing ones, the indices will be wiped clean before data is inserted
-    doc_index = "document_xp"
-    label_index = "label_xp"
 
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
@@ -120,6 +123,9 @@ def single_run(parameters):
     print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])
 
     retriever_eval_results.update({"time_per_label": time_per_label})
+
+    # deleted indice for elastic search to make sure mappings are properly passed
+    delete_indices(index=doc_index)
 
     return retriever_eval_results
 
@@ -155,7 +161,6 @@ if __name__ == '__main__':
         tqdm.write(f"Doing run with config : {param}")
         try:
             with mlflow.start_run(run_name=str(idx)) as run:
-
                 mlflow.log_params(param)
                 # START XP
                 run_results = single_run(param)

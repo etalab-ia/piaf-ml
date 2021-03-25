@@ -114,7 +114,7 @@ SPARSE_MAPPING = {
 SQUAD_MAPPING = {
     "mappings": {
         "properties": {
-            "name": {"type": "keyword"},
+            "name": {"type": "text"},
             "text": {"type": "text"},
             "emb": {"type": "dense_vector", "dims": 512}
         },
