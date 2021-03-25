@@ -159,15 +159,15 @@ if __name__ == '__main__':
     for idx, param in enumerate(tqdm(parameters_grid, desc="GridSearch", unit="config")):
         add_extra_params(param)
         tqdm.write(f"Doing run with config : {param}")
-        # try:
-        with mlflow.start_run(run_name=str(idx)) as run:
-            mlflow.log_params(param)
-            # START XP
-            run_results = single_run(param)
-            mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
-        run_results.update(param)
-        save_results(result_file_path=result_file_path, results_list=run_results)
-"""        except Exception as e:
+        try:
+            with mlflow.start_run(run_name=str(idx)) as run:
+                mlflow.log_params(param)
+                # START XP
+                run_results = single_run(param)
+                mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
+            run_results.update(param)
+            save_results(result_file_path=result_file_path, results_list=run_results)
+        except Exception as e:
             Exception(f"Could not run this config: {param}")
             tqdm.write(f"Error:{e}")
-            continue"""
+            continue
