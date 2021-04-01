@@ -1,7 +1,7 @@
 argopt
 construct
 cython
--e git+https://github.com/deepset-ai/haystack.git@f3ccd59045537ac8ef9dbf8b4164b840580bfab3#egg=farm_haystack
+-e git+https://github.com/deepset-ai/haystack.git@cafa1230da57025746c1c9659c07dfc4b0008faf#egg=farm_haystack
 ipywidgets
 jupyter-console
 pefile
