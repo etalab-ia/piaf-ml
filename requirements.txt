@@ -29,7 +29,7 @@ elastic-apm==5.10.0
 elasticsearch
 entrypoints==0.3
 farm
--e git+https://github.com/deepset-ai/haystack.git@f3ccd59045537ac8ef9dbf8b4164b840580bfab3#egg=farm_haystack
+-e git+https://github.com/deepset-ai/haystack.git@cafa1230da57025746c1c9659c07dfc4b0008faf#egg=farm_haystack
 fastapi==0.63.0
 filelock==3.0.12
 Flask==1.1.2

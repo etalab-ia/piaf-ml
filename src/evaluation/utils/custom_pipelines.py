@@ -86,14 +86,13 @@ class JoinDocuments(BaseComponent):
     ):
         """
         :param ks_retriever: A node-wise list(length of list must be equal to the number of input nodes) of k_retriever kept for
-                        the concatenation of the retrievers in the nodes.
+                        the concatenation of the retrievers in the nodes. If set to None, the number of documents retrieved will be used
         """
         self.ks_retriever = ks_retriever
 
     def run(self, **kwargs):
         inputs = kwargs["inputs"]
 
-        #unique mode using ks_retriever
         document_map = {}
         if self.ks_retriever:
             ks_retriever = self.ks_retriever
