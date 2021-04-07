@@ -120,6 +120,20 @@ def single_run(parameters):
         #used to make sure the p.run method returns enough candidates
         k_retriever = max(k_retriever, k_title_retriever)
 
+    elif retriever_type == "title":
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
+                                                    search_fields=["name", "text"],
+                                                    create_index=False, embedding_field="emb",
+                                                    embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                    custom_mapping=SQUAD_MAPPING)
+        retriever = TitleEmbeddingRetriever(document_store=document_store,
+                                             embedding_model="distiluse-base-multilingual-cased",
+                                             use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                                             pooling_strategy="reduce_max",
+                                             emb_extraction_layer=-1)
+        p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
+
+
     else:
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, dpr or title_bm25")
 
