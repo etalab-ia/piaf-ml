@@ -10,10 +10,10 @@ from tqdm import tqdm
 
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.config.title_qa_pipeline_config import parameters
-from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping
+from src.evaluation.utils.elasticsearch_management import launch_ES, prepare_mapping, delete_indices
 from src.evaluation.utils.utils_eval import eval_titleQA_pipeline, save_results
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
-from src.evaluation.utils.TitleQAPipeline import TitleQAPipeline
+from src.evaluation.utils.custom_pipelines import TitleQAPipeline
 
 
 
@@ -69,6 +69,10 @@ def single_run(parameters):
     retriever_eval_results.update({"date": datetime.today().strftime('%Y-%m-%d_%H-%M-%S'),
                                    "hostname": socket.gethostname(),
                                    "experiment_id": experiment_id})
+
+    # deleted indice for elastic search to make sure mappings are properly passed
+    delete_indices(index=doc_index)
+
     return retriever_eval_results
 
 

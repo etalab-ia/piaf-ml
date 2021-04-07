@@ -18,10 +18,12 @@ from farm.utils import initialize_device_settings
 from sklearn.model_selection import ParameterGrid
 
 from src.evaluation.config.retriever_reader_eval_squad_config import parameters
+from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.utils.elasticsearch_management import launch_ES, delete_indices, prepare_mapping
 from src.evaluation.utils.mlflow_management import prepare_mlflow_server
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
+from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline
 import mlflow
 
 prepare_mlflow_server()
@@ -47,6 +49,7 @@ def single_run(parameters):
     evaluation_data = Path(parameters["squad_dataset"])
     retriever_type = parameters["retriever_type"]
     k_retriever = parameters["k_retriever"]
+    k_title_retriever = parameters["k_title_retriever"]
     k_reader_per_candidate = parameters["k_reader_per_candidate"]
     k_reader_total = parameters["k_reader_total"]
     preprocessing = parameters["preprocessing"]
@@ -70,19 +73,24 @@ def single_run(parameters):
         split_respect_sentence_boundary=False  # the support for this will soon be removed : 29 01 2021
     )
 
+    reader = TransformersReader(model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
+                                tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
+                                use_gpu=gpu_id, top_k_per_candidate=k_reader_per_candidate)
+
     if retriever_type == 'bm25':
 
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
-                                                    search_fields=['name', "text"],
+                                                    search_fields=["name", "text"],
                                                     create_index=False, embedding_field="emb",
                                                     scheme="",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = ElasticsearchRetriever(document_store=document_store)
+        p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
 
     elif retriever_type == "sbert":
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
-                                                    search_fields=['name', "text"],
+                                                    search_fields=["name", "text"],
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
@@ -91,14 +99,43 @@ def single_run(parameters):
                                        use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                        pooling_strategy="reduce_max",
                                        emb_extraction_layer=-1)
+        p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
+
+    elif retriever_type == "title_bm25":
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
+                                                    search_fields=["name", "text"],
+                                                    create_index=False, embedding_field="emb",
+                                                    embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                    custom_mapping=SQUAD_MAPPING)
+        retriever = TitleEmbeddingRetriever(document_store=document_store,
+                                             embedding_model="distiluse-base-multilingual-cased",
+                                             use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                                             pooling_strategy="reduce_max",
+                                             emb_extraction_layer=-1)
+        retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
+
+        p = TitleBM25QAPipeline(reader=reader, retriever_title=retriever, retriever_bm25=retriever_bm25,k_title_retriever=k_title_retriever
+                                , k_bm25_retriever=k_retriever)
+
+        #used to make sure the p.run method returns enough candidates
+        k_retriever = max(k_retriever, k_title_retriever)
+
+    elif retriever_type == "title":
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
+                                                    search_fields=["name","text"],
+                                                    create_index=False, embedding_field="emb",
+                                                    embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                    custom_mapping=SQUAD_MAPPING)
+        retriever = TitleEmbeddingRetriever(document_store=document_store,
+                                             embedding_model="distiluse-base-multilingual-cased",
+                                             use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                                             pooling_strategy="reduce_max",
+                                             emb_extraction_layer=-1)
+        p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
+
+
     else:
-        raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr")
-
-    reader = TransformersReader(model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
-                                tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
-                                use_gpu=gpu_id, top_k_per_candidate=k_reader_per_candidate)
-
-    p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
+        raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, dpr or title_bm25")
 
     # Add evaluation data to Elasticsearch document store
     # We first delete the custom tutorial indices to not have duplicate elements
@@ -109,7 +146,7 @@ def single_run(parameters):
     document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index,
                                  preprocessor=preprocessor)
 
-    if retriever_type in ["sbert", "dpr"]:
+    if retriever_type in ["sbert", "dpr", "title_bm25","title"]:
         document_store.update_embeddings(retriever, index=doc_index)
 
     start = time.time()
