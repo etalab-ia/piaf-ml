@@ -122,7 +122,7 @@ def single_run(parameters):
 
     elif retriever_type == "title":
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
-                                                    search_fields=["name", "text"],
+                                                    search_fields=["name","text"],
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
@@ -146,7 +146,7 @@ def single_run(parameters):
     document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index,
                                  preprocessor=preprocessor)
 
-    if retriever_type in ["sbert", "dpr", "title_bm25"]:
+    if retriever_type in ["sbert", "dpr", "title_bm25","title"]:
         document_store.update_embeddings(retriever, index=doc_index)
 
     start = time.time()
