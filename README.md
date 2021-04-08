@@ -62,32 +62,40 @@ on Windows : `pip install -r requirements.txt -f https://download.pytorch.org/wh
 
 ### Performance evaluation
 The procedure to start the evaluation script is the following:
-1. Unzip the knowledge base from /data. The knowledge bases are stored in zip files called vXY where XY are two digits
-2. Define a set of experiment parameters with the src/evaluation/eval_config/__init__.py
+1. Prepare your knowledge base in the form of a json file formated with the squad format. More information regarding the format of the file can be found [here](https://etalab-ia.github.io/knowledge-base/piaf/howtos/Format_donnees_SQuAD.html)
+2. Define a set of experiment parameters with the src/evaluation/config/retriever_reader_eval_squad.py
 ```python
 parameters = {
-    "k": [5], # number of results to get by ES
-    "retriever_type": ["sparse"], # either dense (sbert) or sparse (bm25)
-    "knowledge_base": ["./data/v11"], # knowledge base jsons
-                     
-    "test_dataset": ["./data/407_question-fiche_anonym.csv"] # test dataset QA,
-    "weighted_precision": [True] # this is MAP, unweighted would be similar to precision ,
-    "filter_level": [None] # to prefilter the searched docs by "thematique" or "sous-thematique"
+    "k_retriever": [20,30],
+    "k_title_retriever" : [10], # must be present, but only used when retriever_type == title_bm25
+    "k_reader_per_candidate": [5],
+    "k_reader_total": [3],
+    "retriever_type": ["title"], # Can be bm25, sbert, dpr, title or title_bm25
+    "squad_dataset": ["./data/evaluation-datasets/tiny.json"],
+    "filter_level": [None],
+    "preprocessing": [True],
+    "boosting" : [1], #default to 1
+    "split_by": ["word"],  # Can be "word", "sentence", or "passage"
+    "split_length": [1000],
+    "experiment_name": ["dev"]
 }
 ```
 3. Run:
 ```bash
-python ./src/evaluation/retriever_eval.py
+python - m src.evaluation.retriever_reader.retriever_reader_eval_squad.py
 ```
 4. If ES throws some errors, try re-running it again. Sometimes the docker image takes time to initialize.
+5. Note that the results will be saved in ``results/`` in a csv form. Also, mlruns will create a record in `mlruns`
 
 ## Project folder structure
 ```
 /piaf-ml/
 ├── data
 │   ├── dense_dicts
+│   ├── evaludation-datasets #datasets available for performance evaluation 
 │   └── vXY # Your folder generated with Knowledge database
 ├── logs # Here we will put our logs when we get to it :)
+├── mlruns # The results saved by mlruns
 ├── notebooks # Notebooks with reports on experimentations
 ├── reports # Reports
 ├── results # Folder were all the results generated from evaluation scripts are stored
@@ -95,7 +103,9 @@ python ./src/evaluation/retriever_eval.py
 │   ├── data # Script related to data generation
 │   │   └── notebooks # Notebooks for data generation 
 │   ├── evaluation
-│   │   └── eval_config # Configuration file
+│   │   ├── config # Configuration file
+│   │   ├── utils # somes utils dedicated to performance evaluation
+│   │   └── retriever_reader # script for evaluating the full pipeline 
 │   ├── models # Scripts related to training models
 │   └── util # Random functions that could be accessed from multiple places
 ```
