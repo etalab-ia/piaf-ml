@@ -20,10 +20,10 @@ from src.evaluation.utils.utils_eval import eval_retriever, save_results
 
 def single_run(parameters):
     """
-    Runs a grid search config
-    :param parameters: A dict with diverse config options
-    :return: A dict with the results obtained running the experiment with these parameters
-    """
+        Runs a grid search config
+        :param parameters: A dict with diverse config options
+        :return: A dict with the results obtained running the experiment with these parameters
+        """
     # col names
     evaluation_data = Path(parameters["squad_dataset"])
     retriever_type = parameters["retriever_type"]
@@ -39,6 +39,12 @@ def single_run(parameters):
 
     prepare_mapping(SQUAD_MAPPING, preprocessing, embedding_dimension=512)
 
+    doc_index = "document_xp"
+    label_index = "label_xp"
+
+    # deleted indice for elastic search to make sure mappings are properly passed
+    delete_indices(index=doc_index)
+
     preprocessor = PreProcessor(
         clean_empty_lines=False,
         clean_whitespace=False,
@@ -51,7 +57,7 @@ def single_run(parameters):
 
     if retriever_type == 'bm25':
 
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
@@ -59,7 +65,7 @@ def single_run(parameters):
         p.add_node(component=retriever, name="ESRetriever", inputs=["Query"])
 
     elif retriever_type == "sbert":
-        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document_xp",
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
@@ -72,11 +78,7 @@ def single_run(parameters):
     else:
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr")
 
-    # Add evaluation data to Elasticsearch document store
-    # We first delete the custom tutorial indices to not have duplicate elements
-    # make sure these indices do not collide with existing ones, the indices will be wiped clean before data is inserted
-    doc_index = "document_xp"
-    label_index = "label_xp"
+
 
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
@@ -100,8 +102,6 @@ def single_run(parameters):
                                    "hostname": socket.gethostname(),
                                    "experiment_id": experiment_id})
 
-    # deleted indice for elastic search to make sure mappings are properly passed
-    delete_indices(index=doc_index)
 
     return retriever_eval_results
 
