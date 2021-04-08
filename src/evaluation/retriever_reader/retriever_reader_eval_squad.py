@@ -38,13 +38,13 @@ else:
 
 def single_run(parameters):
     """
-    Queries ES max_k - min_k times, saving at each step the results in a list. At the end plots the line
-    showing the results obtained. For now we can only vary k.
-    :param min_k: Minimum retriever-k to test
-    :param max_k: Maximum retriever-k to test
-    :param weighted_precision: Whether to take into account the position of the retrieved result in the accuracy computation
-    :return:
-    """
+        Queries ES max_k - min_k times, saving at each step the results in a list. At the end plots the line
+        showing the results obtained. For now we can only vary k.
+        :param min_k: Minimum retriever-k to test
+        :param max_k: Maximum retriever-k to test
+        :param weighted_precision: Whether to take into account the position of the retrieved result in the accuracy computation
+        :return:
+        """
     # col names
     evaluation_data = Path(parameters["squad_dataset"])
     retriever_type = parameters["retriever_type"]
@@ -59,6 +59,9 @@ def single_run(parameters):
 
     doc_index = "document_xp"
     label_index = "label_xp"
+
+    # deleted indice for elastic search to make sure mappings are properly passed
+    delete_indices(index=doc_index)
 
     prepare_mapping(mapping=SQUAD_MAPPING, preprocessing=preprocessing, title_boosting_factor=title_boosting_factor,
                     embedding_dimension=512)
@@ -108,10 +111,10 @@ def single_run(parameters):
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = TitleEmbeddingRetriever(document_store=document_store,
-                                             embedding_model="distiluse-base-multilingual-cased",
-                                             use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
-                                             pooling_strategy="reduce_max",
-                                             emb_extraction_layer=-1)
+                                            embedding_model="distiluse-base-multilingual-cased",
+                                            use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                                            pooling_strategy="reduce_max",
+                                            emb_extraction_layer=-1)
         retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
 
         p = TitleBM25QAPipeline(reader=reader, retriever_title=retriever, retriever_bm25=retriever_bm25,k_title_retriever=k_title_retriever
@@ -127,10 +130,10 @@ def single_run(parameters):
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = TitleEmbeddingRetriever(document_store=document_store,
-                                             embedding_model="distiluse-base-multilingual-cased",
-                                             use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
-                                             pooling_strategy="reduce_max",
-                                             emb_extraction_layer=-1)
+                                            embedding_model="distiluse-base-multilingual-cased",
+                                            use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                                            pooling_strategy="reduce_max",
+                                            emb_extraction_layer=-1)
         p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
 
 
@@ -161,8 +164,6 @@ def single_run(parameters):
 
     retriever_eval_results.update({"time_per_label": time_per_label})
 
-    # deleted indice for elastic search to make sure mappings are properly passed
-    delete_indices(index=doc_index)
 
     return retriever_eval_results
 
