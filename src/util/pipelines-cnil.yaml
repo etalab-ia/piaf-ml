@@ -38,6 +38,7 @@ components:    # define all the building-blocks for Pipeline
       top_k_per_candidate: 4
       return_no_answers: False
       use_gpu: -1
+      top_k: 5
   - name: TextFileConverter
     type: TextConverter
   - name: PDFFileConverter
