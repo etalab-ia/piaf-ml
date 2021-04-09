@@ -4,36 +4,24 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: "deepset/haystack-cpu:latest"
     ports:
       - 8002:8000
+    container_name: haystack-api
     volumes:
       # Optional: mount your own models from disk into the container
       - "./models:/home/user/models"
-      - "./data:/home/user/data"
-      - "./haystack:/home/user/haystack"
-      - "./rest_api:/home/user/rest_api"
     environment:
-      # See rest_api/config.py for more variables that you can configure here.
       - DB_HOST=elasticsearch
       - USE_GPU=False
-      - DB_INDEX=document_elasticsearch
       - TOP_K_PER_SAMPLE=3 # how many answers can come from the same small passage (reduce value for more variety of answers)
-      # Load a model from transformers' model hub or a local path into the FARMReader.
-      # - READER_MODEL_PATH=deepset/roberta-base-squad2
-      # - READER_MODEL_PATH=home/user/models/roberta-base-squad2
-      # Alternative: If you want to use the TransformersReader (e.g. for loading a local model in transformers format):
-      - READER_TYPE=TransformersReader
-      - READER_MODEL_PATH=etalab-ia/camembert-base-squadFR-fquad-piaf
-      - READER_TOKENIZER=etalab-ia/camembert-base-squadFR-fquad-piaf
-      - READER_CAN_HAVE_NO_ANSWER=False
-      - EMBEDDING_DIM=512
+      - QUERY_PIPELINE_NAME=query2
     restart: always
     depends_on:
       - elasticsearch
     command: "/bin/bash -c 'sleep 15 && gunicorn rest_api.application:app -b 0.0.0.0 -k uvicorn.workers.UvicornWorker --workers 1 --timeout 180 --preload'"
   elasticsearch:
-    image: "guillim/cnil:v0"
+    container_name: elasticsearch
+    image: "guillim/cnil:v2"
     ports:
       - 9202:9200
     environment:
