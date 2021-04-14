@@ -76,3 +76,9 @@ class JoinDocumentsCustom(BaseComponent):
         return output, "output_1"
 
 ```
+
+
+# Data injection
+we suggest you put your SQuAD formatted dataset into /data the folder with "root" owner  
+
+Then follow and adapt to your use-case [this tutorial](https://github.com/etalab-ia/piaf-ml/blob/master/src/evaluation/retriever_reader/retriever_reader_eval_squad.py)
