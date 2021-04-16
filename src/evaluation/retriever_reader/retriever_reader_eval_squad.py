@@ -1,4 +1,5 @@
 import hashlib
+import subprocess
 import torch
 import socket
 import time
@@ -181,7 +182,21 @@ def add_extra_params(dict_params: dict):
 
 
 def create_run_ids(parameters_grid):
-    return [str(i) for i, j in enumerate(parameters_grid)]
+    git_commit = subprocess.check_output("git rev-parse --short HEAD", encoding="utf-8").strip()
+    hash_file = {}
+    run_ids = []
+    for param in parameters_grid:
+        id = []
+        file = param['squad_dataset']
+        if file not in hash_file.keys():
+            with open(file, 'r', encoding="utf-8") as f:
+                file_content = f.read()
+            file_hash = hashlib.md5(file_content.encode("utf-8")).hexdigest()[:8]
+            hash_file[file] = file_hash
+        hash_param  = hashlib.md5(str(param).encode("utf-8")).hexdigest()[:8]
+        id = git_commit + hash_file[file] + hash_param
+        run_ids.append(id)
+    return run_ids
 
 
 if __name__ == '__main__':
