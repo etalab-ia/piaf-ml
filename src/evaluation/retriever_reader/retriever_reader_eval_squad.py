@@ -1,9 +1,5 @@
-import hashlib
-import subprocess
 import torch
-import socket
 import time
-from datetime import datetime
 
 from pathlib import Path
 from tqdm import tqdm
@@ -21,7 +17,7 @@ from sklearn.model_selection import ParameterGrid
 from src.evaluation.config.retriever_reader_eval_squad_config import parameters
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.utils.elasticsearch_management import launch_ES, delete_indices, prepare_mapping
-from src.evaluation.utils.mlflow_management import prepare_mlflow_server
+from src.evaluation.utils.mlflow_management import prepare_mlflow_server, add_extra_params, create_run_ids
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline
@@ -168,35 +164,6 @@ def single_run(parameters):
     retriever_eval_results.update({"time_per_label": time_per_label})
 
     return retriever_eval_results
-
-
-def add_extra_params(dict_params: dict):
-    extra_parameters = {
-        "date": datetime.today().strftime('%Y-%m-%d_%H-%M-%S'),
-        "hostname": socket.gethostname()
-    }
-
-    dict_params.update(extra_parameters)
-    experiment_id = hashlib.md5(str(dict_params).encode("utf-8")).hexdigest()[:4]
-    dict_params.update({"experiment_id": experiment_id})
-
-
-def create_run_ids(parameters_grid):
-    git_commit = subprocess.check_output("git rev-parse --short HEAD", encoding="utf-8").strip()
-    hash_file = {}
-    run_ids = []
-    for param in parameters_grid:
-        id = []
-        file = param['squad_dataset']
-        if file not in hash_file.keys():
-            with open(file, 'r', encoding="utf-8") as f:
-                file_content = f.read()
-            file_hash = hashlib.md5(file_content.encode("utf-8")).hexdigest()[:8]
-            hash_file[file] = file_hash
-        hash_param  = hashlib.md5(str(param).encode("utf-8")).hexdigest()[:8]
-        id = git_commit + hash_file[file] + hash_param
-        run_ids.append(id)
-    return run_ids
 
 
 if __name__ == '__main__':

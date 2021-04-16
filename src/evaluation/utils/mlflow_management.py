@@ -1,10 +1,44 @@
+import hashlib
+import subprocess
+import socket
+import os
+
+from datetime import datetime
 from dotenv import load_dotenv
 from tqdm import tqdm
+
 import mlflow
-import os
+
 
 load_dotenv()
 
+def add_extra_params(dict_params: dict):
+    extra_parameters = {
+        "date": datetime.today().strftime('%Y-%m-%d_%H-%M-%S'),
+        "hostname": socket.gethostname()
+    }
+
+    dict_params.update(extra_parameters)
+    experiment_id = hashlib.md5(str(dict_params).encode("utf-8")).hexdigest()[:4]
+    dict_params.update({"experiment_id": experiment_id})
+
+
+def create_run_ids(parameters_grid):
+    git_commit = subprocess.check_output("git rev-parse --short HEAD", encoding="utf-8").strip()
+    hash_file = {}
+    run_ids = []
+    for param in parameters_grid:
+        id = []
+        file = param['squad_dataset']
+        if file not in hash_file.keys():
+            with open(file, 'r', encoding="utf-8") as f:
+                file_content = f.read()
+            file_hash = hashlib.md5(file_content.encode("utf-8")).hexdigest()[:8]
+            hash_file[file] = file_hash
+        hash_param  = hashlib.md5(str(param).encode("utf-8")).hexdigest()[:8]
+        id = git_commit + hash_file[file] + hash_param
+        run_ids.append(id)
+    return run_ids
 
 def prepare_mlflow_server():
     try:
