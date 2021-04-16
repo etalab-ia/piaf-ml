@@ -36,6 +36,7 @@ components:    # define all the building-blocks for Pipeline
       model_name_or_path: etalab-ia/camembert-base-squadFR-fquad-piaf
       tokenizer: etalab-ia/camembert-base-squadFR-fquad-piaf
       top_k_per_candidate: 4
+      context_window_size: 200
       return_no_answers: False
       use_gpu: -1
       top_k: 5

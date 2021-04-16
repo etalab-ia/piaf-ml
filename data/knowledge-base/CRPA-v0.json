@@ -3,64 +3,64 @@
     "data": [
         {
             "title": "Qu'est-ce que l'open data ?",
-            "paragraphs": [{"context": "L'open data public consiste à assurer la large mise à disposition à tous de ces données, en accès libre et gratuit, sous un format numérique facilement réutilisable."}],
+            "paragraphs": [{"context": "L'open data public consiste à assurer la large mise à disposition à tous de ces données, en accès libre et gratuit, sous un format numérique facilement réutilisable.","qas": [] }],
             "link": "https://guides.etalab.gouv.fr/juridique/opendata/ ",
             "theme": "usager et adm"
         },
         {
             "title": "Qu’est-ce qu’une information ?",
-            "paragraphs": [{"context": "Une information est un élément contenue dans un document administratif communicable à tous ou faisant l'objet d'une diffusion publique, sur lequel des tiers ne détiennent pas de droits de propriété intellectuelle.  "}],
+            "paragraphs": [{"context": "Une information est un élément contenue dans un document administratif communicable à tous ou faisant l'objet d'une diffusion publique, sur lequel des tiers ne détiennent pas de droits de propriété intellectuelle.  ","qas": [] }],
             "link": "https://guides.etalab.gouv.fr/juridique/opendata/#qu-est-ce-que-l-open-data",
             "theme": "usager et adm"
         },
         {
             "title": "Qu'est-ce qu'une donnée ?",
-            "paragraphs": [{"context": "Une donnée est une représentation d’une information sous une forme conventionnelle\r\ndestinée à faciliter son traitement."}],
+            "paragraphs": [{"context": "Une donnée est une représentation d’une information sous une forme conventionnelle\r\ndestinée à faciliter son traitement.","qas": [] }],
             "article": "Journal officiel du 22 septembre 2000, révisant l’arrêté du 22 décembre\r\n1981.",
             "theme": "usager et adm"
         },
         {
             "title": "Qu'est-ce qu'une donnée publique ? ",
-            "paragraphs": [{"context": "Il s'agit de la représentation d’une information publique sous une forme conventionnelle destinée à faciliter son traitement. Cela peut être par exemple des données géographiques (adresses, références cadastrales), financières (budgets, commande publique, subventions, etc.), environnementales (émissions, vente de produits, etc.), etc."}],
+            "paragraphs": [{"context": "Il s'agit de la représentation d’une information publique sous une forme conventionnelle destinée à faciliter son traitement. Cela peut être par exemple des données géographiques (adresses, références cadastrales), financières (budgets, commande publique, subventions, etc.), environnementales (émissions, vente de produits, etc.), etc.","qas": [] }],
             "article": "Journal officiel du 22 septembre 2000, révisant l’arrêté du 22 décembre\r\n1981.",
             "theme": "usager et adm"
         },
         {
             "title": "Qu'est-ce qu'un document administratif ?",
-            "paragraphs": [{"context": "Sont considérés comme documents administratifs, quels que soient leur date, leur lieu de conservation, leur forme et leur support, les documents produits ou reçus, dans le cadre de leur mission de service public, par l'Etat, les collectivités territoriales ainsi que par les autres personnes de droit public ou les personnes de droit privé chargées d'une telle mission. Constituent de tels documents notamment les dossiers, rapports, études, comptes rendus, procès-verbaux, statistiques, instructions, circulaires, notes et réponses ministérielles, correspondances, avis, prévisions, codes sources et décisions."}],
+            "paragraphs": [{"context": "Sont considérés comme documents administratifs, quels que soient leur date, leur lieu de conservation, leur forme et leur support, les documents produits ou reçus, dans le cadre de leur mission de service public, par l'Etat, les collectivités territoriales ainsi que par les autres personnes de droit public ou les personnes de droit privé chargées d'une telle mission. Constituent de tels documents notamment les dossiers, rapports, études, comptes rendus, procès-verbaux, statistiques, instructions, circulaires, notes et réponses ministérielles, correspondances, avis, prévisions, codes sources et décisions.","qas": [] }],
             "article": "L. 300-2 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033218936",
             "theme": "usager et adm"
         },
         {
             "title": "Est-ce que l'accès à l'information publique est un droit ?",
-            "paragraphs": [{"context": "oui"}],
+            "paragraphs": [{"context": "oui","qas": [] }],
             "article": "L. 300-1 du code des relations entre le public et l'administration",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000031367687?etatTexte=VIGUEUR&etatTexte=VIGUEUR_DIFF",
             "theme": "usager et adm"
         },
         {
             "title": "Qui peut exercer le droit d'accès des informations publiques ?",
-            "paragraphs": [{"context": "Toute personne"}],
+            "paragraphs": [{"context": "Toute personne","qas": [] }],
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000031367687?etatTexte=VIGUEUR&etatTexte=VIGUEUR_DIFF",
             "theme": "usager et adm"
         },
         {
             "title": "Comment s'exerce le droit à l'information des personnes morales de droit public ?",
-            "paragraphs": [{"context": "Ce droit s'exerce conformément à l'article 1er de la loi pour une République numérique"}],
+            "paragraphs": [{"context": "Ce droit s'exerce conformément à l'article 1er de la loi pour une République numérique","qas": [] }],
             "article": "Article 1er Rep num",
             "theme": "adm"
         },
         {
             "title": "Comment s'exerce le droit à l'information des personnes privées à l'accès aux documents administratifs ? ",
-            "paragraphs": [{"context": "Ce droit s'exerce par la liberté d'accès aux documents administratifs prévue au livre III du code des relations entre le public et l'administration. "}],
+            "paragraphs": [{"context": "Ce droit s'exerce par la liberté d'accès aux documents administratifs prévue au livre III du code des relations entre le public et l'administration. ","qas": [] }],
             "article": "Livre III du code des relations ente le public et l'administraiton",
             "link": "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000031366350/LEGISCTA000031367685/#LEGISCTA000031367685 ",
             "theme": "usager et adm"
         },
         {
             "title": "Quelles sont les dispositions qui régissent l'accès aux actes et documents produits ou reçus par les assemblées parlementaires ?",
-            "paragraphs": [{"context": "Les actes et documents produits ou reçus par les assemblées parlementaires sont régis par l'ordonnance n° 58-1100 du 17 novembre 1958 relative au fonctionnement des assemblées parlementaires."}],
+            "paragraphs": [{"context": "Les actes et documents produits ou reçus par les assemblées parlementaires sont régis par l'ordonnance n° 58-1100 du 17 novembre 1958 relative au fonctionnement des assemblées parlementaires.","qas": [] }],
             "article": "L. 300-2 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033218936",
             "remarques": "A dev plus tard",
@@ -68,132 +68,128 @@
         },
         {
             "title": "Qui est concerné par l'accès aux documents administratifs ? ",
-            "paragraphs": [{"context": "L'Etat, les collectivités territoriales ainsi que par les autres personnes de droit public ou les personnes de droit privé chargées d'une mission de service public"}],
+            "paragraphs": [{"context": "L'Etat, les collectivités territoriales ainsi que par les autres personnes de droit public ou les personnes de droit privé chargées d'une mission de service public","qas": [] }],
             "article": "L. 300-2 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033218936",
             "theme": "usager et adm"
         },
         {
             "title": "Quels sont les documents concernés par la liberté d'accès aux documents administratifs ? ",
-            "paragraphs": [{"context": "Tous les documents produits ou reçus par les administrations au sens du L. 300-2 du CRPA"}],
+            "paragraphs": [{"context": "Tous les documents produits ou reçus par les administrations au sens du L. 300-2 du CRPA","qas": [] }],
             "article": "L. 300-2 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033218936",
             "theme": "usager et adm"
         },
         {
             "title": "Qu'est-ce qu'une mission de service public ?",
-            "paragraphs": [{"context": "La mission de service public se caractérise toujours par la combinaison d’un critère matériel, correspondant à l’exercice d’une mission d’intérêt général, et de deux critères organiques, à savoir le contrôle, direct ou indirect, d’une personne publique et l'attribution de prérogatives de puissance publique. "}],
+            "paragraphs": [{"context": "La mission de service public se caractérise toujours par la combinaison d’un critère matériel, correspondant à l’exercice d’une mission d’intérêt général, et de deux critères organiques, à savoir le contrôle, direct ou indirect, d’une personne publique et l'attribution de prérogatives de puissance publique. ","qas": [] }],
             "theme": "usager et adm"
         },
         {
             "title": "Les documents relatifs à la gestion du domaine privé de l'Etat et des collectivités sont-ils concernés par la liberté d'accès aux documents administratifs ? ",
             "paragraphs": [{"context": "Les titres Ier, II et IV du présent livre II s'appliquent à ces documents .",
-            "article": "L. 300-3 du CRPA"}],
+            "article": "L. 300-3 du CRPA","qas": [] }],
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033206528",
             "theme": "usager et adm"
         },
         {
             "title": "Dans quelles conditions s'effectue la mise à disposition sous forme électronique des documents administratifs ?",
             "paragraphs": [{"context": "La mise à disposition des documents administratifs se fait dans un standard ouvert, aisément réutilisable et exploitable par un système de traitement automatisé.",
-            "article": "L. 300-4 du CRPA"}],
+            "article": "L. 300-4 du CRPA","qas": [] }],
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033205519",
             "theme": "usager et adm"
         },
         {
             "title": "Qu'est ce qu'un standard ouvert ?",
-            "paragraphs": [{"context": "On entend par standard ouvert tout protocole de communication, d'interconnexion ou d'échange et tout format de données interopérable et dont les spécifications techniques sont publiques et sans restriction d'accès ni de mise en œuvre. "}],
+            "paragraphs": [{"context": "On entend par standard ouvert tout protocole de communication, d'interconnexion ou d'échange et tout format de données interopérable et dont les spécifications techniques sont publiques et sans restriction d'accès ni de mise en œuvre. ","qas": [] }],
             "article": "Article 4 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique",
             "link": "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000006421544",
             "theme": "adm"
         },
         {
             "title": "Quels standards doivent être utilisés par les administrations ? ",
-            "paragraphs": [{"context": "Les administrations doivent utilisés les standards visés dans le référentiel général d'interopérabilité"}],
+            "paragraphs": [{"context": "Les administrations doivent utilisés les standards visés dans le référentiel général d'interopérabilité","qas": [] }],
             "article": "Article 11 de l'ordonnance n°2005-1516 du 8 décembre 2005 ",
             "link": "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000006317209",
             "theme": "usager"
         },
         {
             "title": "Qu'est-ce qu'un standard aisément réutilisable et exploitable par un système de traitement automatisé ?",
-            "paragraphs": [{"context": "Il s'agit d'un standard qui peut être traité par un traitement informatique sans intervention humaine complémentaire. "}],
+            "paragraphs": [{"context": "Il s'agit d'un standard qui peut être traité par un traitement informatique sans intervention humaine complémentaire. ","qas": [] }],
             "theme": "adm"
         },
         {
             "title": "Les administrations sont-elles tenues de communiquer à tous ou de publier tous les documents administratifs qu'elles détiennent? ",
-            "paragraphs": [{"context": "Non, seuls les documents administratifs achevés et exempt de tout secret sont communicables ou diffusés. Certains documents ne sont jamais communicables car ils comportent des secrets visés à l'article L. 311-5 ou parce qu'ils ne sont pas achevés. Certains documents ne communicables qu'au seul intéressé."}],
+            "paragraphs": [{"context": "Non, seuls les documents administratifs achevés et exempt de tout secret sont communicables ou diffusés. Certains documents ne sont jamais communicables car ils comportent des secrets visés à l'article L. 311-5 ou parce qu'ils ne sont pas achevés. Certains documents ne communicables qu'au seul intéressé.","qas": [] }],
             "article": "L. 311-1 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033218946",
             "theme": "usager et adm"
         },
         {
             "title": "Les administrations sont-elles tenues de communiquer à tous ou de publier tous les documents administratifs qu'elles détiennent? ",
-            "paragraphs": [{"context": "Les documents administratifs sont communicables à tous sous réserve des secrets prévus aux article L. 311-5 et L. 311-6 du CRPA. "}],
+            "paragraphs": [{"context": "Les documents administratifs sont communicables à tous sous réserve des secrets prévus aux article L. 311-5 et L. 311-6 du CRPA. ","qas": [] }],
             "article": "L. 311-1 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033218946"
         },
         {
-            "title": "Quels sont les documents communicable qu'au seul intéressé ?",
-            "article": "L. 311-6 du CRPA"
-        },
-        {
             "title": "Le droit à communication s'exerce-t-il pour des documents qui font l'objet d'une diffusion publique ? ",
-            "paragraphs": [{"context": "Non, le droit à communication ne s'exerce plus lorsque les documents font l'objet d'une diffusion publique "}],
+            "paragraphs": [{"context": "Non, le droit à communication ne s'exerce plus lorsque les documents font l'objet d'une diffusion publique ","qas": [] }],
             "article": "L. 311-2 alinéa 4 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000031367700",
             "theme": "adm"
         },
         {
             "title": "Le dépôt aux archives publiques de documents administratif communicable fait-il  obstacle au droit à communication ? ",
-            "paragraphs": [{"context": "Le dépôt aux archives publiques des documents administratifs communicables aux termes du présent chapitre ne fait pas obstacle au droit à communication à tout moment desdits documents. "}],
+            "paragraphs": [{"context": "Le dépôt aux archives publiques des documents administratifs communicables aux termes du présent chapitre ne fait pas obstacle au droit à communication à tout moment desdits documents. ","qas": [] }],
             "article": "L. 311-2 alinéa 5 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000031367700",
             "theme": "adm"
         },
         {
             "title": "Que se passe-t-il lorsqu'une administration est saisie d'une demande de communication d'un document qu'elle ne détient pas ? ",
-            "paragraphs": [{"context": "Lorsqu'une administration mentionnée à l'article L. 300-2 est saisie d'une demande de communication portant sur un document administratif qu'elle ne détient pas mais qui est détenu par une autre administration mentionnée au même article, elle la transmet à cette dernière et en avise l'intéressé."}],
+            "paragraphs": [{"context": "Lorsqu'une administration mentionnée à l'article L. 300-2 est saisie d'une demande de communication portant sur un document administratif qu'elle ne détient pas mais qui est détenu par une autre administration mentionnée au même article, elle la transmet à cette dernière et en avise l'intéressé.","qas": [] }],
             "article": "L. 311-2 alinéa 6 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000031367700",
             "theme": "usager et adm"
         },
         {
             "title": "Que se passe-t-il lorsqu'une administration est saisie d'une demande de communication d'un document susceptible de relever de plusieurs régimes d'accès ?",
-            "paragraphs": [{"context": "Lorsqu'une administration mentionnée à l'article L. 300-2, ou la Commission d'accès aux documents administratifs, est saisie d'une demande de communication d'un document administratif susceptible de relever de plusieurs des régimes d'accès mentionnés aux articles L. 342-1 et L. 342-2, il lui appartient de l'examiner d'office au regard de l'ensemble de ces régimes, à l'exception du régime organisé par l'article L. 213-3 du code du patrimoine. "}],
+            "paragraphs": [{"context": "Lorsqu'une administration mentionnée à l'article L. 300-2, ou la Commission d'accès aux documents administratifs, est saisie d'une demande de communication d'un document administratif susceptible de relever de plusieurs des régimes d'accès mentionnés aux articles L. 342-1 et L. 342-2, il lui appartient de l'examiner d'office au regard de l'ensemble de ces régimes, à l'exception du régime organisé par l'article L. 213-3 du code du patrimoine. ","qas": [] }],
             "article": "L. 311-2 alinéa 7 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000031367700",
             "theme": "usager et adm"
         },
         {
             "title": "L'administration est-elle tenue de donner suite à toutes les demandes ?",
-            "paragraphs": [{"context": "Non, l'administration n'est pas tenue de donner suite aux demandes abusives, en particulier par leur nombre ou leur caractère répétitif ou systématique."}],
+            "paragraphs": [{"context": "Non, l'administration n'est pas tenue de donner suite aux demandes abusives, en particulier par leur nombre ou leur caractère répétitif ou systématique.","qas": [] }],
             "article": "L. 311-2 alinéa 8 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000031367700",
             "theme": "usager et adm"
         },
         {
             "title": "Puis-je accéder à un document administratif contenant de conclusions qui me sont opposés?",
-            "paragraphs": [{"context": "Sous réserve des dispositions de la loi n° 78-17 du 6 janvier 1978 relative à l'informatique, aux fichiers et aux libertés, concernant les données à caractère personnel figurant dans des fichiers, toute personne a le droit de connaître les informations contenues dans un document administratif dont les conclusions lui sont opposées."}],
+            "paragraphs": [{"context": "Sous réserve des dispositions de la loi n° 78-17 du 6 janvier 1978 relative à l'informatique, aux fichiers et aux libertés, concernant les données à caractère personnel figurant dans des fichiers, toute personne a le droit de connaître les informations contenues dans un document administratif dont les conclusions lui sont opposées.","qas": [] }],
             "article": "L. 311-3 alinéa 1 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000031367703",
             "theme": "Usager"
         },
         {
             "title": "dois-je communiquer à un usager un document administratif contenant des conclusions qui lui sont opposées? ",
-            "paragraphs": [{"context": "Oui. Sous réserve des dispositions de la loi n° 78-17 du 6 janvier 1978 relative à l'informatique, aux fichiers et aux libertés, concernant les données à caractère personnel figurant dans des fichiers, toute personne a le droit de connaître les informations contenues dans un document administratif dont les conclusions lui sont opposées."}],
+            "paragraphs": [{"context": "Oui. Sous réserve des dispositions de la loi n° 78-17 du 6 janvier 1978 relative à l'informatique, aux fichiers et aux libertés, concernant les données à caractère personnel figurant dans des fichiers, toute personne a le droit de connaître les informations contenues dans un document administratif dont les conclusions lui sont opposées.","qas": [] }],
             "article": "L. 311-3 alinéa 1 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000031367703",
             "theme": "adm"
         },
         {
             "title": "Quelle mention une décision individuelle prise sur le fondement d'un traitement algorithmique doit comporter ?",
-            "paragraphs": [{"context": "Sous réserve de l'application du 2° de l'article L. 311-5, une décision individuelle prise sur le fondement d'un traitement algorithmique comporte une mention explicite en informant l'intéressé. "}],
+            "paragraphs": [{"context": "Sous réserve de l'application du 2° de l'article L. 311-5, une décision individuelle prise sur le fondement d'un traitement algorithmique comporte une mention explicite en informant l'intéressé. ","qas": [] }],
             "article": "L. 311-3-1 alinéa 1 du CRPA ",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033205535",
             "theme": "adm"
         },
         {
             "title": "Qu'est-ce qu'une décision individuelle ?",
-            "paragraphs": [{"context": "Il s'agit d'un acte à caractère unilatéral, pris par une autorité administrative, et qui a pour destinataire une ou plusieurs personnes nommément désignées.  Le fait qu'un même acte concerne plusieurs personnes - ce sont les décisions dites « collectives » - ne lui ôte pas son caractère de décision individuelle, dès lors que les intéressés sont nominativement désignés. \r\nPar ailleurs, il n'y a pas lieu d'opérer des distinctions selon la qualité des personnes destinataires : personnes physiques ou morales, publiques ou privées peuvent également faire l'objet de décisions « individuelles »."}],
+            "paragraphs": [{"context": "Il s'agit d'un acte à caractère unilatéral, pris par une autorité administrative, et qui a pour destinataire une ou plusieurs personnes nommément désignées.  Le fait qu'un même acte concerne plusieurs personnes - ce sont les décisions dites « collectives » - ne lui ôte pas son caractère de décision individuelle, dès lors que les intéressés sont nominativement désignés. \r\nPar ailleurs, il n'y a pas lieu d'opérer des distinctions selon la qualité des personnes destinataires : personnes physiques ou morales, publiques ou privées peuvent également faire l'objet de décisions « individuelles ».","qas": [] }],
             "article": "Circulaire du 24 décembre 1997 relative à la mise en oeuvre de la déconcentration des décisions administratives individuelles",
             "link": "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000752779",
             "remarques": "Corriger lien guide algo pour arriver à la définition de la circulaire",
@@ -201,58 +197,58 @@
         },
         {
             "title": "Les documents préparatoires à une décision sont-ils communicables ? ",
-            "paragraphs": [{"context": "Les documents  préparatoires à une décision ne sont communicables que lorsque la décision a été prise ou aurait dû être prise. "}],
+            "paragraphs": [{"context": "Les documents  préparatoires à une décision ne sont communicables que lorsque la décision a été prise ou aurait dû être prise. ","qas": [] }],
             "article": "L. 311-1 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033218946",
             "theme": "adm"
         },
         {
             "title": "Que signifie \"lorsque la décision aurait dû être prise\" ? ",
-            "paragraphs": [{"context": "Selon la doctrine de la Commission de l'accès aux documents administratifs, une décision aurait dû être prise dans le délai d'un an"}],
+            "paragraphs": [{"context": "Selon la doctrine de la Commission de l'accès aux documents administratifs, une décision aurait dû être prise dans le délai d'un an","qas": [] }],
             "link": "Fouiller site cada pour Ref"
         },
         {
             "title": "Qui est concerné par la diffusion des données ?",
-            "paragraphs": [{"context": "Vous êtes concerné par la diffusion des documents administratifs si vous êtes :\r\n    une administration centrale de plus de 50 agents ;\r\n    une personne morale de droit privé chargée d'une mission de service public qui emploie plus de  50 agents à temps plein ;\r\n    une collectivité territoriale de plus de 3 500 habitants et de plus de 50 agents"}],
+            "paragraphs": [{"context": "Vous êtes concerné par la diffusion des documents administratifs si vous êtes :\r\n    une administration centrale de plus de 50 agents ;\r\n    une personne morale de droit privé chargée d'une mission de service public qui emploie plus de  50 agents à temps plein ;\r\n    une collectivité territoriale de plus de 3 500 habitants et de plus de 50 agents","qas": [] }],
             "article": "Combinaison des articles L. 300-2 / L. 313-1 / D. 312-1-1-1",
             "theme": "adm"
         },
         {
             "title": "Quels sont les documents qui doivent être mis en open data ?",
-            "paragraphs": [{"context": "   Vous êtes tenus de diffuser en open data :  Les documents administratifs que vous avez communiqué à des demandeurs ; L'inventaire des documents administratifs que vous produisez dans le cadre de vos missions de service public ; Attention, Les documents administratifs diffusés doivent être achevés; Les bases de données produites et reçues dans le cadre des missions de service public. Ces bases de données doivent êtres mises à jour régulièrement ; Les données dont la publication représente un intérêt économique, social, sanitaire ou environnemental. Attention il existe des exceptions"}],
+            "paragraphs": [{"context": "   Vous êtes tenus de diffuser en open data :  Les documents administratifs que vous avez communiqué à des demandeurs ; L'inventaire des documents administratifs que vous produisez dans le cadre de vos missions de service public ; Attention, Les documents administratifs diffusés doivent être achevés; Les bases de données produites et reçues dans le cadre des missions de service public. Ces bases de données doivent êtres mises à jour régulièrement ; Les données dont la publication représente un intérêt économique, social, sanitaire ou environnemental. Attention il existe des exceptions","qas": [] }],
             "article": "L. 312-1 CRPA",
             "link": "https://guides.etalab.gouv.fr/juridique/ouverture/#la-diffusion-de-vos-documents-administratifs",
             "theme": "adm"
         },
         {
             "title": "Comment dois-je publier mes données ? ",
-            "paragraphs": [{"context": "Les documents administratifs, informations publiques et données doivent être publiés dans un format :\r\n    Ouvert : tout protocole de communication, d’interconnexion ou d’échange et tout format de données interopérable et dont les spécifications techniques sont publiques, sans restriction d'accès ou de mise en œuvre ;\r\n    Aisément réutilisable : le producteur prend en considérant les connaissances et besoins du réutilisateur lors de la publication ;\r\n    Exploitable par un système de traitement automatisé : la publication est optimisée pour une utilisation par un système de traitement automatisé et non pour une exploitation immédiate par des humains."}],
+            "paragraphs": [{"context": "Les documents administratifs, informations publiques et données doivent être publiés dans un format :\r\n    Ouvert : tout protocole de communication, d’interconnexion ou d’échange et tout format de données interopérable et dont les spécifications techniques sont publiques, sans restriction d'accès ou de mise en œuvre ;\r\n    Aisément réutilisable : le producteur prend en considérant les connaissances et besoins du réutilisateur lors de la publication ;\r\n    Exploitable par un système de traitement automatisé : la publication est optimisée pour une utilisation par un système de traitement automatisé et non pour une exploitation immédiate par des humains.","qas": [] }],
             "article": "L. 300-4 du CRPA",
             "link": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033205519/2016-10-09  ",
             "theme": "adm"
         },
         {
             "title": "Est-ce que tous mes documents doivent être mis en open data? ",
-            "paragraphs": [{"context": "Non, seuls les documents administratifs achevés et exempt de tout secret doivent être diffusés. C'est-à-dire que vos documents ont atteint leur version finale, à date : les brouillons, documents de travail, notes préalables ne sont pas considérés comme des documents achevés. Si le document administratif contient une décision, cette dernière ne doit pas être en cours de délibération mais bien prise."}],
+            "paragraphs": [{"context": "Non, seuls les documents administratifs achevés et exempt de tout secret doivent être diffusés. C'est-à-dire que vos documents ont atteint leur version finale, à date : les brouillons, documents de travail, notes préalables ne sont pas considérés comme des documents achevés. Si le document administratif contient une décision, cette dernière ne doit pas être en cours de délibération mais bien prise.","qas": [] }],
             "link": "https://guides.etalab.gouv.fr/juridique/ouverture/#la-diffusion-de-vos-documents-administratifs ",
             "theme": "adm"
         },
         {
             "title": "Qu'est-ce qu'une base de données ? ",
-            "paragraphs": [{"context": "On entend par base de données un recueil d’œuvres, de données ou d'autres éléments indépendants, disposés de manière systématique ou méthodique, et individuellement accessibles par des moyens électroniques ou par tout autre moyen (Article L112-3 du code de la propriété intellectuelle ). À titre d'exemples, sont des bases de données : le registre des entreprises, l'annuaire des adresses, les données de demande de valeurs foncières, etc."}],
+            "paragraphs": [{"context": "On entend par base de données un recueil d’œuvres, de données ou d'autres éléments indépendants, disposés de manière systématique ou méthodique, et individuellement accessibles par des moyens électroniques ou par tout autre moyen (Article L112-3 du code de la propriété intellectuelle ). À titre d'exemples, sont des bases de données : le registre des entreprises, l'annuaire des adresses, les données de demande de valeurs foncières, etc.","qas": [] }],
             "article": "article L 112-3 alinéa 2 du Code de propriété intellectuelle",
             "link": "https://guides.etalab.gouv.fr/juridique/ouverture/#la-diffusion-de-vos-documents-administratifs ",
             "theme": "usager et adm"
         },
         {
             "title": "Quels sont les documents couverts par un secret légal ?",
-            "paragraphs": [{"context": "Ce sont par exemple les documents dont la diffusion porterait atteinte au secret des délibérations du Gouvernement, au secret de la défense nationale ou de la sûreté de l’État, etc (Article L. 311-5 du CRPA ).\r\nLes documents dont la diffusion porterait atteinte à la protection de la vie privée, au secret médical et au secret des affaires. Les documents qui portent une appréciation ou un jugement de valeur sur une personne physique ou qui font apparaître le comportement d’une personne ( Article L. 311-6 du CRPA )."}],
+            "paragraphs": [{"context": "Ce sont par exemple les documents dont la diffusion porterait atteinte au secret des délibérations du Gouvernement, au secret de la défense nationale ou de la sûreté de l’État, etc (Article L. 311-5 du CRPA ).\r\nLes documents dont la diffusion porterait atteinte à la protection de la vie privée, au secret médical et au secret des affaires. Les documents qui portent une appréciation ou un jugement de valeur sur une personne physique ou qui font apparaître le comportement d’une personne ( Article L. 311-6 du CRPA ).","qas": [] }],
             "link": "https://guides.etalab.gouv.fr/juridique/ouverture/#la-diffusion-de-vos-documents-administratifs",
             "theme": "usager et adm"
         },
         {
             "title": "Comment occulter les données par un traitement automatisé d'usage courant ? ",
-            "paragraphs": [{"context": "L'occultation correspond au masquage ou au retrait des données identifiées comme confidentielles et non communicables."}],
+            "paragraphs": [{"context": "L'occultation correspond au masquage ou au retrait des données identifiées comme confidentielles et non communicables.","qas": [] }],
             "link": "https://guides.etalab.gouv.fr/juridique/ouverture/#la-diffusion-de-vos-documents-administratifs ",
             "theme": "adm"
         }
