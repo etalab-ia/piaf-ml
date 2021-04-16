@@ -25,6 +25,7 @@ from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline
 import mlflow
+from mlflow.tracking import MlflowClient
 
 prepare_mlflow_server()
 
@@ -117,15 +118,16 @@ def single_run(parameters):
                                             emb_extraction_layer=-1)
         retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
 
-        p = TitleBM25QAPipeline(reader=reader, retriever_title=retriever, retriever_bm25=retriever_bm25,k_title_retriever=k_title_retriever
+        p = TitleBM25QAPipeline(reader=reader, retriever_title=retriever, retriever_bm25=retriever_bm25,
+                                k_title_retriever=k_title_retriever
                                 , k_bm25_retriever=k_retriever)
 
-        #used to make sure the p.run method returns enough candidates
+        # used to make sure the p.run method returns enough candidates
         k_retriever = max(k_retriever, k_title_retriever)
 
     elif retriever_type == "title":
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
-                                                    search_fields=["name","text"],
+                                                    search_fields=["name", "text"],
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
@@ -149,7 +151,7 @@ def single_run(parameters):
     document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index,
                                  preprocessor=preprocessor)
 
-    if retriever_type in ["sbert", "dpr", "title_bm25","title"]:
+    if retriever_type in ["sbert", "dpr", "title_bm25", "title"]:
         document_store.update_embeddings(retriever, index=doc_index)
 
     start = time.time()
@@ -163,7 +165,6 @@ def single_run(parameters):
     print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])
 
     retriever_eval_results.update({"time_per_label": time_per_label})
-
 
     return retriever_eval_results
 
@@ -179,9 +180,15 @@ def add_extra_params(dict_params: dict):
     dict_params.update({"experiment_id": experiment_id})
 
 
+def create_run_ids(parameters_grid):
+    return [str(i) for i, j in enumerate(parameters_grid)]
+
+
 if __name__ == '__main__':
     result_file_path = Path("./results/results_reader.csv")
     parameters_grid = list(ParameterGrid(param_grid=parameters))
+    experiment_name = parameters["experiment_name"][0]
+
 
     device, n_gpu = initialize_device_settings(use_cuda=True)
     GPU_AVAILABLE = 1 if device.type == "cuda" else 0
@@ -193,19 +200,29 @@ if __name__ == '__main__':
 
     all_results = []
     launch_ES()
-    mlflow.set_experiment(parameters["experiment_name"][0])
-    for idx, param in enumerate(tqdm(parameters_grid, desc="GridSearch", unit="config")):
+    client = MlflowClient()
+    list_run_ids = create_run_ids(parameters_grid)
+    mlflow.set_experiment(experiment_name=experiment_name)
+
+    experiment_id = client.get_experiment_by_name(experiment_name).experiment_id
+    list_past_run_names = [client.get_run(run.run_id).data.tags['mlflow.runName']for run in client.list_run_infos(experiment_id)]
+
+    for idx, param in zip(list_run_ids, tqdm(parameters_grid, desc="GridSearch", unit="config")):
         add_extra_params(param)
-        tqdm.write(f"Doing run with config : {param}")
-        try:
-            with mlflow.start_run(run_name=str(idx)) as run:
-                mlflow.log_params(param)
-                # START XP
-                run_results = single_run(param)
-                mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
-            run_results.update(param)
-            save_results(result_file_path=result_file_path, results_list=run_results)
-        except Exception as e:
-            Exception(f"Could not run this config: {param}")
-            tqdm.write(f"Error:{e}")
-            continue
+
+        if idx not in list_past_run_names:
+            tqdm.write(f"Doing run with config : {param}")
+            try:
+                with mlflow.start_run(run_name=idx) as run:
+                    mlflow.log_params(param)
+                    # START XP
+                    run_results = single_run(param)
+                    mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
+                run_results.update(param)
+                save_results(result_file_path=result_file_path, results_list=run_results)
+            except Exception as e:
+                Exception(f"Could not run this config: {param}")
+                tqdm.write(f"Error:{e}")
+                continue
+        else:
+            print('config already done')
