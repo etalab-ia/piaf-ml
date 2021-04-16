@@ -171,7 +171,6 @@ if __name__ == '__main__':
     parameters_grid = list(ParameterGrid(param_grid=parameters))
     experiment_name = parameters["experiment_name"][0]
 
-
     device, n_gpu = initialize_device_settings(use_cuda=True)
     GPU_AVAILABLE = 1 if device.type == "cuda" else 0
 
@@ -181,14 +180,16 @@ if __name__ == '__main__':
         gpu_id = -1
 
     all_results = []
+
     launch_ES()
     client = MlflowClient()
+
     list_run_ids = create_run_ids(parameters_grid)
-    mlflow.set_experiment(experiment_name=experiment_name)
-
     experiment_id = client.get_experiment_by_name(experiment_name).experiment_id
-    list_past_run_names = [client.get_run(run.run_id).data.tags['mlflow.runName']for run in client.list_run_infos(experiment_id)]
+    list_past_run_names = [client.get_run(run.run_id).data.tags['mlflow.runName'] for run in
+                           client.list_run_infos(experiment_id)]
 
+    mlflow.set_experiment(experiment_name=experiment_name)
     for idx, param in zip(list_run_ids, tqdm(parameters_grid, desc="GridSearch", unit="config")):
         add_extra_params(param)
 

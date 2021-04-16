@@ -24,6 +24,14 @@ def add_extra_params(dict_params: dict):
 
 
 def create_run_ids(parameters_grid):
+    """
+    This function creates a list of ids for every run of the experiment to be launched.
+    Each id is composed of the hash for the git commit of the code, the hash for the knowledge_base being used for testing,
+    the hash for the params of the run.
+
+    :param parameters_grid: the parameter grid created from the configuration file
+    :return: a list of run ids
+    """
     git_commit = subprocess.check_output("git rev-parse --short HEAD", encoding="utf-8").strip()
     hash_file = {}
     run_ids = []
