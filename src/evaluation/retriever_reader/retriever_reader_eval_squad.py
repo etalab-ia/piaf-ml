@@ -62,6 +62,7 @@ def single_run(parameters):
 
     # deleted indice for elastic search to make sure mappings are properly passed
     delete_indices(index=doc_index)
+    delete_indices(index=label_index)
 
     prepare_mapping(mapping=SQUAD_MAPPING, preprocessing=preprocessing, title_boosting_factor=title_boosting_factor,
                     embedding_dimension=512)
@@ -144,8 +145,6 @@ def single_run(parameters):
     # We first delete the custom tutorial indices to not have duplicate elements
     # make sure these indices do not collide with existing ones, the indices will be wiped clean before data is inserted
 
-    document_store.delete_all_documents(index=doc_index)
-    document_store.delete_all_documents(index=label_index)
     document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index,
                                  preprocessor=preprocessor)
 
