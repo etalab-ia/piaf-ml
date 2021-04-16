@@ -187,7 +187,7 @@ if __name__ == '__main__':
     list_run_ids = create_run_ids(parameters_grid)
     experiment_id = client.get_experiment_by_name(experiment_name).experiment_id
     list_past_run_names = [client.get_run(run.run_id).data.tags['mlflow.runName'] for run in
-                           client.list_run_infos(experiment_id)]
+                           client.list_run_infos(experiment_id) if run.status == 'FINISHED']
 
     mlflow.set_experiment(experiment_name=experiment_name)
     for idx, param in zip(list_run_ids, tqdm(parameters_grid, desc="GridSearch", unit="config")):
