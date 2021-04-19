@@ -1,7 +1,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import List, Tuple, Dict, Union
+from typing import List, Dict, Union
 
 import pandas as pd
 from haystack.document_store.base import BaseDocumentStore
@@ -9,7 +9,7 @@ from haystack.eval import eval_counts_reader, calculate_reader_metrics
 from haystack.pipeline import Pipeline
 from tqdm import tqdm
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 def save_results(result_file_path: Path, results_list: Union[Dict, List[Dict]]):

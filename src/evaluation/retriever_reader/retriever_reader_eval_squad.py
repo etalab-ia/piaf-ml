@@ -4,6 +4,18 @@ import socket
 import time
 from datetime import datetime
 
+import logging
+
+logging.root.handlers = []
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("./logs/run_log.log"),
+        logging.StreamHandler()
+    ]
+)
+
 from pathlib import Path
 from tqdm import tqdm
 
@@ -12,7 +24,7 @@ from haystack.retriever.sparse import ElasticsearchRetriever
 from haystack.retriever.dense import EmbeddingRetriever
 from haystack.reader.transformers import TransformersReader
 from haystack.preprocessor.preprocessor import PreProcessor
-from haystack.pipeline import Pipeline, ExtractiveQAPipeline
+from haystack.pipeline import ExtractiveQAPipeline
 
 from farm.utils import initialize_device_settings
 from sklearn.model_selection import ParameterGrid
@@ -118,15 +130,16 @@ def single_run(parameters):
                                             emb_extraction_layer=-1)
         retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
 
-        p = TitleBM25QAPipeline(reader=reader, retriever_title=retriever, retriever_bm25=retriever_bm25,k_title_retriever=k_title_retriever
+        p = TitleBM25QAPipeline(reader=reader, retriever_title=retriever, retriever_bm25=retriever_bm25,
+                                k_title_retriever=k_title_retriever
                                 , k_bm25_retriever=k_retriever)
 
-        #used to make sure the p.run method returns enough candidates
+        # used to make sure the p.run method returns enough candidates
         k_retriever = max(k_retriever, k_title_retriever)
 
     elif retriever_type == "title":
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
-                                                    search_fields=["name","text"],
+                                                    search_fields=["name", "text"],
                                                     create_index=False, embedding_field="emb",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
@@ -139,8 +152,8 @@ def single_run(parameters):
 
 
     else:
+        logging.error(f"You chose {retriever_type}. Choose one from bm25, sbert, dpr or title_bm25")
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, dpr or title_bm25")
-
     # Add evaluation data to Elasticsearch document store
     # We first delete the custom tutorial indices to not have duplicate elements
     # make sure these indices do not collide with existing ones, the indices will be wiped clean before data is inserted
@@ -148,7 +161,7 @@ def single_run(parameters):
     document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index,
                                  preprocessor=preprocessor)
 
-    if retriever_type in ["sbert", "dpr", "title_bm25","title"]:
+    if retriever_type in ["sbert", "dpr", "title_bm25", "title"]:
         document_store.update_embeddings(retriever, index=doc_index)
 
     start = time.time()
@@ -162,7 +175,6 @@ def single_run(parameters):
     print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])
 
     retriever_eval_results.update({"time_per_label": time_per_label})
-
 
     return retriever_eval_results
 
@@ -195,7 +207,7 @@ if __name__ == '__main__':
     mlflow.set_experiment(parameters["experiment_name"][0])
     for idx, param in enumerate(tqdm(parameters_grid, desc="GridSearch", unit="config")):
         add_extra_params(param)
-        tqdm.write(f"Doing run with config : {param}")
+        logging.info(f"Doing run with config : {param}")
         try:
             with mlflow.start_run(run_name=str(idx)) as run:
                 mlflow.log_params(param)
@@ -204,7 +216,7 @@ if __name__ == '__main__':
                 mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
             run_results.update(param)
             save_results(result_file_path=result_file_path, results_list=run_results)
+            # mlflow.log_artifact(result_file_path)
         except Exception as e:
-            Exception(f"Could not run this config: {param}")
-            tqdm.write(f"Error:{e}")
+            logging.error(f"Could not run this config: {param}. Error {e}.")
             continue
