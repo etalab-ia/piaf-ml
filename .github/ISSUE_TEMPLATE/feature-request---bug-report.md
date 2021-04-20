@@ -7,13 +7,13 @@ assignees: ''
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
-Clear + concise description of the problem
-  - steps to reproduce
+**Problem description**
+Is your feature request related to a problem? Please give a clear and concise description of the problem
+  - steps to reproduce (add some sample code if possible)
   - actual result
   - expected result
 
-**Describe the solution you'd like**
+**Solution description**
 What you imagine in your wildest dreams
 
 **Additional context / screeshot**
