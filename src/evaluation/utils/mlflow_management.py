@@ -3,6 +3,7 @@ import subprocess
 import socket
 import os
 
+from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
 from tqdm import tqdm
@@ -22,6 +23,28 @@ def add_extra_params(dict_params: dict):
     experiment_id = hashlib.md5(str(dict_params).encode("utf-8")).hexdigest()[:4]
     dict_params.update({"experiment_id": experiment_id})
 
+def hash_piaf_code():
+    """
+    This function lists all files in folders data and src at the exception of the files for experiment configuration.
+    Then it returns the hash of the list of the md5 sums of the files
+    :return:
+    """
+    folders_to_hash = ['src']
+    list_files_to_hash = []
+    for folder in folders_to_hash:
+        for path in Path(folder).rglob('*.py'):
+            if '_config.py' in path.name:
+                continue
+            list_files_to_hash.append(path)
+
+    list_hash = []
+    for file in list_files_to_hash:
+        with open(file, 'r', encoding="utf-8") as f:
+            file_content = f.read()
+        file_hash = hashlib.md5(file_content.encode("utf-8")).hexdigest()[:8]
+        list_hash.append(file_hash)
+
+    return hashlib.md5(str(list_hash).encode("utf-8")).hexdigest()[:8]
 
 def create_run_ids(parameters_grid):
     """
@@ -33,6 +56,8 @@ def create_run_ids(parameters_grid):
     :return: a list of run ids
     """
     git_commit = subprocess.check_output("git rev-parse --short HEAD", encoding="utf-8").strip()
+    hash_librairies = hashlib.md5(subprocess.check_output("pip freeze", encoding="utf-8").encode('utf-8')).hexdigest()[:8]
+    hash_code = hash_piaf_code()
     hash_file = {}
     run_ids = []
     for param in parameters_grid:
@@ -44,7 +69,7 @@ def create_run_ids(parameters_grid):
             file_hash = hashlib.md5(file_content.encode("utf-8")).hexdigest()[:8]
             hash_file[file] = file_hash
         hash_param  = hashlib.md5(str(param).encode("utf-8")).hexdigest()[:8]
-        id = git_commit + hash_file[file] + hash_param
+        id = git_commit + hash_file[file] +  hash_code + hash_librairies + hash_param
         run_ids.append(id)
     return run_ids
 
