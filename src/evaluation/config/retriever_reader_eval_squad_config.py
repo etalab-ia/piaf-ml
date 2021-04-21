@@ -10,7 +10,7 @@ parameters = {
     "boosting" : [1], #default to 1
     "split_by": ["word"],  # Can be "word", "sentence", or "passage"
     "split_length": [1000],
-    "experiment_name": ["test_2"]
+    "experiment_name": ["test_3"]
 }
 # rules:
 # corpus and retriever type requires reloading ES indexing

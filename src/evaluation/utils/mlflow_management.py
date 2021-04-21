@@ -10,8 +10,8 @@ from tqdm import tqdm
 
 import mlflow
 
-
 load_dotenv()
+
 
 def add_extra_params(dict_params: dict):
     extra_parameters = {
@@ -22,6 +22,7 @@ def add_extra_params(dict_params: dict):
     dict_params.update(extra_parameters)
     experiment_id = hashlib.md5(str(dict_params).encode("utf-8")).hexdigest()[:4]
     dict_params.update({"experiment_id": experiment_id})
+
 
 def hash_piaf_code():
     """
@@ -46,6 +47,7 @@ def hash_piaf_code():
 
     return hashlib.md5(str(list_hash).encode("utf-8")).hexdigest()[:8]
 
+
 def create_run_ids(parameters_grid):
     """
     This function creates a list of ids for every run of the experiment to be launched.
@@ -53,15 +55,15 @@ def create_run_ids(parameters_grid):
     the hash for the params of the run.
 
     :param parameters_grid: the parameter grid created from the configuration file
-    :return: a list of run ids
+    :return: the run_ids:  a list of run ids
     """
     git_commit = subprocess.check_output("git rev-parse --short HEAD", encoding="utf-8").strip()
-    hash_librairies = hashlib.md5(subprocess.check_output("pip freeze", encoding="utf-8").encode('utf-8')).hexdigest()[:8]
+    hash_librairies = hashlib.md5(subprocess.check_output("pip freeze", encoding="utf-8").encode('utf-8')).hexdigest()[
+                      :8]
     hash_code = hash_piaf_code()
     hash_file = {}
     run_ids = []
     for param in parameters_grid:
-        id = []
         file = param['squad_dataset']
         if file not in hash_file.keys():
             with open(file, 'r', encoding="utf-8") as f:
@@ -72,6 +74,7 @@ def create_run_ids(parameters_grid):
         id = git_commit + hash_code + hash_librairies + hash_file[file] + hash_param
         run_ids.append(id)
     return run_ids
+
 
 def prepare_mlflow_server():
     try:
