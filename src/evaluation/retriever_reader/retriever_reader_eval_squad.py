@@ -190,17 +190,19 @@ if __name__ == '__main__':
     list_run_ids = create_run_ids(parameters_grid)
     try:
         experiment_id = client.get_experiment_by_name(experiment_name).experiment_id
-        #create a dict with {run_name: run_id}
+        # create a dict with {run_name: run_id}
         list_past_run_names = {client.get_run(run.run_id).data.tags['mlflow.runName']: run.run_id for run in
                                client.list_run_infos(experiment_id) if run.status == 'FINISHED'}
     except:
         list_past_run_names = {}
 
     mlflow.set_experiment(experiment_name=experiment_name)
-    for idx, param in tqdm(zip(list_run_ids, parameters_grid), total=len(list_run_ids), desc="GridSearch", unit="config"):
+    for idx, param in tqdm(zip(list_run_ids, parameters_grid), total=len(list_run_ids), desc="GridSearch",
+                           unit="config"):
         add_extra_params(param)
 
-        if idx not in list_past_run_names.keys() or not os.getenv("USE_CACHE"): #run already done or USE_CACHE set to False or not set
+        if idx not in list_past_run_names.keys() or not os.getenv(
+                "USE_CACHE"):  # run already done or USE_CACHE set to False or not set
             tqdm.write(f"Doing run with config : {param}")
             try:
                 with mlflow.start_run(run_name=idx) as run:
@@ -214,11 +216,10 @@ if __name__ == '__main__':
                 Exception(f"Could not run this config: {param}")
                 tqdm.write(f"Error:{e}")
                 continue
-        else: #run not done
+        else:  # run not done
             print('config already done')
-            #Log again run with previous results
+            # Log again run with previous results
             previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
             with mlflow.start_run(run_name=idx) as run:
                 mlflow.log_params(param)
                 mlflow.log_metrics(previous_metrics)
-
