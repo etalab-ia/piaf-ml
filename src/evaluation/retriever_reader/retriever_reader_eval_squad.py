@@ -1,8 +1,10 @@
 import torch
 import time
+import os
 
 from pathlib import Path
 from tqdm import tqdm
+from dotenv import load_dotenv
 
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.sparse import ElasticsearchRetriever
@@ -24,6 +26,7 @@ from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline
 import mlflow
 from mlflow.tracking import MlflowClient
 
+load_dotenv()
 prepare_mlflow_server()
 
 GPU_AVAILABLE = torch.cuda.is_available()
@@ -185,16 +188,19 @@ if __name__ == '__main__':
     client = MlflowClient()
 
     list_run_ids = create_run_ids(parameters_grid)
-    experiment_id = client.get_experiment_by_name(experiment_name).experiment_id
-    #create a dict with {run_name: run_id}
-    list_past_run_names = {client.get_run(run.run_id).data.tags['mlflow.runName']: run.run_id for run in
-                           client.list_run_infos(experiment_id) if run.status == 'FINISHED'}
+    try:
+        experiment_id = client.get_experiment_by_name(experiment_name).experiment_id
+        #create a dict with {run_name: run_id}
+        list_past_run_names = {client.get_run(run.run_id).data.tags['mlflow.runName']: run.run_id for run in
+                               client.list_run_infos(experiment_id) if run.status == 'FINISHED'}
+    except:
+        list_past_run_names = {}
 
     mlflow.set_experiment(experiment_name=experiment_name)
-    for idx, param in zip(list_run_ids, tqdm(parameters_grid, desc="GridSearch", unit="config")):
+    for idx, param in tqdm(zip(list_run_ids, parameters_grid), total=len(list_run_ids), desc="GridSearch", unit="config"):
         add_extra_params(param)
 
-        if idx not in list_past_run_names.keys():
+        if idx not in list_past_run_names.keys() or not os.getenv("USE_CACHE"): #run already done or USE_CACHE set to False or not set
             tqdm.write(f"Doing run with config : {param}")
             try:
                 with mlflow.start_run(run_name=idx) as run:
@@ -208,7 +214,7 @@ if __name__ == '__main__':
                 Exception(f"Could not run this config: {param}")
                 tqdm.write(f"Error:{e}")
                 continue
-        else:
+        else: #run not done
             print('config already done')
             #Log again run with previous results
             previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
