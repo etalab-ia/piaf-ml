@@ -48,6 +48,23 @@ def hash_piaf_code():
     return hashlib.md5(str(list_hash).encode("utf-8")).hexdigest()[:8]
 
 
+def get_list_past_run (client, experiment_name):
+    """
+    This function returns the list of the past experiments
+    :param client: the mlflow client
+    :param experiment_name: the name of the experiment
+    :return: the list of the past experiments
+    """
+    try:
+        experiment_id = client.get_experiment_by_name(experiment_name).experiment_id
+        # create a dict with {run_name: run_id}
+        list_past_run_names = {client.get_run(run.run_id).data.tags['mlflow.runName']: run.run_id for run in
+                               client.list_run_infos(experiment_id) if run.status == 'FINISHED'}
+    except:
+        list_past_run_names = {}
+
+    return list_past_run_names
+
 def create_run_ids(parameters_grid):
     """
     This function creates a list of ids for every run of the experiment to be launched.

@@ -19,7 +19,7 @@ from sklearn.model_selection import ParameterGrid
 from src.evaluation.config.retriever_reader_eval_squad_config import parameters
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.utils.elasticsearch_management import launch_ES, delete_indices, prepare_mapping
-from src.evaluation.utils.mlflow_management import prepare_mlflow_server, add_extra_params, create_run_ids
+from src.evaluation.utils.mlflow_management import prepare_mlflow_server, add_extra_params, create_run_ids, get_list_past_run
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline
@@ -188,13 +188,7 @@ if __name__ == '__main__':
     client = MlflowClient()
 
     list_run_ids = create_run_ids(parameters_grid)
-    try:
-        experiment_id = client.get_experiment_by_name(experiment_name).experiment_id
-        # create a dict with {run_name: run_id}
-        list_past_run_names = {client.get_run(run.run_id).data.tags['mlflow.runName']: run.run_id for run in
-                               client.list_run_infos(experiment_id) if run.status == 'FINISHED'}
-    except:
-        list_past_run_names = {}
+    list_past_run_names = get_list_past_run(client, experiment_name)
 
     mlflow.set_experiment(experiment_name=experiment_name)
     for idx, param in tqdm(zip(list_run_ids, parameters_grid), total=len(list_run_ids), desc="GridSearch",
@@ -212,6 +206,7 @@ if __name__ == '__main__':
                     mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
                 run_results.update(param)
                 save_results(result_file_path=result_file_path, results_list=run_results)
+                list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
             except Exception as e:
                 Exception(f"Could not run this config: {param}")
                 tqdm.write(f"Error:{e}")
