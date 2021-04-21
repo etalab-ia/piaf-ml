@@ -1,88 +1,7 @@
-# Customisation of haystack
+# About your dataset: if you don't have annotations attached to your texts, don't forget to add an empty array like this "qas": []
+# we suggest you put your SQuAD formatted dataset into the /data folder
+# make sure your dataset has "root" owner
 
-Before we have a proper way to keep track of every client customization, here are the file changes required for haystack to work with CNIL
-
--  Pipelines.yaml (see file in the same folder)
-- docker-compose (same)
-- requirements.txt
-add at the end
-```bash
-sentence-transformers
-pytest
-```
-- haystack/__init__.py
-add these lines in the import section
-```python
-from haystack.custom import TitleEmbeddingRetriever
-from haystack.custom import JoinDocumentsCustom
-```
-- haystack/custom.py
-create this new file and add this :
-```python
-from typing import List
-from haystack.schema import BaseComponent
-from haystack.retriever.dense import EmbeddingRetriever
-import numpy as np
-from haystack import Document
-
-
-class TitleEmbeddingRetriever(EmbeddingRetriever):
-    def embed_passages(self, docs: List[Document]) -> List[np.ndarray]:
-        """
-        Create embeddings of the titles for a list of passages. For this Retriever type: The same as calling .embed()
-        :param docs: List of documents to embed
-        :return: Embeddings, one per input passage
-        """
-        texts = [d.meta['name'] for d in docs]
-
-        return self.embed(texts)
-
-
-class JoinDocumentsCustom(BaseComponent):
-    """
-    A node to join documents outputted by multiple retriever nodes.
-    The node allows multiple join modes:
-    * concatenate: combine the documents from multiple nodes. Any duplicate documents are discarded.
-    * merge: merge scores of documents from multiple nodes. Optionally, each input score can be given a different
-             `weight` & a `top_k` limit can be set. This mode can also be used for "reranking" retrieved documents.
-    """
-
-    outgoing_edges = 1
-
-    def __init__(
-        self, ks_retriever: List[int] = None
-    ):
-        """
-        :param ks_retriever: A node-wise list(length of list must be equal to the number of input nodes) of k_retriever kept for
-                        the concatenation of the retrievers in the nodes. If set to None, the number of documents retrieved will be used
-        """
-        self.ks_retriever = ks_retriever
-
-    def run(self, **kwargs):
-        inputs = kwargs["inputs"]
-
-        document_map = {}
-        if self.ks_retriever:
-            ks_retriever = self.ks_retriever
-        else:
-            ks_retriever = [len(inputs[0]['documents']) for i in range(len(inputs))]
-        for input_from_node, k_retriever in zip(inputs, ks_retriever):
-            for i, doc in enumerate(input_from_node["documents"]):
-                if i == k_retriever:
-                    break
-                document_map[doc.id] = doc
-        documents = document_map.values()
-        output = {"query": inputs[0]["query"], "documents": documents, "labels": inputs[0].get("labels", None)}
-        return output, "output_1"
-
-```
-
-
-# Data injection
-we suggest you put your SQuAD formatted dataset into /data the folder with "root" owner. Do not forget to add an empty array `"qas": []` if you don't have annotations attached to your texts.
-
-Then follow and adapt to your use-case [this tutorial](https://github.com/etalab-ia/piaf-ml/blob/master/src/evaluation/retriever_reader/retriever_reader_eval_squad.py)
-```py
 import hashlib
 import torch
 import socket
@@ -114,7 +33,7 @@ split_by = "word"
 split_length = 1000
 title_boosting_factor = 1
 
-ES_host="haystack_crpa_elasticsearch_1"
+ES_host="haystack_cnil_elasticsearch_1"
 
 from typing import List
 import numpy as np
@@ -245,11 +164,10 @@ prepare_mapping(mapping=SQUAD_MAPPING, preprocessing=preprocessing, title_boosti
 
 preprocessor = PreProcessor(clean_empty_lines=False,clean_whitespace=False,clean_header_footer=False,split_by=split_by,split_length=split_length,split_overlap=0,split_respect_sentence_boundary=False)
 
-document_store = ElasticsearchDocumentStore(host="haystack_crpa_elasticsearch_1", username="", password="", index=doc_index,search_fields=["name","text"],create_index=False, embedding_field="emb",embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',custom_mapping=SQUAD_MAPPING)
+document_store = ElasticsearchDocumentStore(host="haystack_cnil_elasticsearch_1", username="", password="", index=doc_index,search_fields=["name","text"],create_index=False, embedding_field="emb",embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',custom_mapping=SQUAD_MAPPING)
 retriever = TitleEmbeddingRetriever(document_store=document_store,embedding_model="distiluse-base-multilingual-cased",use_gpu=False, model_format="sentence_transformers",pooling_strategy="reduce_max",emb_extraction_layer=-1)
 
 document_store.delete_all_documents(index=doc_index)
 document_store.delete_all_documents(index=label_index)
 document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index,preprocessor=preprocessor)
 document_store.update_embeddings(retriever, index=doc_index)
-```

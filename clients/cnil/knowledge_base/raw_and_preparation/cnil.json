@@ -1,0 +1,88 @@
+{
+  "request": {
+    "questions": ["Qu'est ce qu'un cookie ?"],
+    "filters": null,
+    "top_k_reader": 5,
+    "top_k_retriever": 5
+  },
+  "results": [{
+    "query": "Qu'est ce qu'un cookie ?",
+    "answers": [{
+      "answer": "traceurs informatiques",
+      "context": "Quelques conseils pour se prot\u00e9ger du spam : ne jamais r\u00e9pondre \u00e0 un spam : cela confirme au spammeur que l'adresse \u00e9lectronique est valide ;\nne jamais cliquer sur les liens ins\u00e9r\u00e9s dans le message : si vous vous rendez sur le site attach\u00e9 au lien, cela permet souvent au spammeur de r\u00e9cup\u00e9rer des informations par l'utilisation de cookies ou d'autres traceurs informatiques ;\nne jamais ouvrir les pi\u00e8ces jointes ;\n\u00eatre vigilant lors de la communication de votre adresse \u00e9lectronique et lire attentivement les mentions d'informations sur la communication des coordonn\u00e9es \u00e0 des tiers ;\ncr\u00e9er plusieurs adresses de messageries \u00e9lectroniques : une pour les achats sur internet, une pour les r\u00e9seaux sociaux, une pour les \u00e9changes avec vos proches, etc. ;\nutiliser un filtre de spam.\nQuels sont mes recours ? Vous connecter sur le site www.signal-spam.fr, plate-forme nationale ",
+      "offset_start": 352,
+      "offset_end": 374,
+      "probability": 0.9792867302894592,
+      "score": null,
+      "document_id": "f42f8c44-58d4-4e25-88f6-65fcd28fab0e",
+      "meta": {
+        "dossier": "m\u00e9l, mail, email, pub, spam, messagerie, publicit\u00e9",
+        "theme": " Publicit\u00e9",
+        "sous_theme": " Particuliers ",
+        "id": 177,
+        "name": "D\u00e9marchage par courriel : conseils et recours"
+      }
+    }, {
+      "answer": "un petit fichier informatique, un traceur,",
+      "context": "Un cookie est un petit fichier informatique, un traceur, d\u00e9pos\u00e9 et lu par exemple lors de la consultation d'un site internet, de la lecture d'un courrier \u00e9lectronique, de l'installation ou de l'utilisation d'un logiciel ou d'une application mobile et ce, quel que soit le type de terminal utilis\u00e9 (ordinateur, smartphone, liseuse num\u00e9rique, console de jeux vid\u00e9os connect\u00e9e \u00e0 Internet, etc.).\nLe terme de \"cookie\" recouvre par exemple : les cookies HTTP ;\nles cookies \"flash\" ;\nle r\u00e9sultat du calcul d'empreinte dans le cas du \"fingerprinting\" (calcul d'un",
+      "offset_start": 14,
+      "offset_end": 56,
+      "probability": 0.5909488797187805,
+      "score": null,
+      "document_id": "62bf7ebe-b7a8-4a3d-ae08-b5928a7d4adf",
+      "meta": {
+        "dossier": "cookie, traceur, tag, internet, site web, bandeau, consentement, information",
+        "theme": " Internet",
+        "sous_theme": " Particuliers ",
+        "id": 1,
+        "name": "Un cookie : qu'est-ce que c'est ?"
+      }
+    }, {
+      "answer": "cookies",
+      "context": "Non !\nLes r\u00e8gles relatives aux cookies ne rel\u00e8vent pas du R\u00e8glement europ\u00e9en pour la protection des donn\u00e9es (RGPD) mais du r\u00e8glement europ\u00e9en ePrivacy en cours de r\u00e9vision et de l'article 32 II de la loi Informatique et Libert\u00e9s modifi\u00e9e.\nTout savoir sur les obligations en cette mati\u00e8re : Cookie, que dit la loi ?",
+      "offset_start": 31,
+      "offset_end": 38,
+      "probability": 0.2779255211353302,
+      "score": null,
+      "document_id": "1d3a240d-b218-4210-bba7-edf0551bbbbc",
+      "meta": {
+        "dossier": "cookie, traceur, r\u00e8gles, obligations, eprivacy, RGPD, ",
+        "theme": " R\u00e8glement europ\u00e9en",
+        "sous_theme": " Professionnels ",
+        "id": 515,
+        "name": "R\u00e8glement europ\u00e9en : le RGPD modifie-t-il les r\u00e8gles relatives aux cookies ?"
+      }
+    }, {
+      "answer": "petit fichier informatique, un traceur,",
+      "context": "Un cookie est un petit fichier informatique, un traceur, d\u00e9pos\u00e9 et lu par exemple lors de la consultation d'un site internet, de la lecture d'un courrier \u00e9lectronique, de l'installation ou de l'utilisation d'un logiciel ou d'une application mobile et ce, quel que soit le type de terminal utilis\u00e9 (ordinateur, smartphone, liseuse num\u00e9rique, console de jeux vid\u00e9os connect\u00e9e \u00e0 Internet, etc.).\nLe terme de \"cookie\" recouvre par exemple : les cookies HTTP ;\nles cookies \"flash\" ;\nle r\u00e9sultat du calcul d'empreinte dans le cas du \"fingerprinting\" (calcul d'un",
+      "offset_start": 17,
+      "offset_end": 56,
+      "probability": 0.2010745257139206,
+      "score": null,
+      "document_id": "62bf7ebe-b7a8-4a3d-ae08-b5928a7d4adf",
+      "meta": {
+        "dossier": "cookie, traceur, tag, internet, site web, bandeau, consentement, information",
+        "theme": " Internet",
+        "sous_theme": " Particuliers ",
+        "id": 1,
+        "name": "Un cookie : qu'est-ce que c'est ?"
+      }
+    }, {
+      "answer": "Les r\u00e8gles relatives aux cookies",
+      "context": "Non !\nLes r\u00e8gles relatives aux cookies ne rel\u00e8vent pas du R\u00e8glement europ\u00e9en pour la protection des donn\u00e9es (RGPD) mais du r\u00e8glement europ\u00e9en ePrivacy en cours de r\u00e9vision et de l'article 32 II de la loi Informatique et Libert\u00e9s modifi\u00e9e.\nTout savoir sur les obligations en cette mati\u00e8re : Cookie, que dit la loi ?",
+      "offset_start": 6,
+      "offset_end": 38,
+      "probability": 0.12642882764339447,
+      "score": null,
+      "document_id": "1d3a240d-b218-4210-bba7-edf0551bbbbc",
+      "meta": {
+        "dossier": "cookie, traceur, r\u00e8gles, obligations, eprivacy, RGPD, ",
+        "theme": " R\u00e8glement europ\u00e9en",
+        "sous_theme": " Professionnels ",
+        "id": 515,
+        "name": "R\u00e8glement europ\u00e9en : le RGPD modifie-t-il les r\u00e8gles relatives aux cookies ?"
+      }
+    }]
+  }],
+  "time": "1.27"
+}
