@@ -27,7 +27,7 @@ def hash_piaf_code():
     """
     This function lists all files in folders data and src at the exception of the files for experiment configuration.
     Then it returns the hash of the list of the md5 sums of the files
-    :return:
+    :return: str with the hash of the list of the md5 sums of the files
     """
     folders_to_hash = ['src']
     list_files_to_hash = []
@@ -68,8 +68,8 @@ def create_run_ids(parameters_grid):
                 file_content = f.read()
             file_hash = hashlib.md5(file_content.encode("utf-8")).hexdigest()[:8]
             hash_file[file] = file_hash
-        hash_param  = hashlib.md5(str(param).encode("utf-8")).hexdigest()[:8]
-        id = git_commit + hash_file[file] +  hash_code + hash_librairies + hash_param
+        hash_param = hashlib.md5(str(param).encode("utf-8")).hexdigest()[:8]
+        id = git_commit + hash_code + hash_librairies + hash_file[file] + hash_param
         run_ids.append(id)
     return run_ids
 
