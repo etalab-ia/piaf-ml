@@ -186,19 +186,20 @@ if __name__ == '__main__':
 
     list_run_ids = create_run_ids(parameters_grid)
     experiment_id = client.get_experiment_by_name(experiment_name).experiment_id
-    list_past_run_names = [client.get_run(run.run_id).data.tags['mlflow.runName'] for run in
-                           client.list_run_infos(experiment_id) if run.status == 'FINISHED']
+    #create a dict with {run_name: run_id}
+    list_past_run_names = {client.get_run(run.run_id).data.tags['mlflow.runName']: run.run_id for run in
+                           client.list_run_infos(experiment_id) if run.status == 'FINISHED'}
 
     mlflow.set_experiment(experiment_name=experiment_name)
     for idx, param in zip(list_run_ids, tqdm(parameters_grid, desc="GridSearch", unit="config")):
         add_extra_params(param)
 
-        if idx not in list_past_run_names:
+        if idx not in list_past_run_names.keys():
             tqdm.write(f"Doing run with config : {param}")
             try:
                 with mlflow.start_run(run_name=idx) as run:
                     mlflow.log_params(param)
-                    # START XP
+                    # START run
                     run_results = single_run(param)
                     mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
                 run_results.update(param)
@@ -209,3 +210,9 @@ if __name__ == '__main__':
                 continue
         else:
             print('config already done')
+            #Log again run with previous results
+            previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
+            with mlflow.start_run(run_name=idx) as run:
+                mlflow.log_params(param)
+                mlflow.log_metrics(previous_metrics)
+
