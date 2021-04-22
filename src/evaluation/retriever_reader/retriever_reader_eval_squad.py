@@ -2,6 +2,18 @@ import torch
 import time
 import os
 
+import logging
+
+logging.root.handlers = []
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("./logs/run_log.log"),
+        logging.StreamHandler()
+    ]
+)
+
 from pathlib import Path
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -11,7 +23,7 @@ from haystack.retriever.sparse import ElasticsearchRetriever
 from haystack.retriever.dense import EmbeddingRetriever
 from haystack.reader.transformers import TransformersReader
 from haystack.preprocessor.preprocessor import PreProcessor
-from haystack.pipeline import Pipeline, ExtractiveQAPipeline
+from haystack.pipeline import ExtractiveQAPipeline
 
 from farm.utils import initialize_device_settings
 from sklearn.model_selection import ParameterGrid
@@ -65,6 +77,7 @@ def single_run(parameters):
 
     # deleted indice for elastic search to make sure mappings are properly passed
     delete_indices(index=doc_index)
+    delete_indices(index=label_index)
 
     prepare_mapping(mapping=SQUAD_MAPPING, preprocessing=preprocessing, title_boosting_factor=title_boosting_factor,
                     embedding_dimension=512)
@@ -143,14 +156,12 @@ def single_run(parameters):
 
 
     else:
+        logging.error(f"You chose {retriever_type}. Choose one from bm25, sbert, dpr or title_bm25")
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, dpr or title_bm25")
-
     # Add evaluation data to Elasticsearch document store
     # We first delete the custom tutorial indices to not have duplicate elements
     # make sure these indices do not collide with existing ones, the indices will be wiped clean before data is inserted
 
-    document_store.delete_all_documents(index=doc_index)
-    document_store.delete_all_documents(index=label_index)
     document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index,
                                  preprocessor=preprocessor)
 
@@ -197,10 +208,9 @@ if __name__ == '__main__':
     for idx, param in tqdm(zip(list_run_ids, parameters_grid), total=len(list_run_ids), desc="GridSearch",
                            unit="config"):
         add_extra_params(param)
-
         if idx not in list_past_run_names.keys() or not os.getenv(
                 "USE_CACHE"):  # run already done or USE_CACHE set to False or not set
-            tqdm.write(f"Doing run with config : {param}")
+            logging.info(f"Doing run with config : {param}")
             try:
                 with mlflow.start_run(run_name=idx) as run:
                     mlflow.log_params(param)
@@ -211,8 +221,7 @@ if __name__ == '__main__':
                 save_results(result_file_path=result_file_path, results_list=run_results)
                 list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
             except Exception as e:
-                Exception(f"Could not run this config: {param}")
-                tqdm.write(f"Error:{e}")
+                logging.error(f"Could not run this config: {param}. Error {e}.")
                 continue
         else:  # run not done
             print('config already done')
