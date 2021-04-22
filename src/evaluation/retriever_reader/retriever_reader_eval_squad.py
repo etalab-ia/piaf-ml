@@ -54,6 +54,8 @@ def single_run(parameters):
     k_reader_per_candidate = parameters["k_reader_per_candidate"]
     k_reader_total = parameters["k_reader_total"]
     preprocessing = parameters["preprocessing"]
+    reader_model_version = parameters["reader_model_version"]
+    retriever_model = parameters["retriever_model"]
     split_by = parameters["split_by"]
     split_length = parameters["split_length"]
     title_boosting_factor = parameters["boosting"]
@@ -79,6 +81,7 @@ def single_run(parameters):
 
     reader = TransformersReader(model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
                                 tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
+                                model_version=reader_model_version,
                                 use_gpu=gpu_id, top_k_per_candidate=k_reader_per_candidate)
 
     if retriever_type == 'bm25':
@@ -99,7 +102,7 @@ def single_run(parameters):
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = EmbeddingRetriever(document_store=document_store,
-                                       embedding_model="distiluse-base-multilingual-cased",
+                                       embedding_model=retriever_model,
                                        use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                        pooling_strategy="reduce_max",
                                        emb_extraction_layer=-1)
@@ -112,7 +115,7 @@ def single_run(parameters):
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = TitleEmbeddingRetriever(document_store=document_store,
-                                            embedding_model="distiluse-base-multilingual-cased",
+                                            embedding_model=retriever_model,
                                             use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                             pooling_strategy="reduce_max",
                                             emb_extraction_layer=-1)
@@ -132,7 +135,7 @@ def single_run(parameters):
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = TitleEmbeddingRetriever(document_store=document_store,
-                                            embedding_model="distiluse-base-multilingual-cased",
+                                            embedding_model=retriever_model,
                                             use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                             pooling_strategy="reduce_max",
                                             emb_extraction_layer=-1)
