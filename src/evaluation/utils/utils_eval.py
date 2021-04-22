@@ -1,7 +1,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import List, Tuple, Dict, Union
+from typing import List, Dict, Union
 
 import pandas as pd
 from haystack.document_store.base import BaseDocumentStore
@@ -9,7 +9,7 @@ from haystack.eval import eval_counts_reader, calculate_reader_metrics
 from haystack.pipeline import Pipeline
 from tqdm import tqdm
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 def save_results(result_file_path: Path, results_list: Union[Dict, List[Dict]]):
@@ -140,8 +140,11 @@ def eval_retriever_reader(
     labels_agg = [label for label in labels_agg if label.question]
 
     questions = [label.question for label in labels_agg]
-    predicted_answers_list = [pipeline.run(query=q, top_k_retriever=k_retriever,
-                                           top_k_reader=k_reader_total) for q in questions]
+    predicted_answers_list = []
+    for q in questions:
+        answer = pipeline.run(query=q, top_k_retriever=k_retriever, top_k_reader=k_reader_total)
+        predicted_answers_list.append(answer)
+
     assert len(questions) == len(predicted_answers_list), f"Number of questions is not the same number of predicted" \
                                                           f"answers"
     # quick renaming fix to match with haystack.eval.eval_counts_reader, this might be due to preprocessing
