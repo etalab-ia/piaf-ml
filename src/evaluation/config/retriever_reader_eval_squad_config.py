@@ -8,7 +8,7 @@ parameters = {
     "retriever_type": ["sbert"], # Can be bm25, sbert, dpr, title or title_bm25
     "squad_dataset": ["./data/evaluation-datasets/tiny.json"],
     "filter_level": [None],
-    "preprocessing": [True],
+    "preprocessing": [True, False],
     "boosting" : [1], #default to 1
     "split_by": ["word"],  # Can be "word", "sentence", or "passage"
     "split_length": [1000],
