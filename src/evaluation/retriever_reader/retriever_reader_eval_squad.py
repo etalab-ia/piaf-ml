@@ -76,18 +76,20 @@ def single_run(parameters):
     delete_indices(index=doc_index)
     delete_indices(index=label_index)
 
-    prepare_mapping(mapping=SQUAD_MAPPING, preprocessing=preprocessing, title_boosting_factor=title_boosting_factor,
-                    embedding_dimension=512)
+    prepare_mapping(mapping=SQUAD_MAPPING, title_boosting_factor=title_boosting_factor, embedding_dimension=512)
 
-    preprocessor = PreProcessor(
-        clean_empty_lines=False,
-        clean_whitespace=False,
-        clean_header_footer=False,
-        split_by=split_by,
-        split_length=split_length,
-        split_overlap=0,  # this must be set to 0 at the data of writting this: 22 01 2021
-        split_respect_sentence_boundary=False  # the support for this will soon be removed : 29 01 2021
-    )
+    if preprocessing:
+        preprocessor = PreProcessor(
+            clean_empty_lines=False,
+            clean_whitespace=False,
+            clean_header_footer=False,
+            split_by=split_by,
+            split_length=split_length,
+            split_overlap=0,  # this must be set to 0 at the data of writting this: 22 01 2021
+            split_respect_sentence_boundary=False  # the support for this will soon be removed : 29 01 2021
+        )
+    else:
+        preprocessor = None
 
     reader = TransformersReader(model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
                                 tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
