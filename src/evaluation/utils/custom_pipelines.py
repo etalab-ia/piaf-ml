@@ -69,6 +69,73 @@ class TitleBM25QAPipeline(BaseStandardPipeline):
         return output
 
 
+class RetrieverReaderEvaluationPipeline(BaseStandardPipeline):
+    def __init__(self, reader: BaseReader, retriever: BaseRetriever):
+
+        self.pipeline = Pipeline()
+        self.pipeline.add_node(component = retriever , name="Retriever" , inputs=["Query"])
+        self.pipeline.add_node(component = reader , name="Reader" , inputs=["Retriever"])
+        self.pipeline.add_node(component = ReturnRetrieverReader(), name="QARetriverReader", inputs=["Retriever","Reader"])
+
+
+    def run(self, query: str, filters: Optional[Dict] = None, top_k_retriever: int = 10, top_k_reader: int = 10):
+
+        output = self.pipeline.run(
+            query = query, filters=filters, top_k_retriever=top_k_retriever, top_k_reader=top_k_reader
+        )
+
+        return output
+
+
+class TitleBM25QAEvaluationPipeline(BaseStandardPipeline):
+    def __init__(self, reader: BaseReader, retriever_title: BaseRetriever, retriever_bm25: BaseRetriever, k_title_retriever: int, k_bm25_retriever: int):
+        """
+        Initialize a Pipeline for Extractive Question Answering. This Pipeline is based on two retrievers and a reader.
+        The two retrievers used for this pipeline are :
+            - A TitleEmbeddingRetriever
+            - An ElasticsearchRetriever
+        The output of the two retrievers are concatenated based on the number of k_retriever passed for each retrievers.
+
+        :param reader: Reader instance
+        :param retriever: Retriever instance
+        :param k_title_retriever: int
+        :param k_bm25_retriever: int
+        """
+        self.k_title_retriever = k_title_retriever
+        self.k_bm25_retriever = k_bm25_retriever
+        self.pipeline = Pipeline()
+        self.pipeline.add_node(component=retriever_bm25, name="Retriever_bm25", inputs=["Query"])
+        self.pipeline.add_node(component=retriever_title, name="Retriever_title", inputs=["Query"])
+        self.pipeline.add_node(component=JoinDocuments(ks_retriever=[k_bm25_retriever, k_title_retriever]), name="JoinResults",
+                               inputs=["Retriever_bm25", "Retriever_title"])
+        self.pipeline.add_node(component=reader, name="QAReader", inputs=["JoinResults"])
+        self.pipeline.add_node(component = ReturnRetrieverReader(), name="QARetriverReader", inputs=["JoinResults","QAReader"])
+
+
+    def run(self, query: str, filters: Optional[Dict] = None, top_k_retriever: int = 10, top_k_reader: int = 10):
+        assert top_k_retriever <= max(self.k_title_retriever, self.k_bm25_retriever), "Be carefull, the pipeline was run with top_k_retriever that is greater than the k_retriever declared at instanciation"
+        output = self.pipeline.run(
+            query=query, filters=filters, top_k_retriever=top_k_retriever, top_k_reader=top_k_reader
+        )
+        return output
+
+class ReturnRetrieverReader(BaseComponent):
+    outgoing_edges = 1 
+
+    def __init__(self):
+        pass
+  
+    def run(self, **kwargs):
+    
+        output = {
+            **kwargs['inputs'][0],
+            **kwargs['inputs'][1]
+        }
+
+        return (output , "output")
+
+
+
 class JoinDocuments(BaseComponent):
     """
     A node to join documents outputted by multiple retriever nodes.

@@ -177,6 +177,66 @@ def eval_retriever_reader(
     return metrics
 
 
+def full_eval_retriever_reader(
+        document_store: BaseDocumentStore,
+        pipeline: Pipeline,
+        k_retriever: int,
+        k_reader_total: int,
+        label_index: str = "label",
+        doc_index: str = "eval_document",
+        label_origin: str = "gold_label",
+):
+    filters = {"origin": [label_origin]}
+    labels = document_store.get_all_labels_aggregated(index=label_index, filters=filters)
+
+    question_label_dict_list = []
+    for label in labels:
+        if not label.question:
+            continue
+        deduplicated_doc_ids = list(set([str(x) for x in label.multiple_document_ids]))
+        question_label_dict = {'query': label.question, 'gold_ids': deduplicated_doc_ids}
+        question_label_dict_list.append(question_label_dict)
+
+
+    predicted_answers_list = [pipeline.run(query=question["query"], top_k_retriever=k_retriever) for question in
+                           question_label_dict_list]
+   
+
+    retriever_metrics = get_retriever_metrics(predicted_answers_list, question_label_dict_list)
+
+    assert len(question_label_dict_list) == len(predicted_answers_list), f"Number of questions is not the same number of predicted" \
+                                                          f"answers"
+
+    for predicted_answers in predicted_answers_list:
+        for answer in predicted_answers['answers']:
+            answer["offset_start_in_doc"] = answer["offset_start"]
+            answer["offset_end_in_doc"] = answer["offset_end"]
+
+    metric_counts = {}
+    metric_counts["correct_no_answers_top1"] = 0
+    metric_counts["correct_no_answers_topk"] = 0
+    metric_counts["correct_readings_topk"] = 0
+    metric_counts["exact_matches_topk"] = 0
+    metric_counts["summed_f1_topk"] = 0
+    metric_counts["correct_readings_top1"] = 0
+    metric_counts["correct_readings_top1_has_answer"] = 0
+    metric_counts["correct_readings_topk_has_answer"] = 0
+    metric_counts["summed_f1_top1"] = 0
+    metric_counts["summed_f1_top1_has_answer"] = 0
+    metric_counts["exact_matches_top1"] = 0
+    metric_counts["exact_matches_top1_has_answer"] = 0
+    metric_counts["exact_matches_topk_has_answer"] = 0
+    metric_counts["summed_f1_topk_has_answer"] = 0
+    metric_counts["number_of_no_answer"] = 0
+    for question, predicted_answers in zip(labels, predicted_answers_list):
+        metric_counts = eval_counts_reader(question, predicted_answers, metric_counts)
+    retriever_reader_metrics = calculate_reader_metrics(metric_counts, len(predicted_answers_list))
+    retriever_reader_metrics.update(metric_counts)
+    retriever_reader_metrics.update(retriever_metrics)
+
+    return retriever_reader_metrics
+
+
 """
     # Aggregate all answer labels per question
     aggregated_per_doc = defaultdict(list)
