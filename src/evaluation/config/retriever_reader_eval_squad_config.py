@@ -4,7 +4,7 @@ parameters = {
     "k_reader_per_candidate": [1],
     "k_reader_total": [1],
     "reader_model_version": ["053b085d851196110d7a83d8e0f077d0a18470be"],
-    "retriever_model": ["distiluse-base-multilingual-cased-v2"],
+    "retriever_model_version": ["1a01b38498875d45f69b2a6721bf6fe87425da39"],
     "retriever_type": ["sbert"], # Can be bm25, sbert, dpr, title or title_bm25
     "squad_dataset": ["./data/evaluation-datasets/tiny.json"],
     "filter_level": [None],

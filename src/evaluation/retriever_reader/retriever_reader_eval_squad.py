@@ -67,7 +67,7 @@ def single_run(parameters):
     k_reader_total = parameters["k_reader_total"]
     preprocessing = parameters["preprocessing"]
     reader_model_version = parameters["reader_model_version"]
-    retriever_model = parameters["retriever_model"]
+    retriever_model_version = parameters["retriever_model_version"]
     split_by = parameters["split_by"]
     split_length = parameters["split_length"]
     title_boosting_factor = parameters["boosting"]
@@ -80,7 +80,7 @@ def single_run(parameters):
     delete_indices(index=label_index)
 
     prepare_mapping(mapping=SQUAD_MAPPING, preprocessing=preprocessing, title_boosting_factor=title_boosting_factor,
-                    embedding_dimension=512)
+                    embedding_dimension=768)
 
     preprocessor = PreProcessor(
         clean_empty_lines=False,
@@ -103,7 +103,7 @@ def single_run(parameters):
                                                     search_fields=["name", "text"],
                                                     create_index=False, embedding_field="emb",
                                                     scheme="",
-                                                    embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                    embedding_dim=768, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = ElasticsearchRetriever(document_store=document_store)
         p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
@@ -112,11 +112,12 @@ def single_run(parameters):
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
                                                     search_fields=["name", "text"],
                                                     create_index=False, embedding_field="emb",
-                                                    embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                    embedding_dim=768, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = EmbeddingRetriever(document_store=document_store,
-                                       embedding_model=retriever_model,
-                                       use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                                       embedding_model="distilbert-base-multilingual-cased",
+                                       model_version=retriever_model_version,
+                                       use_gpu=GPU_AVAILABLE, model_format="transformers",
                                        pooling_strategy="reduce_max",
                                        emb_extraction_layer=-1)
         p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
@@ -125,11 +126,12 @@ def single_run(parameters):
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
                                                     search_fields=["name", "text"],
                                                     create_index=False, embedding_field="emb",
-                                                    embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                    embedding_dim=768, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = TitleEmbeddingRetriever(document_store=document_store,
-                                            embedding_model=retriever_model,
-                                            use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                                            embedding_model="distilbert-base-multilingual-cased",
+                                            model_version=retriever_model_version,
+                                            use_gpu=GPU_AVAILABLE, model_format="transformers",
                                             pooling_strategy="reduce_max",
                                             emb_extraction_layer=-1)
         retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
@@ -148,7 +150,8 @@ def single_run(parameters):
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = TitleEmbeddingRetriever(document_store=document_store,
-                                            embedding_model=retriever_model,
+                                            embedding_model="distilbert-base-multilingual-cased",
+                                            model_version=retriever_model_version,
                                             use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                             pooling_strategy="reduce_max",
                                             emb_extraction_layer=-1)
@@ -211,18 +214,19 @@ if __name__ == '__main__':
         if idx not in list_past_run_names.keys() or not os.getenv(
                 "USE_CACHE"):  # run already done or USE_CACHE set to False or not set
             logging.info(f"Doing run with config : {param}")
-            try:
-                with mlflow.start_run(run_name=idx) as run:
-                    mlflow.log_params(param)
-                    # START run
-                    run_results = single_run(param)
-                    mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
-                run_results.update(param)
-                save_results(result_file_path=result_file_path, results_list=run_results)
-                list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
+            #try:
+            with mlflow.start_run(run_name=idx) as run:
+                mlflow.log_params(param)
+                # START run
+                run_results = single_run(param)
+                mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
+            run_results.update(param)
+            save_results(result_file_path=result_file_path, results_list=run_results)
+            list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
+            """
             except Exception as e:
                 logging.error(f"Could not run this config: {param}. Error {e}.")
-                continue
+                continue"""
         else:  # run not done
             print('config already done')
             # Log again run with previous results
