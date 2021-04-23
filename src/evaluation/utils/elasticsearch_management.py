@@ -33,16 +33,7 @@ def delete_indices(index='document'):
     es = Elasticsearch([f'http://localhost:{port}/'], verify_certs=True)
     es.indices.delete(index=index, ignore=[400, 404])
 
-def prepare_mapping (mapping, preprocessing, title_boosting_factor =1, embedding_dimension=512):
+def prepare_mapping (mapping, title_boosting_factor =1, embedding_dimension=512):
     mapping["mappings"]["properties"]["name"]["boost"] = title_boosting_factor
     mapping["mappings"]["properties"]["emb"]["dims"] = embedding_dimension
-    if not preprocessing:
-        mapping['settings'] = {
-                    "analysis": {
-                        "analyzer": {
-                            "default": {
-                                "type": 'standard',
-                            }
-                        }
-                    }
-                }
+
