@@ -225,16 +225,16 @@ if __name__ == '__main__':
 
         else:  # run not already done or USE_CACHE set to False or not set
             logging.info(f"Doing run with config : {param}")
-            #try:
-            with mlflow.start_run(run_name=idx) as run:
-                mlflow.log_params(param)
-                # START run
-                run_results = single_run(param)
-                mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
-            run_results.update(param)
-            save_results(result_file_path=result_file_path, results_list=run_results)
-            list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
-            """
+            try:
+                with mlflow.start_run(run_name=idx) as run:
+                    mlflow.log_params(param)
+                    # START run
+                    run_results = single_run(param)
+                    mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
+                run_results.update(param)
+                save_results(result_file_path=result_file_path, results_list=run_results)
+                list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
+            
             except Exception as e:
                 logging.error(f"Could not run this config: {param}. Error {e}.")
-                continue"""
+                continue
