@@ -49,7 +49,7 @@ else:
     n_gpu = -1
 
 
-def single_run(parameters):
+def single_run(**kwargs):
     """
         Queries ES max_k - min_k times, saving at each step the results in a list. At the end plots the line
         showing the results obtained. For now we can only vary k.
@@ -59,18 +59,18 @@ def single_run(parameters):
         :return:
         """
     # col names
-    evaluation_data = Path(parameters["squad_dataset"])
-    retriever_type = parameters["retriever_type"]
-    k_retriever = parameters["k_retriever"]
-    k_title_retriever = parameters["k_title_retriever"]
-    k_reader_per_candidate = parameters["k_reader_per_candidate"]
-    k_reader_total = parameters["k_reader_total"]
-    preprocessing = parameters["preprocessing"]
-    reader_model_version = parameters["reader_model_version"]
-    retriever_model_version = parameters["retriever_model_version"]
-    split_by = parameters["split_by"]
-    split_length = parameters["split_length"]
-    title_boosting_factor = parameters["boosting"]
+    evaluation_data = Path(kwargs["squad_dataset"])
+    retriever_type = kwargs["retriever_type"]
+    k_retriever = kwargs["k_retriever"]
+    k_title_retriever = kwargs["k_title_retriever"]
+    k_reader_per_candidate = kwargs["k_reader_per_candidate"]
+    k_reader_total = kwargs["k_reader_total"]
+    preprocessing = kwargs["preprocessing"]
+    reader_model_version = kwargs["reader_model_version"]
+    retriever_model_version = kwargs["retriever_model_version"]
+    split_by = kwargs["split_by"]
+    split_length = kwargs["split_length"]
+    title_boosting_factor = kwargs["boosting"]
 
     doc_index = "document_xp"
     label_index = "label_xp"
@@ -191,7 +191,6 @@ def single_run(parameters):
 
 if __name__ == '__main__':
     result_file_path = Path("./results/results_reader.csv")
-    parameters_grid = list(ParameterGrid(param_grid=parameters))
     experiment_name = parameters["experiment_name"][0]
 
     device, n_gpu = initialize_device_settings(use_cuda=True)
@@ -207,33 +206,38 @@ if __name__ == '__main__':
     launch_ES()
     client = MlflowClient()
 
-    list_run_ids = create_run_ids(parameters_grid)
-    list_past_run_names = get_list_past_run(client, experiment_name)
+    if os.getenv('USE_OPTIMIZATION') == 'true':
+        print(1)
+    else:
+        parameters_grid = list(ParameterGrid(param_grid=parameters))
+        list_run_ids = create_run_ids(parameters_grid)
+        list_past_run_names = get_list_past_run(client, experiment_name)
 
-    mlflow.set_experiment(experiment_name=experiment_name)
-    for idx, param in tqdm(zip(list_run_ids, parameters_grid), total=len(list_run_ids), desc="GridSearch",
-                           unit="config"):
-        add_extra_params(param)
-        if idx not in list_past_run_names.keys() or not os.getenv(
-                "USE_CACHE"):  # run already done or USE_CACHE set to False or not set
-            logging.info(f"Doing run with config : {param}")
-            #try:
-            with mlflow.start_run(run_name=idx) as run:
-                mlflow.log_params(param)
-                # START run
-                run_results = single_run(param)
-                mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
-            run_results.update(param)
-            save_results(result_file_path=result_file_path, results_list=run_results)
-            list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
-            """
-            except Exception as e:
-                logging.error(f"Could not run this config: {param}. Error {e}.")
-                continue"""
-        else:  # run not done
-            print('config already done')
-            # Log again run with previous results
-            previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
-            with mlflow.start_run(run_name=idx) as run:
-                mlflow.log_params(param)
-                mlflow.log_metrics(previous_metrics)
+        mlflow.set_experiment(experiment_name=experiment_name)
+        for idx, param in tqdm(zip(list_run_ids, parameters_grid), total=len(list_run_ids), desc="GridSearch",
+                               unit="config"):
+            add_extra_params(param)
+            if idx not in list_past_run_names.keys() or not os.getenv(
+                    "USE_CACHE"):  # run already done or USE_CACHE set to False or not set
+                logging.info(f"Doing run with config : {param}")
+                #try:
+                with mlflow.start_run(run_name=idx) as run:
+                    mlflow.log_params(param)
+                    # START run
+                    run_results = single_run(**param)
+                    mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
+                run_results.update(param)
+                save_results(result_file_path=result_file_path, results_list=run_results)
+                list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
+                """
+                except Exception as e:
+                    logging.error(f"Could not run this config: {param}. Error {e}.")
+                    continue"""
+            else:  # run not done
+                print('config already done')
+                # Log again run with previous results
+                previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
+                with mlflow.start_run(run_name=idx) as run:
+                    mlflow.log_params(param)
+                    mlflow.log_metrics(previous_metrics)
+
