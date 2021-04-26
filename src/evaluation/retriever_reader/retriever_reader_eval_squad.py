@@ -4,6 +4,7 @@ import os
 
 import logging
 
+
 logging.root.handlers = []
 logging.basicConfig(
     level=logging.INFO,
@@ -17,6 +18,12 @@ logging.basicConfig(
 from pathlib import Path
 from tqdm import tqdm
 from dotenv import load_dotenv
+import mlflow
+from mlflow.tracking import MlflowClient
+
+from skopt import gp_minimize
+from skopt.plots import plot_objective
+from skopt.utils import use_named_args
 
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.sparse import ElasticsearchRetriever
@@ -35,8 +42,7 @@ from src.evaluation.utils.mlflow_management import prepare_mlflow_server, add_ex
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline
-import mlflow
-from mlflow.tracking import MlflowClient
+from src.evaluation.utils.utils_optimizer import tqdm_skopt, create_dimensions_from_parameters
 
 load_dotenv()
 prepare_mlflow_server()
@@ -69,7 +75,7 @@ def single_run(**kwargs):
     reader_model_version = kwargs["reader_model_version"]
     retriever_model_version = kwargs["retriever_model_version"]
     split_by = kwargs["split_by"]
-    split_length = kwargs["split_length"]
+    split_length = int(kwargs["split_length"]) #this is intended to convert numpy.int64 to int
     title_boosting_factor = kwargs["boosting"]
 
     doc_index = "document_xp"
@@ -181,7 +187,7 @@ def single_run(**kwargs):
     end = time.time()
     time_per_label = (end - start) / document_store.get_label_count(index=label_index)
 
-    print("Reader Accuracy:", retriever_eval_results["reader_topk_accuracy"])
+    print("Reader Accuracy:", retriever_eval_results["reader_topk_accuracy_has_answer"])
     print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])
 
     retriever_eval_results.update({"time_per_label": time_per_label})
@@ -207,8 +213,18 @@ if __name__ == '__main__':
     launch_ES()
     client = MlflowClient()
 
-    if os.getenv('USE_OPTIMIZATION') == 'true':
-        print(1)
+    if os.getenv('USE_OPTIMIZATION') == 'True':
+        dimensions = create_dimensions_from_parameters(parameters)
+
+        @use_named_args(dimensions=dimensions)
+        def single_run_optimization(**kwargs):
+            return 1 - single_run(**kwargs)["reader_topk_accuracy_has_answer"]
+        n_calls = 11
+        res = gp_minimize(single_run_optimization, dimensions, n_calls=n_calls, callback=[tqdm_skopt(total=n_calls, desc="Gaussian Process")],
+                          n_jobs=-1)
+
+        plot_objective(res)
+
     else:
         parameters_grid = list(ParameterGrid(param_grid=parameters))
         list_run_ids = create_run_ids(parameters_grid)
@@ -218,29 +234,28 @@ if __name__ == '__main__':
         for idx, param in tqdm(zip(list_run_ids, parameters_grid), total=len(list_run_ids), desc="GridSearch",
                                unit="config"):
             add_extra_params(param)
-            if idx in list_past_run_names.keys() and os.getenv(
-                    "USE_CACHE")== "True":  # run not done
-            print('config already done')
-            # Log again run with previous results
-            previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
-            with mlflow.start_run(run_name=idx) as run:
-                mlflow.log_params(param)
-                mlflow.log_metrics(previous_metrics)
-
-        else:  # run notalready done or USE_CACHE set to False or not set
-                logging.info(f"Doing run with config : {param}")
-                #try:
+            if idx in list_past_run_names.keys() and os.getenv("USE_CACHE") == "True":  # run not done
+                print('config already done')
+                # Log again run with previous results
+                previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
                 with mlflow.start_run(run_name=idx) as run:
                     mlflow.log_params(param)
-                    # START run
-                    run_results = single_run(**param)
-                    mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
-                run_results.update(param)
-                save_results(result_file_path=result_file_path, results_list=run_results)
-                list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
-                """
-                except Exception as e:
-                    logging.error(f"Could not run this config: {param}. Error {e}.")
-                    continue"""
+                    mlflow.log_metrics(previous_metrics)
+
+            else:  # run notalready done or USE_CACHE set to False or not set
+                    logging.info(f"Doing run with config : {param}")
+                    #try:
+                    with mlflow.start_run(run_name=idx) as run:
+                        mlflow.log_params(param)
+                        # START run
+                        run_results = single_run(**param)
+                        mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
+                    run_results.update(param)
+                    save_results(result_file_path=result_file_path, results_list=run_results)
+                    list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
+                    """
+                    except Exception as e:
+                        logging.error(f"Could not run this config: {param}. Error {e}.")
+                        continue"""
 
 
