@@ -1,8 +1,6 @@
-import hashlib
 import torch
-import socket
 import time
-from datetime import datetime
+import os
 
 import logging
 
@@ -18,6 +16,7 @@ logging.basicConfig(
 
 from pathlib import Path
 from tqdm import tqdm
+from dotenv import load_dotenv
 
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.sparse import ElasticsearchRetriever
@@ -32,12 +31,14 @@ from sklearn.model_selection import ParameterGrid
 from src.evaluation.config.retriever_reader_eval_squad_config import parameters
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.utils.elasticsearch_management import launch_ES, delete_indices, prepare_mapping
-from src.evaluation.utils.mlflow_management import prepare_mlflow_server
+from src.evaluation.utils.mlflow_management import prepare_mlflow_server, add_extra_params, create_run_ids, get_list_past_run
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline
 import mlflow
+from mlflow.tracking import MlflowClient
 
+load_dotenv()
 prepare_mlflow_server()
 
 GPU_AVAILABLE = torch.cuda.is_available()
@@ -65,6 +66,8 @@ def single_run(parameters):
     k_reader_per_candidate = parameters["k_reader_per_candidate"]
     k_reader_total = parameters["k_reader_total"]
     preprocessing = parameters["preprocessing"]
+    reader_model_version = parameters["reader_model_version"]
+    retriever_model_version = parameters["retriever_model_version"]
     split_by = parameters["split_by"]
     split_length = parameters["split_length"]
     title_boosting_factor = parameters["boosting"]
@@ -76,7 +79,8 @@ def single_run(parameters):
     delete_indices(index=doc_index)
     delete_indices(index=label_index)
 
-    prepare_mapping(mapping=SQUAD_MAPPING, title_boosting_factor=title_boosting_factor, embedding_dimension=512)
+
+    prepare_mapping(mapping=SQUAD_MAPPING, title_boosting_factor=title_boosting_factor, embedding_dimension=768)
 
     if preprocessing:
         preprocessor = PreProcessor(
@@ -93,6 +97,7 @@ def single_run(parameters):
 
     reader = TransformersReader(model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
                                 tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
+                                model_version=reader_model_version,
                                 use_gpu=gpu_id, top_k_per_candidate=k_reader_per_candidate)
 
     if retriever_type == 'bm25':
@@ -101,7 +106,7 @@ def single_run(parameters):
                                                     search_fields=["name", "text"],
                                                     create_index=False, embedding_field="emb",
                                                     scheme="",
-                                                    embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                    embedding_dim=768, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = ElasticsearchRetriever(document_store=document_store)
         p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
@@ -110,11 +115,12 @@ def single_run(parameters):
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
                                                     search_fields=["name", "text"],
                                                     create_index=False, embedding_field="emb",
-                                                    embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                    embedding_dim=768, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = EmbeddingRetriever(document_store=document_store,
-                                       embedding_model="distiluse-base-multilingual-cased",
-                                       use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                                       embedding_model="distilbert-base-multilingual-cased",
+                                       model_version=retriever_model_version,
+                                       use_gpu=GPU_AVAILABLE, model_format="transformers",
                                        pooling_strategy="reduce_max",
                                        emb_extraction_layer=-1)
         p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
@@ -123,11 +129,12 @@ def single_run(parameters):
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
                                                     search_fields=["name", "text"],
                                                     create_index=False, embedding_field="emb",
-                                                    embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                    embedding_dim=768, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = TitleEmbeddingRetriever(document_store=document_store,
-                                            embedding_model="distiluse-base-multilingual-cased",
-                                            use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                                            embedding_model="distilbert-base-multilingual-cased",
+                                            model_version=retriever_model_version,
+                                            use_gpu=GPU_AVAILABLE, model_format="transformers",
                                             pooling_strategy="reduce_max",
                                             emb_extraction_layer=-1)
         retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
@@ -146,7 +153,8 @@ def single_run(parameters):
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = TitleEmbeddingRetriever(document_store=document_store,
-                                            embedding_model="distiluse-base-multilingual-cased",
+                                            embedding_model="distilbert-base-multilingual-cased",
+                                            model_version=retriever_model_version,
                                             use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                             pooling_strategy="reduce_max",
                                             emb_extraction_layer=-1)
@@ -181,20 +189,10 @@ def single_run(parameters):
     return retriever_eval_results
 
 
-def add_extra_params(dict_params: dict):
-    extra_parameters = {
-        "date": datetime.today().strftime('%Y-%m-%d_%H-%M-%S'),
-        "hostname": socket.gethostname()
-    }
-
-    dict_params.update(extra_parameters)
-    experiment_id = hashlib.md5(str(dict_params).encode("utf-8")).hexdigest()[:4]
-    dict_params.update({"experiment_id": experiment_id})
-
-
 if __name__ == '__main__':
     result_file_path = Path("./results/results_reader.csv")
     parameters_grid = list(ParameterGrid(param_grid=parameters))
+    experiment_name = parameters["experiment_name"][0]
 
     device, n_gpu = initialize_device_settings(use_cuda=True)
     GPU_AVAILABLE = 1 if device.type == "cuda" else 0
@@ -205,20 +203,37 @@ if __name__ == '__main__':
         gpu_id = -1
 
     all_results = []
+
     launch_ES()
-    mlflow.set_experiment(parameters["experiment_name"][0])
-    for idx, param in enumerate(tqdm(parameters_grid, desc="GridSearch", unit="config")):
+    client = MlflowClient()
+
+    list_run_ids = create_run_ids(parameters_grid)
+    list_past_run_names = get_list_past_run(client, experiment_name)
+
+    mlflow.set_experiment(experiment_name=experiment_name)
+    for idx, param in tqdm(zip(list_run_ids, parameters_grid), total=len(list_run_ids), desc="GridSearch",
+                           unit="config"):
         add_extra_params(param)
-        logging.info(f"Doing run with config : {param}")
-        try:
-            with mlflow.start_run(run_name=str(idx)) as run:
+        if idx not in list_past_run_names.keys() or not os.getenv(
+                "USE_CACHE"):  # run already done or USE_CACHE set to False or not set
+            logging.info(f"Doing run with config : {param}")
+            #try:
+            with mlflow.start_run(run_name=idx) as run:
                 mlflow.log_params(param)
-                # START XP
+                # START run
                 run_results = single_run(param)
                 mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
             run_results.update(param)
             save_results(result_file_path=result_file_path, results_list=run_results)
-            # mlflow.log_artifact(result_file_path)
-        except Exception as e:
-            logging.error(f"Could not run this config: {param}. Error {e}.")
-            continue
+            list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
+            """
+            except Exception as e:
+                logging.error(f"Could not run this config: {param}. Error {e}.")
+                continue"""
+        else:  # run not done
+            print('config already done')
+            # Log again run with previous results
+            previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
+            with mlflow.start_run(run_name=idx) as run:
+                mlflow.log_params(param)
+                mlflow.log_metrics(previous_metrics)
