@@ -74,8 +74,8 @@ def create_run_ids(parameters_grid):
     :param parameters_grid: the parameter grid created from the configuration file
     :return: the run_ids:  a list of run ids
     """
-    git_commit = subprocess.check_output("git rev-parse --short HEAD", encoding="utf-8").strip()
-    hash_librairies = hashlib.md5(subprocess.check_output("pip freeze", encoding="utf-8").encode('utf-8')).hexdigest()[
+    git_commit = subprocess.check_output("git rev-parse --short HEAD", encoding="utf-8", shell=True).strip()
+    hash_librairies = hashlib.md5(subprocess.check_output("pip freeze", encoding="utf-8", shell=True).encode('utf-8')).hexdigest()[
                       :8]
     hash_code = hash_piaf_code()
     hash_file = {}
