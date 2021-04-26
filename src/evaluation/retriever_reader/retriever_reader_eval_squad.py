@@ -150,7 +150,7 @@ def single_run(parameters):
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
                                                     search_fields=["name", "text"],
                                                     create_index=False, embedding_field="emb",
-                                                    embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                    embedding_dim=768, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
         retriever = TitleEmbeddingRetriever(document_store=document_store,
                                             embedding_model="distilbert-base-multilingual-cased",
