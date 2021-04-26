@@ -116,7 +116,7 @@ SQUAD_MAPPING = {
         "properties": {
             "name": {"type": "text"},
             "text": {"type": "text"},
-            "emb": {"type": "dense_vector", "dims": 768}
+            "emb": {"type": "dense_vector", "dims": 512}
         },
         "dynamic_templates": [
             {
