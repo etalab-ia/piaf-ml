@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 import mlflow
 from mlflow.tracking import MlflowClient
 
-from skopt import gp_minimize
+from skopt import gp_minimize, dump
 from skopt.plots import plot_objective
 from skopt.utils import use_named_args
 
@@ -55,7 +55,7 @@ else:
     n_gpu = -1
 
 
-def single_run(**kwargs):
+def single_run(idx=None, **kwargs):
     """
         Queries ES max_k - min_k times, saving at each step the results in a list. At the end plots the line
         showing the results obtained. For now we can only vary k.
@@ -65,7 +65,7 @@ def single_run(**kwargs):
         :return:
         """
     with mlflow.start_run(run_name=idx) as run:
-        mlflow.log_params(param)
+        mlflow.log_params(kwargs)
         # col names
         evaluation_data = Path(kwargs["squad_dataset"])
         retriever_type = kwargs["retriever_type"]
@@ -200,6 +200,7 @@ def single_run(**kwargs):
 
 if __name__ == '__main__':
     result_file_path = Path("./results/results_reader.csv")
+    optimize_result_file_path = Path("./results/optimize_result")
     parameters_grid = list(ParameterGrid(param_grid=parameters))
     experiment_name = parameters["experiment_name"][0]
 
@@ -215,6 +216,7 @@ if __name__ == '__main__':
 
     launch_ES()
     client = MlflowClient()
+    mlflow.set_experiment(experiment_name=experiment_name)
 
     if os.getenv('USE_OPTIMIZATION') == 'True':
         dimensions = create_dimensions_from_parameters(parameters)
@@ -222,18 +224,16 @@ if __name__ == '__main__':
         @use_named_args(dimensions=dimensions)
         def single_run_optimization(**kwargs):
             return 1 - single_run(**kwargs)["reader_topk_accuracy_has_answer"]
-        n_calls = 11
-        res = gp_minimize(single_run_optimization, dimensions, n_calls=n_calls, callback=[tqdm_skopt(total=n_calls, desc="Gaussian Process")],
-                          n_jobs=-1)
-
-        plot_objective(res)
+        n_calls = 10
+        res = gp_minimize(single_run_optimization, dimensions, n_calls=n_calls, n_jobs=1)
+        #callback=[tqdm_skopt(total=n_calls, desc="Gaussian Process")],
+        dump(res, optimize_result_file_path, store_objective=True)
 
     else:
         parameters_grid = list(ParameterGrid(param_grid=parameters))
         list_run_ids = create_run_ids(parameters_grid)
         list_past_run_names = get_list_past_run(client, experiment_name)
 
-        mlflow.set_experiment(experiment_name=experiment_name)
         for idx, param in tqdm(zip(list_run_ids, parameters_grid), total=len(list_run_ids), desc="GridSearch",
                                unit="config"):
             add_extra_params(param)
@@ -246,15 +246,15 @@ if __name__ == '__main__':
                     mlflow.log_metrics(previous_metrics)
 
             else:  # run notalready done or USE_CACHE set to False or not set
-                    logging.info(f"Doing run with config : {param}")
-                    #try:
-                    run_results = single_run(**param)
-                    run_results.update(param)
-                    save_results(result_file_path=result_file_path, results_list=run_results)
-                    list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
-                    """
-                    except Exception as e:
-                        logging.error(f"Could not run this config: {param}. Error {e}.")
-                        continue"""
+                logging.info(f"Doing run with config : {param}")
+                #try:
+                run_results = single_run(idx=idx, **param)
+                run_results.update(param)
+                save_results(result_file_path=result_file_path, results_list=run_results)
+                list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
+                """
+                except Exception as e:
+                    logging.error(f"Could not run this config: {param}. Error {e}.")
+                    continue"""
 
 
