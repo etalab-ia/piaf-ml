@@ -214,8 +214,16 @@ if __name__ == '__main__':
     for idx, param in tqdm(zip(list_run_ids, parameters_grid), total=len(list_run_ids), desc="GridSearch",
                            unit="config"):
         add_extra_params(param)
-        if idx not in list_past_run_names.keys() or not os.getenv(
-                "USE_CACHE"):  # run already done or USE_CACHE set to False or not set
+        if idx in list_past_run_names.keys() and os.getenv(
+                "USE_CACHE") == "True":  # run not done
+            print('config already done')
+            # Log again run with previous results
+            previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
+            with mlflow.start_run(run_name=idx) as run:
+                mlflow.log_params(param)
+                mlflow.log_metrics(previous_metrics)
+
+        else:  # run not already done or USE_CACHE set to False or not set
             logging.info(f"Doing run with config : {param}")
             #try:
             with mlflow.start_run(run_name=idx) as run:
@@ -230,10 +238,3 @@ if __name__ == '__main__':
             except Exception as e:
                 logging.error(f"Could not run this config: {param}. Error {e}.")
                 continue"""
-        else:  # run not done
-            print('config already done')
-            # Log again run with previous results
-            previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
-            with mlflow.start_run(run_name=idx) as run:
-                mlflow.log_params(param)
-                mlflow.log_metrics(previous_metrics)
