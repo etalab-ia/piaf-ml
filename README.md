@@ -110,6 +110,26 @@ python - m src.evaluation.retriever_reader.retriever_reader_eval_squad.py
 │   └── util # Random functions that could be accessed from multiple places
 ```
 
+## Set environment variables
+
+Certain capabilities of this codebase (e.g., using a remote mlflow endpoint) need a set of environment variables to work properly. We use `python-dotenv` to read the contents of a `.env` file that sits at the root of the project. This file is not tracked by git for security reasons. Still, in order for everything to work properly, you need to create such a file in your local code, again, at the root of the project, such as `piaf-ml/.env`. 
+
+As of now, a sample `.env` file looks like this:
+
+```
+MLFLOW_TRACKING_USERNAME=someusername
+MLFLOW_TRACKING_PASSWORD=somepassword
+MLFLOW_TRACKING_SERVER_URI = https://mlflow.endpoint/
+```
+#### Mlflow Specific Configutation
+To be able to upload artifacts into mlflow, you need to be able to `ssh` into the designated artifact server via a `ssh` key. Also, you need a local `ssh` config that specifies an identity file for the artifact-server domain. Such as: 
+```
+Host mlflow.artifact.host
+    User someusername
+    IdentityFile ~/.ssh/your_private_key
+```
+This requirement is needed **when using `sftp`** as your artifact endpoint protocol. 
+
 ## How to deploy PIAF
 
 ### If you already published the docker images to https://hub.docker.com/
