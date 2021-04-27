@@ -182,17 +182,22 @@ def single_run(idx=None, **kwargs):
         if retriever_type in ["sbert", "dpr", "title_bm25", "title"]:
             document_store.update_embeddings(retriever, index=doc_index)
 
-        start = time.time()
-        retriever_eval_results = eval_retriever_reader(document_store=document_store, pipeline=p,
-                                                       k_retriever=k_retriever, k_reader_total=k_reader_total,
-                                                       label_index=label_index)
-        end = time.time()
-        time_per_label = (end - start) / document_store.get_label_count(index=label_index)
+        retriever_eval_results = {}
+        try:
+            start = time.time()
+            retriever_eval_results = eval_retriever_reader(document_store=document_store, pipeline=p,
+                                                           k_retriever=k_retriever, k_reader_total=k_reader_total,
+                                                           label_index=label_index)
+            end = time.time()
+            time_per_label = (end - start) / document_store.get_label_count(index=label_index)
 
-        print("Reader Accuracy:", retriever_eval_results["reader_topk_accuracy_has_answer"])
-        print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])
+            print("Reader Accuracy:", retriever_eval_results["reader_topk_accuracy_has_answer"])
+            print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])
 
-        retriever_eval_results.update({"time_per_label": time_per_label})
+            retriever_eval_results.update({"time_per_label": time_per_label})
+        except Exception as e:
+            logging.error(f"Could not run this config: {kwargs}. Error {e}.")
+
         mlflow.log_metrics({k: v for k, v in retriever_eval_results.items() if v is not None})
 
     return retriever_eval_results
