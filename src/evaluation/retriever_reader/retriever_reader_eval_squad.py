@@ -229,7 +229,7 @@ if __name__ == '__main__':
         @use_named_args(dimensions=dimensions)
         def single_run_optimization(**kwargs):
             return 1 - single_run(**kwargs)["reader_topk_accuracy_has_answer"]
-        n_calls = os.getenv('OPTIMIZATION_NCALLS')
+        n_calls = int(os.getenv('OPTIMIZATION_NCALLS'))
         res = gp_minimize(single_run_optimization, dimensions, n_calls=n_calls, n_jobs=1)
         #callback=[tqdm_skopt(total=n_calls, desc="Gaussian Process")],
         dump(res, optimize_result_file_path, store_objective=True)
