@@ -205,7 +205,7 @@ def single_run(idx=None, **kwargs):
 
 if __name__ == '__main__':
     result_file_path = Path("./results/results_reader.csv")
-    optimize_result_file_path = Path("./results/optimize_result")
+    optimize_result_file_path = Path("./results/optimize_result.z")
     parameters_grid = list(ParameterGrid(param_grid=parameters))
     experiment_name = parameters["experiment_name"][0]
 
@@ -229,7 +229,7 @@ if __name__ == '__main__':
         @use_named_args(dimensions=dimensions)
         def single_run_optimization(**kwargs):
             return 1 - single_run(**kwargs)["reader_topk_accuracy_has_answer"]
-        n_calls = 10
+        n_calls = os.getenv('OPTIMIZATION_NCALLS')
         res = gp_minimize(single_run_optimization, dimensions, n_calls=n_calls, n_jobs=1)
         #callback=[tqdm_skopt(total=n_calls, desc="Gaussian Process")],
         dump(res, optimize_result_file_path, store_objective=True)
