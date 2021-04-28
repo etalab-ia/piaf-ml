@@ -1,5 +1,5 @@
 parameters = {
-    "k_retriever": [1,2,1],
+    "k_retriever": [1,2],
     "k_title_retriever" : [10], # must be present, but only used when retriever_type == title_bm25
     "k_reader_per_candidate": [1],
     "k_reader_total": [1],
@@ -8,7 +8,7 @@ parameters = {
     "retriever_type": ["sbert"], # Can be bm25, sbert, dpr, title or title_bm25
     "squad_dataset": ["./data/evaluation-datasets/tiny.json"],
     "filter_level": [None],
-    "preprocessing": [True, False],
+    "preprocessing": [True],
     "boosting" : [1], #default to 1
     "split_by": ["word"],  # Can be "word", "sentence", or "passage"
     "split_length": [1000],
