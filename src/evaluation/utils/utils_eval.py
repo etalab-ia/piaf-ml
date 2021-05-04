@@ -5,9 +5,10 @@ from typing import List, Dict, Union
 
 import pandas as pd
 from haystack.document_store.base import BaseDocumentStore
-from haystack.eval import eval_counts_reader, calculate_reader_metrics
+from haystack.eval import eval_counts_reader, calculate_reader_metrics, _count_no_answer , _calculate_f1 , _count_overlap , _count_exact_match
 from haystack.pipeline import Pipeline
 from tqdm import tqdm
+
 
 logger = logging.getLogger()
 
@@ -177,6 +178,170 @@ def eval_retriever_reader(
     return metrics
 
 
+class EvalRetriever:
+    
+    def __init__(self):
+        self.outgoing_edges = 1
+        self.init_counts()
+        self.no_answer_warning = False
+
+    def init_counts(self):
+        self.correct_retrieval_count = 0
+        self.query_count = 0
+        self.has_answer_count = 0
+        self.has_answer_correct = 0
+        self.has_answer_recall = 0
+        self.no_answer_count = 0
+        self.summed_avg_precision = 0.0
+        self.summed_reciprocal_rank = 0.0
+
+        self.metrics = {
+            "recall": 0.0, #recall
+            "map": 0.0, #mean_average_precision
+            "mrr": 0.0 #mean_reciprocal_rank
+        }
+
+
+    def run(self, documents, labels: dict, **kwargs):
+        """Run this node on one sample and its labels"""
+        self.query_count += 1
+        retriever_labels = labels["retriever"]
+        relevant_docs_found = 0
+        current_avg_precision = 0.0
+               
+        correct_retrieval = True if self.correct_retrievals_count(retriever_labels, documents) > 0 else False
+    
+        self.correct_retrieval_count += correct_retrieval
+        self.recall = self.correct_retrieval_count / self.query_count
+
+        self.metrics['recall'] = self.correct_retrieval_count / self.query_count 
+        self.metrics['map'] = self.summed_avg_precision / self.query_count 
+        self.metrics['mrr'] = self.summed_reciprocal_rank / self.query_count 
+
+        return {"documents": documents, "labels": labels, "correct_retrieval": correct_retrieval, **kwargs}, "output_1"
+
+    def correct_retrievals_count(self, retriever_labels, predictions):
+        relevant_docs_found = 0
+        found_relevant_doc = False
+        current_avg_precision = 0.0
+        correct_retrieval = 0
+
+        label_ids = list(set(retriever_labels.multiple_document_ids))
+        for doc_idx, doc in enumerate(predictions):
+            if doc.id in label_ids:
+                relevant_docs_found += 1
+                if not found_relevant_doc:
+                    correct_retrieval = 1
+                    self.summed_reciprocal_rank += 1 / (doc_idx + 1)
+                current_avg_precision += relevant_docs_found / (doc_idx + 1)
+                found_relevant_doc = True
+        if found_relevant_doc:
+            all_relevant_docs = len(label_ids)
+            self.summed_avg_precision += current_avg_precision / all_relevant_docs
+
+        return relevant_docs_found
+
+    def get_metrics(self):
+        return self.metrics
+
+
+class EvalReader:
+
+    def __init__(self):
+     
+        self.outgoing_edges = 1
+        self.init_counts()
+
+    def init_counts(self):
+        self.query_count = 0
+        self.correct_retrieval_count = 0
+
+        self.metric_counts = {
+        "correct_no_answers_top1" : 0,
+        "correct_no_answers_topk" : 0,
+        "correct_readings_topk" : 0,
+        "exact_matches_topk" : 0,
+        "summed_f1_topk" : 0,
+        "correct_readings_top1" : 0,
+        "correct_readings_top1_has_answer" : 0,
+        "correct_readings_topk_has_answer" : 0,
+        "summed_f1_top1" : 0,
+        "summed_f1_top1_has_answer" : 0,
+        "exact_matches_top1" : 0,
+        "exact_matches_top1_has_answer" : 0,
+        "exact_matches_topk_has_answer" : 0,
+        "summed_f1_topk_has_answer" : 0,
+        "number_of_no_answer" : 0
+        }
+
+
+    def run(self, labels, answers, **kwargs):
+
+        self.query_count += 1
+
+        multi_labels = labels["reader"]
+        predictions = answers
+        
+        if predictions:
+            self.correct_retrieval_count += 1
+
+            if multi_labels.no_answer:
+                self.metric_counts['number_of_no_answer']+= 1
+                self.metric_counts = _count_no_answer(predictions, self.metric_counts)
+
+          
+            else:
+                found_answer = False
+                found_em = False
+                best_f1 = 0
+
+                for answer_idx, answer in enumerate(predictions):
+
+
+                    if answer["document_id"] in multi_labels.multiple_document_ids:
+                        gold_spans = [{"offset_start": multi_labels.multiple_offset_start_in_docs[i],
+                                    "offset_end": multi_labels.multiple_offset_start_in_docs[i] + len(multi_labels.multiple_answers[i]),
+                                    "doc_id": multi_labels.multiple_document_ids[i]} for i in range(len(multi_labels.multiple_answers))] 
+
+                        predicted_span = {"offset_start": answer["offset_start"],
+                                        "offset_end": answer["offset_end"],
+                                        "doc_id": answer["document_id"]}
+
+                        best_f1_in_gold_spans = 0
+                        for gold_span in gold_spans:
+                            if gold_span["doc_id"] == predicted_span["doc_id"]:
+                                # check if overlap between gold answer and predicted answer
+                                if not found_answer:
+                                    self.metric_counts, found_answer = _count_overlap(gold_span, predicted_span, self.metric_counts, answer_idx)  # type: ignore
+
+                                # check for exact match
+                                if not found_em:
+                                    self.metric_counts, found_em = _count_exact_match(gold_span, predicted_span, self.metric_counts, answer_idx)  # type: ignore
+
+                                # calculate f1
+                                current_f1 = _calculate_f1(gold_span, predicted_span)  # type: ignore
+                                if current_f1 > best_f1_in_gold_spans:
+                                    best_f1_in_gold_spans = current_f1
+                        # top-1 f1
+                        if answer_idx == 0:
+                            self.metric_counts["summed_f1_top1"] += best_f1_in_gold_spans
+                            self.metric_counts["summed_f1_top1_has_answer"] += best_f1_in_gold_spans
+                        if best_f1_in_gold_spans > best_f1:
+                            best_f1 = best_f1_in_gold_spans
+
+                    if found_em:
+                        break
+
+                self.metric_counts["summed_f1_topk"] += best_f1
+                self.metric_counts["summed_f1_topk_has_answer"] += best_f1
+      
+        return {**kwargs}, "output_1"
+
+    def get_metrics(self):
+        return calculate_reader_metrics(self.metric_counts,self.query_count)
+
+
+
 def full_eval_retriever_reader(
         document_store: BaseDocumentStore,
         pipeline: Pipeline,
@@ -188,55 +353,30 @@ def full_eval_retriever_reader(
 ):
     filters = {"origin": [label_origin]}
     labels = document_store.get_all_labels_aggregated(index=label_index, filters=filters)
+    labels = [label for label in labels if label.question]
+    results=[]
 
     question_label_dict_list = []
-    for label in labels:
-        if not label.question:
-            continue
-        deduplicated_doc_ids = list(set([str(x) for x in label.multiple_document_ids]))
-        question_label_dict = {'query': label.question, 'gold_ids': deduplicated_doc_ids}
-        question_label_dict_list.append(question_label_dict)
+    
+    q_to_l_dict = {
+    l.question: {
+        "retriever": l,
+        "reader": l
+    } for l in labels
+    }
 
+    for q, l in q_to_l_dict.items():
+        res = pipeline.run(
+            query=q,
+            top_k_retriever=10,
+            labels=l,
+            top_k_reader=10,
+        )
+        results.append(res)
 
-    predicted_answers_list = [pipeline.run(query=question["query"], top_k_retriever=k_retriever) for question in
-                           question_label_dict_list]
-   
+    
 
-    retriever_metrics = get_retriever_metrics(predicted_answers_list, question_label_dict_list)
-
-    assert len(question_label_dict_list) == len(predicted_answers_list), f"Number of questions is not the same number of predicted" \
-                                                          f"answers"
-
-    for predicted_answers in predicted_answers_list:
-        for answer in predicted_answers['answers']:
-            answer["offset_start_in_doc"] = answer["offset_start"]
-            answer["offset_end_in_doc"] = answer["offset_end"]
-
-    metric_counts = {}
-    metric_counts["correct_no_answers_top1"] = 0
-    metric_counts["correct_no_answers_topk"] = 0
-    metric_counts["correct_readings_topk"] = 0
-    metric_counts["exact_matches_topk"] = 0
-    metric_counts["summed_f1_topk"] = 0
-    metric_counts["correct_readings_top1"] = 0
-    metric_counts["correct_readings_top1_has_answer"] = 0
-    metric_counts["correct_readings_topk_has_answer"] = 0
-    metric_counts["summed_f1_top1"] = 0
-    metric_counts["summed_f1_top1_has_answer"] = 0
-    metric_counts["exact_matches_top1"] = 0
-    metric_counts["exact_matches_top1_has_answer"] = 0
-    metric_counts["exact_matches_topk_has_answer"] = 0
-    metric_counts["summed_f1_topk_has_answer"] = 0
-    metric_counts["number_of_no_answer"] = 0
-    for question, predicted_answers in zip(labels, predicted_answers_list):
-        metric_counts = eval_counts_reader(question, predicted_answers, metric_counts)
-    retriever_reader_metrics = calculate_reader_metrics(metric_counts, len(predicted_answers_list))
-    retriever_reader_metrics.update(metric_counts)
-    retriever_reader_metrics.update(retriever_metrics)
-
-    return retriever_reader_metrics
-
-
+        
 """
     # Aggregate all answer labels per question
     aggregated_per_doc = defaultdict(list)

@@ -24,7 +24,7 @@ from haystack.retriever.sparse import ElasticsearchRetriever
 from haystack.retriever.dense import EmbeddingRetriever
 from haystack.reader.transformers import TransformersReader
 from haystack.preprocessor.preprocessor import PreProcessor
-from haystack.pipeline import ExtractiveQAPipeline
+from haystack.pipeline import ExtractiveQAPipeline,Pipeline
 
 from farm.utils import initialize_device_settings
 from sklearn.model_selection import ParameterGrid
@@ -33,7 +33,7 @@ from src.evaluation.config.retriever_reader_eval_squad_config import parameters
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.utils.elasticsearch_management import launch_ES, delete_indices, prepare_mapping
 from src.evaluation.utils.mlflow_management import prepare_mlflow_server
-from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results,full_eval_retriever_reader
+from src.evaluation.utils.utils_eval import save_results,full_eval_retriever_reader,EvalRetriever,EvalReader
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline,RetrieverReaderEvaluationPipeline,TitleBM25QAEvaluationPipeline
 import mlflow
@@ -92,6 +92,9 @@ def single_run(parameters):
     reader = TransformersReader(model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
                                 tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
                                 use_gpu=gpu_id, top_k_per_candidate=k_reader_per_candidate)
+                                
+    eval_retriever = EvalRetriever()
+    eval_reader = EvalReader()
 
     if retriever_type == 'bm25':
 
@@ -101,8 +104,13 @@ def single_run(parameters):
                                                     scheme="",
                                                     embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
                                                     custom_mapping=SQUAD_MAPPING)
-        retriever = ElasticsearchRetriever(document_store=document_store)
-        p = RetrieverReaderEvaluationPipeline(reader=reader, retriever=retriever)
+        retriever = ElasticsearchRetriever(document_store=document_store, )
+
+    
+        p  = RetrieverReaderEvaluationPipeline(reader = reader, 
+                                              retriever = retriever, 
+                                              eval_retriever = eval_retriever, 
+                                              eval_reader = eval_reader)
 
     elif retriever_type == "sbert":
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
@@ -115,8 +123,10 @@ def single_run(parameters):
                                        use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                        pooling_strategy="reduce_max",
                                        emb_extraction_layer=-1)
-        p = RetrieverReaderEvaluationPipeline(reader=reader, retriever=retriever)
-
+        p  = RetrieverReaderEvaluationPipeline(reader = reader, 
+                                              retriever = retriever, 
+                                              eval_retriever = eval_retriever, 
+                                              eval_reader = eval_reader)
     elif retriever_type == "title_bm25":
         document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
                                                     search_fields=["name", "text"],
@@ -130,9 +140,13 @@ def single_run(parameters):
                                             emb_extraction_layer=-1)
         retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
 
-        p = TitleBM25QAEvaluationPipeline(reader=reader, retriever_title=retriever, retriever_bm25=retriever_bm25
-                                        , k_title_retriever=k_title_retriever
-                                        , k_bm25_retriever=k_retriever)
+        p = TitleBM25QAEvaluationPipeline(reader=reader, 
+                                          retriever_title=retriever, 
+                                          retriever_bm25=retriever_bm25,
+                                          k_title_retriever=k_title_retriever,
+                                          k_bm25_retriever=k_retriever,
+                                          eval_retriever = eval_retriever,
+                                          eval_reader = eval_reader)
 
         # used to make sure the p.run method returns enough candidates
         k_retriever = max(k_retriever, k_title_retriever)
@@ -148,7 +162,11 @@ def single_run(parameters):
                                             use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
                                             pooling_strategy="reduce_max",
                                             emb_extraction_layer=-1)
-        p = RetrieverReaderEvaluationPipeline(reader=reader, retriever=retriever)
+
+        p = RetrieverReaderEvaluationPipeline(reader = reader, 
+                                              retriever = retriever, 
+                                              eval_retriever = eval_retriever, 
+                                              eval_reader = eval_reader)
 
 
     else:
@@ -169,20 +187,30 @@ def single_run(parameters):
 
     start = time.time()
 
-    retriever_reader_eval_results = full_eval_retriever_reader(document_store=document_store, pipeline=p,
-                                                                                      k_retriever=k_retriever, k_reader_total=k_reader_total,
-                                                                                      label_index=label_index)
+    full_eval_retriever_reader(document_store=document_store, 
+                               pipeline=p,
+                               k_retriever=k_retriever, 
+                               k_reader_total=k_reader_total,
+                               label_index=label_index)
 
     end = time.time()
 
-    time_per_label = (end - start) / document_store.get_label_count(index=label_index)
 
+    retriever_reader_eval_results = eval_retriever.get_metrics()
+    retriever_reader_eval_results.update(eval_reader.get_metrics())
+   
+    retriever.print_time()
+    print()
     print("Retriever Recall:", retriever_reader_eval_results["recall"])
     print("Retriever Mean Avg Precision:", retriever_reader_eval_results["map"])
-
-
+    
+    reader.print_time()
+    print()
+    
     print("Reader Accuracy:", retriever_reader_eval_results["reader_topk_accuracy"])
     print("reader_topk_f1:", retriever_reader_eval_results["reader_topk_f1"])
+
+    time_per_label = (end - start) / document_store.get_label_count(index=label_index)
 
     retriever_reader_eval_results.update({"time_per_label": time_per_label})
 
@@ -225,10 +253,8 @@ if __name__ == '__main__':
                 run_results = single_run(param)
                 mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
             run_results.update(param)
-            #for key,value in run_results.items():
-            #    print(key,value) 
             save_results(result_file_path=result_file_path, results_list=run_results)
-            # mlflow.log_artifact(result_file_path)
+            mlflow.log_artifact(result_file_path)
         except Exception as e:
             logging.error(f"Could not run this config: {param}. Error {e}.")
             continue
