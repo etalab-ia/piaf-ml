@@ -1,20 +1,14 @@
+import logging
+
 import torch
 import time
 import os
-
-import logging
-
-logging.root.handlers = []
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler("./logs/run_log.log"),
-        logging.StreamHandler()
-    ]
-)
-
 from pathlib import Path
+
+from src.evaluation.utils.logging_management import get_custom_logger, clean_log
+
+logger = get_custom_logger(None, root_logger_path=Path("./logs/"), level=logging.INFO)
+
 from tqdm import tqdm
 from dotenv import load_dotenv
 
@@ -31,7 +25,8 @@ from sklearn.model_selection import ParameterGrid
 from src.evaluation.config.retriever_reader_eval_squad_config import parameters
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.utils.elasticsearch_management import launch_ES, delete_indices, prepare_mapping
-from src.evaluation.utils.mlflow_management import prepare_mlflow_server, add_extra_params, create_run_ids, get_list_past_run
+from src.evaluation.utils.mlflow_management import prepare_mlflow_server, add_extra_params, create_run_ids, \
+    get_list_past_run
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline
@@ -78,7 +73,6 @@ def single_run(parameters):
     # deleted indice for elastic search to make sure mappings are properly passed
     delete_indices(index=doc_index)
     delete_indices(index=label_index)
-
 
     prepare_mapping(mapping=SQUAD_MAPPING, title_boosting_factor=title_boosting_factor, embedding_dimension=768)
 
@@ -162,7 +156,7 @@ def single_run(parameters):
 
 
     else:
-        logging.error(f"You chose {retriever_type}. Choose one from bm25, sbert, dpr or title_bm25")
+        logger.error(f"You chose {retriever_type}. Choose one from bm25, sbert, dpr or title_bm25")
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, dpr or title_bm25")
     # Add evaluation data to Elasticsearch document store
     # We first delete the custom tutorial indices to not have duplicate elements
@@ -180,9 +174,6 @@ def single_run(parameters):
                                                    label_index=label_index)
     end = time.time()
     time_per_label = (end - start) / document_store.get_label_count(index=label_index)
-
-    print("Reader Accuracy:", retriever_eval_results["reader_topk_accuracy"])
-    print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])
 
     retriever_eval_results.update({"time_per_label": time_per_label})
 
@@ -216,7 +207,7 @@ if __name__ == '__main__':
         add_extra_params(param)
         if idx in list_past_run_names.keys() and os.getenv(
                 "USE_CACHE") == "True":  # run not done
-            print('config already done')
+            logger.info(f'Config {param} already done and found in mlflow. Not doing it again.')
             # Log again run with previous results
             previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
             with mlflow.start_run(run_name=idx) as run:
@@ -224,17 +215,22 @@ if __name__ == '__main__':
                 mlflow.log_metrics(previous_metrics)
 
         else:  # run not already done or USE_CACHE set to False or not set
-            logging.info(f"Doing run with config : {param}")
+            logger.info(f"Doing run with config : {param}")
             try:
                 with mlflow.start_run(run_name=idx) as run:
                     mlflow.log_params(param)
                     # START run
                     run_results = single_run(param)
+                    logger.info(f"Run finished successfully")
+                    logger.info(f'Reader Accuracy: {run_results["reader_topk_accuracy"]}')
+                    logger.info(f'Reader topk f1: {run_results["reader_topk_f1"]}')
                     mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
+                    mlflow.log_artifact(f"./logs/root.log")
                 run_results.update(param)
                 save_results(result_file_path=result_file_path, results_list=run_results)
-                list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
-            
+                list_past_run_names = get_list_past_run(client, experiment_name)  # update list of past experiments
             except Exception as e:
-                logging.error(f"Could not run this config: {param}. Error {e}.")
+                logger.exception(f"Could not run this config: {param}.")
                 continue
+            finally:
+                clean_log()
