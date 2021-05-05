@@ -192,8 +192,10 @@ Follow README.md on the [PiafAgent repo](https://github.com/etalab-ia/piaf_agent
 * [P. Soriano](https://github.com/psorianom)
 
 **Past Members :**
-
 * [J. Denes](https://github.com/jdenes)
+
+## How to contribute to this project 
+We love your input! We want to make contributing to this project as easy and transparent as possible : see our [contribution rules](https://github.com/etalab-ia/piaf-ml/blob/master/.github/contributing.md)
 
 ## Contact
 * Feel free to contact the team at piaf@data.gouv.fr with any questions or if you are interested in contributing!
