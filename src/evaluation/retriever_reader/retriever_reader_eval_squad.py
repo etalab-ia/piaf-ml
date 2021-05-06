@@ -1,20 +1,14 @@
+import logging
+
 import torch
 import time
 import os
-
-import logging
-
-logging.root.handlers = []
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler("./logs/run_log.log"),
-        logging.StreamHandler()
-    ]
-)
-
 from pathlib import Path
+
+from src.evaluation.utils.logging_management import get_custom_logger, clean_log
+
+logger = get_custom_logger(None, root_logger_path=Path("./logs/"), level=logging.INFO)
+
 from tqdm import tqdm
 from dotenv import load_dotenv
 import mlflow
@@ -193,10 +187,14 @@ def single_run(idx=None, **kwargs):
             time_per_label = (end - start) / document_store.get_label_count(index=label_index)
             retriever_eval_results.update({"time_per_label": time_per_label})
 
+            mlflow.log_metrics({k: v for k, v in retriever_eval_results.items() if v is not None})
+            logger.info(f"Run finished successfully")
+            logger.info(f'Reader Accuracy: {retriever_eval_results["reader_topk_accuracy"]}')
+            mlflow.log_artifact(f"./logs/root.log")
+
         except Exception as e:
             logging.error(f"Could not run this config: {kwargs}. Error {e}.")
 
-        mlflow.log_metrics({k: v for k, v in retriever_eval_results.items() if v is not None})
 
     return retriever_eval_results
 
@@ -248,7 +246,7 @@ if __name__ == '__main__':
                                unit="config"):
             add_extra_params(param)
             if idx in list_past_run_names.keys() and os.getenv("USE_CACHE") == "True":  # run not done
-                logging.info(f"This config was done already : {param}")
+                logging.info(f'Config {param} already done and found in mlflow. Not doing it again.')
                 # Log again run with previous results
                 previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
                 with mlflow.start_run(run_name=idx) as run:
@@ -263,9 +261,8 @@ if __name__ == '__main__':
                 run_results.update(param)
                 save_results(result_file_path=result_file_path, results_list=run_results)
 
+                clean_log()
+
                 # update list of past experiments
                 list_past_run_names = get_list_past_run(client, experiment_name)
-                """
-                except Exception as e:
-                    logging.error(f"Could not run this config: {param}. Error {e}.")
-                    continue"""
+
