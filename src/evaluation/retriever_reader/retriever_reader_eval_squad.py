@@ -37,7 +37,8 @@ from sklearn.model_selection import ParameterGrid
 from src.evaluation.config.retriever_reader_eval_squad_config import parameters
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.utils.elasticsearch_management import launch_ES, delete_indices, prepare_mapping
-from src.evaluation.utils.mlflow_management import prepare_mlflow_server, add_extra_params, create_run_ids, get_list_past_run
+from src.evaluation.utils.mlflow_management import prepare_mlflow_server, add_extra_params, create_run_ids, \
+    get_list_past_run
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline
@@ -56,16 +57,14 @@ else:
 
 def single_run(idx=None, **kwargs):
     """
-        Queries ES max_k - min_k times, saving at each step the results in a list. At the end plots the line
-        showing the results obtained. For now we can only vary k.
-        :param min_k: Minimum retriever-k to test
-        :param max_k: Maximum retriever-k to test
-        :param weighted_precision: Whether to take into account the position of the retrieved result in the accuracy computation
-        :return:
+        Perform one run of the pipeline under testing with the parameters given in the config file.
+        The results are saved in the mlflow instance.
         """
+
     with mlflow.start_run(run_name=idx) as run:
         mlflow.log_params(kwargs)
-        # col names
+
+        # Gather parameters
         evaluation_data = Path(kwargs["squad_dataset"])
         retriever_type = kwargs["retriever_type"]
         k_retriever = kwargs["k_retriever"]
@@ -76,16 +75,16 @@ def single_run(idx=None, **kwargs):
         reader_model_version = kwargs["reader_model_version"]
         retriever_model_version = kwargs["retriever_model_version"]
         split_by = kwargs["split_by"]
-        split_length = int(kwargs["split_length"]) #this is intended to convert numpy.int64 to int
+        split_length = int(kwargs["split_length"])  # this is intended to convert numpy.int64 to int
         title_boosting_factor = kwargs["boosting"]
 
+        # indexes for the elastic search
         doc_index = "document_xp"
         label_index = "label_xp"
 
         # deleted indice for elastic search to make sure mappings are properly passed
         delete_indices(index=doc_index)
         delete_indices(index=label_index)
-
 
         prepare_mapping(mapping=SQUAD_MAPPING, title_boosting_factor=title_boosting_factor, embedding_dimension=768)
 
@@ -108,12 +107,12 @@ def single_run(idx=None, **kwargs):
                                     use_gpu=gpu_id, top_k_per_candidate=k_reader_per_candidate)
 
         if retriever_type == 'bm25':
-
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
                                                         search_fields=["name", "text"],
                                                         create_index=False, embedding_field="emb",
                                                         scheme="",
-                                                        embedding_dim=768, excluded_meta_data=["emb"], similarity='cosine',
+                                                        embedding_dim=768, excluded_meta_data=["emb"],
+                                                        similarity='cosine',
                                                         custom_mapping=SQUAD_MAPPING)
             retriever = ElasticsearchRetriever(document_store=document_store)
             p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
@@ -122,7 +121,8 @@ def single_run(idx=None, **kwargs):
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
                                                         search_fields=["name", "text"],
                                                         create_index=False, embedding_field="emb",
-                                                        embedding_dim=768, excluded_meta_data=["emb"], similarity='cosine',
+                                                        embedding_dim=768, excluded_meta_data=["emb"],
+                                                        similarity='cosine',
                                                         custom_mapping=SQUAD_MAPPING)
             retriever = EmbeddingRetriever(document_store=document_store,
                                            embedding_model="distilbert-base-multilingual-cased",
@@ -136,7 +136,8 @@ def single_run(idx=None, **kwargs):
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
                                                         search_fields=["name", "text"],
                                                         create_index=False, embedding_field="emb",
-                                                        embedding_dim=768, excluded_meta_data=["emb"], similarity='cosine',
+                                                        embedding_dim=768, excluded_meta_data=["emb"],
+                                                        similarity='cosine',
                                                         custom_mapping=SQUAD_MAPPING)
             retriever = TitleEmbeddingRetriever(document_store=document_store,
                                                 embedding_model="distilbert-base-multilingual-cased",
@@ -145,7 +146,6 @@ def single_run(idx=None, **kwargs):
                                                 pooling_strategy="reduce_max",
                                                 emb_extraction_layer=-1)
             retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
-
             p = TitleBM25QAPipeline(reader=reader, retriever_title=retriever, retriever_bm25=retriever_bm25,
                                     k_title_retriever=k_title_retriever
                                     , k_bm25_retriever=k_retriever)
@@ -157,7 +157,8 @@ def single_run(idx=None, **kwargs):
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
                                                         search_fields=["name", "text"],
                                                         create_index=False, embedding_field="emb",
-                                                        embedding_dim=768, excluded_meta_data=["emb"], similarity='cosine',
+                                                        embedding_dim=768, excluded_meta_data=["emb"],
+                                                        similarity='cosine',
                                                         custom_mapping=SQUAD_MAPPING)
             retriever = TitleEmbeddingRetriever(document_store=document_store,
                                                 embedding_model="distilbert-base-multilingual-cased",
@@ -170,11 +171,9 @@ def single_run(idx=None, **kwargs):
 
         else:
             logging.error(f"You chose {retriever_type}. Choose one from bm25, sbert, dpr or title_bm25")
-            raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, dpr or title_bm25")
-        # Add evaluation data to Elasticsearch document store
-        # We first delete the custom tutorial indices to not have duplicate elements
-        # make sure these indices do not collide with existing ones, the indices will be wiped clean before data is inserted
+            raise Exception(f"Wrong retriever type for {retriever_type}.")
 
+        # Add evaluation data to Elasticsearch document store
         document_store.add_eval_data(evaluation_data.as_posix(), doc_index=doc_index, label_index=label_index,
                                      preprocessor=preprocessor)
 
@@ -187,13 +186,13 @@ def single_run(idx=None, **kwargs):
             retriever_eval_results = eval_retriever_reader(document_store=document_store, pipeline=p,
                                                            k_retriever=k_retriever, k_reader_total=k_reader_total,
                                                            label_index=label_index)
+            logging.info(f"Reader Accuracy:{retriever_eval_results['reader_topk_accuracy_has_answer']}")
+
+            # Log time per label in metrics
             end = time.time()
             time_per_label = (end - start) / document_store.get_label_count(index=label_index)
-
-            print("Reader Accuracy:", retriever_eval_results["reader_topk_accuracy_has_answer"])
-            print("reader_topk_f1:", retriever_eval_results["reader_topk_f1"])
-
             retriever_eval_results.update({"time_per_label": time_per_label})
+
         except Exception as e:
             logging.error(f"Could not run this config: {kwargs}. Error {e}.")
 
@@ -225,12 +224,19 @@ if __name__ == '__main__':
     if os.getenv('USE_OPTIMIZATION') == 'True':
         dimensions = create_dimensions_from_parameters(parameters)
 
+
         @use_named_args(dimensions=dimensions)
         def single_run_optimization(**kwargs):
-            return 1 - single_run(**kwargs)["reader_topk_accuracy_has_answer"]
+            try:
+                return 1 - single_run(**kwargs)["reader_topk_accuracy_has_answer"]
+            except:
+                print('Run failed, returning accuracy of zero')
+                return 1
+
+
         n_calls = int(os.getenv('OPTIMIZATION_NCALLS'))
         res = gp_minimize(single_run_optimization, dimensions, n_calls=n_calls, n_jobs=1)
-        #callback=[tqdm_skopt(total=n_calls, desc="Gaussian Process")],
+        # callback=[tqdm_skopt(total=n_calls, desc="Gaussian Process")],
         dump(res, optimize_result_file_path, store_objective=True)
 
     else:
@@ -242,7 +248,7 @@ if __name__ == '__main__':
                                unit="config"):
             add_extra_params(param)
             if idx in list_past_run_names.keys() and os.getenv("USE_CACHE") == "True":  # run not done
-                print('config already done')
+                logging.info(f"This config was done already : {param}")
                 # Log again run with previous results
                 previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
                 with mlflow.start_run(run_name=idx) as run:
@@ -251,14 +257,15 @@ if __name__ == '__main__':
 
             else:  # run notalready done or USE_CACHE set to False or not set
                 logging.info(f"Doing run with config : {param}")
-                #try:
                 run_results = single_run(idx=idx, **param)
+
+                # For debugging purpose, we keep a copy of the results in a csv form
                 run_results.update(param)
                 save_results(result_file_path=result_file_path, results_list=run_results)
-                list_past_run_names = get_list_past_run(client, experiment_name) # update list of past experiments
+
+                # update list of past experiments
+                list_past_run_names = get_list_past_run(client, experiment_name)
                 """
                 except Exception as e:
                     logging.error(f"Could not run this config: {param}. Error {e}.")
                     continue"""
-
-
