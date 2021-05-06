@@ -4,7 +4,6 @@ import os
 
 import logging
 
-
 logging.root.handlers = []
 logging.basicConfig(
     level=logging.INFO,
@@ -158,12 +157,12 @@ def single_run(idx=None, **kwargs):
             document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
                                                         search_fields=["name", "text"],
                                                         create_index=False, embedding_field="emb",
-                                                        embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                        embedding_dim=768, excluded_meta_data=["emb"], similarity='cosine',
                                                         custom_mapping=SQUAD_MAPPING)
             retriever = TitleEmbeddingRetriever(document_store=document_store,
                                                 embedding_model="distilbert-base-multilingual-cased",
                                                 model_version=retriever_model_version,
-                                                use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                                                use_gpu=GPU_AVAILABLE, model_format="transformers",
                                                 pooling_strategy="reduce_max",
                                                 emb_extraction_layer=-1)
             p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
