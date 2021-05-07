@@ -203,7 +203,7 @@ if __name__ == '__main__':
     optimize_result_file_path = Path("./results/optimize_result.z") # used for storing results of scikit optimize
 
     parameters_grid = list(ParameterGrid(param_grid=parameters))
-    experiment_name = parameters["experiment_name"]
+    experiment_name = parameters["experiment_name"][0]
 
     device, n_gpu = initialize_device_settings(use_cuda=True)
     GPU_AVAILABLE = 1 if device.type == "cuda" else 0
@@ -224,12 +224,11 @@ if __name__ == '__main__':
 
         @use_named_args(dimensions=dimensions)
         def single_run_optimization(**kwargs):
-            try:
-                return 1 - single_run(**kwargs)["reader_topk_accuracy_has_answer"]
-            except:
+            #try:
+            return 1 - single_run(**kwargs)["reader_topk_accuracy_has_answer"]
+            """except:
                 print('Run failed, returning accuracy of zero')
-                return 1
-
+                return 1"""
 
         n_calls = int(os.getenv('OPTIMIZATION_NCALLS'))
         res = gp_minimize(single_run_optimization, dimensions, n_calls=n_calls, callback=LoggingCallback(n_calls), n_jobs=-1)
