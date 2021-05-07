@@ -15,7 +15,6 @@ import mlflow
 from mlflow.tracking import MlflowClient
 
 from skopt import gp_minimize, dump
-from skopt.plots import plot_objective
 from skopt.utils import use_named_args
 
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
@@ -36,7 +35,7 @@ from src.evaluation.utils.mlflow_management import prepare_mlflow_server, add_ex
 from src.evaluation.utils.utils_eval import eval_retriever_reader, save_results
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline
-from src.evaluation.utils.utils_optimizer import tqdm_skopt, create_dimensions_from_parameters
+from src.evaluation.utils.utils_optimizer import LoggingCallback, create_dimensions_from_parameters
 
 load_dotenv()
 prepare_mlflow_server()
@@ -200,10 +199,11 @@ def single_run(idx=None, **kwargs):
 
 
 if __name__ == '__main__':
-    result_file_path = Path("./results/results_reader.csv")
-    optimize_result_file_path = Path("./results/optimize_result.z")
+    result_file_path = Path("./results/results_reader.csv") # file used for debbugging
+    optimize_result_file_path = Path("./results/optimize_result.z") # used for storing results of scikit optimize
+
     parameters_grid = list(ParameterGrid(param_grid=parameters))
-    experiment_name = parameters["experiment_name"][0]
+    experiment_name = parameters["experiment_name"]
 
     device, n_gpu = initialize_device_settings(use_cuda=True)
     GPU_AVAILABLE = 1 if device.type == "cuda" else 0
@@ -222,7 +222,6 @@ if __name__ == '__main__':
     if os.getenv('USE_OPTIMIZATION') == 'True':
         dimensions = create_dimensions_from_parameters(parameters)
 
-
         @use_named_args(dimensions=dimensions)
         def single_run_optimization(**kwargs):
             try:
@@ -233,8 +232,7 @@ if __name__ == '__main__':
 
 
         n_calls = int(os.getenv('OPTIMIZATION_NCALLS'))
-        res = gp_minimize(single_run_optimization, dimensions, n_calls=n_calls, n_jobs=1)
-        # callback=[tqdm_skopt(total=n_calls, desc="Gaussian Process")],
+        res = gp_minimize(single_run_optimization, dimensions, n_calls=n_calls, callback=LoggingCallback(n_calls), n_jobs=-1)
         dump(res, optimize_result_file_path, store_objective=True)
 
     else:
