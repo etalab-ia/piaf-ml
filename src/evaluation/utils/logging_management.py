@@ -2,6 +2,7 @@ import logging
 import sys
 
 from pathlib import Path
+from typing import Union
 
 
 def clean_log(log_name: str = "root"):
@@ -9,11 +10,12 @@ def clean_log(log_name: str = "root"):
 
 
 # https://stackoverflow.com/questions/54591352/python-logging-new-log-file-each-loop-iteration
-def get_custom_logger(logger_name: str, root_logger_path: Path = Path("./logs/"), level=logging.DEBUG):
+def get_custom_logger(logger_name: Union[str, None], root_logger_path: Path = Path("./logs/"), level=logging.DEBUG):
     """
     Method to return a custom logger with the given name and level
     """
-
+    if not root_logger_path.exists():
+        root_logger_path.mkdir()
     logger = logging.getLogger(logger_name)
     if not logger_name:
         logger_name = "root.log"

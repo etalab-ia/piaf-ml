@@ -154,7 +154,6 @@ def single_run(parameters):
                                             emb_extraction_layer=-1)
         p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
 
-
     else:
         logger.error(f"You chose {retriever_type}. Choose one from bm25, sbert, dpr or title_bm25")
         raise Exception(f"You chose {retriever_type}. Choose one from bm25, sbert, dpr or title_bm25")
