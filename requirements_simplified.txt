@@ -6,11 +6,13 @@ ipywidgets
 jupyter-console
 pefile
 pip-chill
+pysftp
 pytest
 python-ptrace
 qtconsole
 seaborn
-sentence-transformers
+sentence-transformerss
+scikit-optimize
 python-dotenv
 # alembic # Installed as dependency for mlflow
 # aniso8601 # Installed as dependency for flask-restplus
