@@ -33,7 +33,7 @@ from src.evaluation.config.retriever_reader_eval_squad_config import parameters
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.utils.elasticsearch_management import launch_ES, delete_indices, prepare_mapping
 from src.evaluation.utils.mlflow_management import prepare_mlflow_server
-from src.evaluation.utils.utils_eval import save_results,full_eval_retriever_reader,EvalRetriever,EvalReader
+from src.evaluation.utils.utils_eval import save_results,full_eval_retriever_reader,Eval_Retriever,Eval_Reader
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline,RetrieverReaderEvaluationPipeline,TitleBM25QAEvaluationPipeline
 import mlflow
@@ -93,8 +93,8 @@ def single_run(parameters):
                                 tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
                                 use_gpu=gpu_id, top_k_per_candidate=k_reader_per_candidate)
                                 
-    eval_retriever = EvalRetriever()
-    eval_reader = EvalReader()
+    eval_retriever = Eval_Retriever()
+    eval_reader = Eval_Reader()
 
     if retriever_type == 'bm25':
 
@@ -198,17 +198,25 @@ def single_run(parameters):
 
     retriever_reader_eval_results = eval_retriever.get_metrics()
     retriever_reader_eval_results.update(eval_reader.get_metrics())
-   
+    
+    print()
     retriever.print_time()
     print()
+    print('Retreiver')
+    print("---------------")
     print("Retriever Recall:", retriever_reader_eval_results["recall"])
     print("Retriever Mean Avg Precision:", retriever_reader_eval_results["map"])
-    
-    reader.print_time()
+    print("Retriever Mean Reciprocal Rank:",retriever_reader_eval_results["mrr"])
+
     print()
-    
+    reader.print_time()   
+    print() 
+    print('Reader')
+    print("---------------")
     print("Reader Accuracy:", retriever_reader_eval_results["reader_topk_accuracy"])
     print("reader_topk_f1:", retriever_reader_eval_results["reader_topk_f1"])
+    print()
+
 
     time_per_label = (end - start) / document_store.get_label_count(index=label_index)
 

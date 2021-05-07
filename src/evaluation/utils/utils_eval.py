@@ -5,7 +5,7 @@ from typing import List, Dict, Union
 
 import pandas as pd
 from haystack.document_store.base import BaseDocumentStore
-from haystack.eval import eval_counts_reader, calculate_reader_metrics, _count_no_answer , _calculate_f1 , _count_overlap , _count_exact_match
+from haystack.eval import eval_counts_reader,calculate_reader_metrics,_count_no_answer,_calculate_f1,_count_overlap,_count_exact_match,EvalRetriever,EvalReader
 from haystack.pipeline import Pipeline
 from tqdm import tqdm
 
@@ -178,20 +178,15 @@ def eval_retriever_reader(
     return metrics
 
 
-class EvalRetriever:
-    
-    def __init__(self):
-        self.outgoing_edges = 1
-        self.init_counts()
-        self.no_answer_warning = False
-
-    def init_counts(self):
-        self.correct_retrieval_count = 0
-        self.query_count = 0
-        self.has_answer_count = 0
-        self.has_answer_correct = 0
-        self.has_answer_recall = 0
-        self.no_answer_count = 0
+class Eval_Retriever(EvalRetriever):
+    """
+    This is a pipeline node that should be placed after a Retriever in order to assess its performance. Performance
+    metrics are stored in this class and updated as each sample passes through it.
+    To extract the metrics in a dict form use EvalRetriever.get_metrics().
+    """  
+    def __init__(self,debug: bool=False, open_domain: bool=False):
+        super().__init__(debug,open_domain)
+        
         self.summed_avg_precision = 0.0
         self.summed_reciprocal_rank = 0.0
 
@@ -200,6 +195,7 @@ class EvalRetriever:
             "map": 0.0, #mean_average_precision
             "mrr": 0.0 #mean_reciprocal_rank
         }
+
 
 
     def run(self, documents, labels: dict, **kwargs):
@@ -214,13 +210,17 @@ class EvalRetriever:
         self.correct_retrieval_count += correct_retrieval
         self.recall = self.correct_retrieval_count / self.query_count
 
-        self.metrics['recall'] = self.correct_retrieval_count / self.query_count 
+        self.metrics['recall'] = self.recall
         self.metrics['map'] = self.summed_avg_precision / self.query_count 
         self.metrics['mrr'] = self.summed_reciprocal_rank / self.query_count 
+        
+        if self.debug:
+            self.log.append({"documents": documents, "labels": labels, "correct_retrieval": correct_retrieval, **kwargs})
 
         return {"documents": documents, "labels": labels, "correct_retrieval": correct_retrieval, **kwargs}, "output_1"
 
     def correct_retrievals_count(self, retriever_labels, predictions):
+        
         relevant_docs_found = 0
         found_relevant_doc = False
         current_avg_precision = 0.0
@@ -245,17 +245,14 @@ class EvalRetriever:
         return self.metrics
 
 
-class EvalReader:
-
+class Eval_Reader(EvalReader):
+    """
+    This is a pipeline node that should be placed after a Reader in order to assess the performance of the Reader
+    To extract the metrics in a dict form use EvalReader.get_metrics().
+    """
     def __init__(self):
-     
-        self.outgoing_edges = 1
-        self.init_counts()
 
-    def init_counts(self):
-        self.query_count = 0
-        self.correct_retrieval_count = 0
-
+        super().__init__(debug = True,open_domain = False)
         self.metric_counts = {
         "correct_no_answers_top1" : 0,
         "correct_no_answers_topk" : 0,
@@ -273,72 +270,85 @@ class EvalReader:
         "summed_f1_topk_has_answer" : 0,
         "number_of_no_answer" : 0
         }
-
-
+        
     def run(self, labels, answers, **kwargs):
-
+        """Run this node on one sample and its labels"""
         self.query_count += 1
 
         multi_labels = labels["reader"]
         predictions = answers
         
-        if predictions:
-            self.correct_retrieval_count += 1
+        if multi_labels.no_answer:
 
-            if multi_labels.no_answer:
-                self.metric_counts['number_of_no_answer']+= 1
-                self.metric_counts = _count_no_answer(predictions, self.metric_counts)
+            self.metric_counts['number_of_no_answer']+= 1
+            self.metric_counts = _count_no_answer(predictions, self.metric_counts)
+            if predictions:
+                if self.debug:
+                        self.log.append({"predictions": predictions,
+                                        "gold_labels": multi_labels,
+                                        "top_1_no_answer": int(predictions[0] == ""),
+                                        })
 
-          
-            else:
-                found_answer = False
-                found_em = False
-                best_f1 = 0
+        
+        else:
+            found_answer = False
+            found_em = False
+            best_f1 = 0
 
-                for answer_idx, answer in enumerate(predictions):
+            for answer_idx, answer in enumerate(predictions):
 
 
-                    if answer["document_id"] in multi_labels.multiple_document_ids:
-                        gold_spans = [{"offset_start": multi_labels.multiple_offset_start_in_docs[i],
-                                    "offset_end": multi_labels.multiple_offset_start_in_docs[i] + len(multi_labels.multiple_answers[i]),
-                                    "doc_id": multi_labels.multiple_document_ids[i]} for i in range(len(multi_labels.multiple_answers))] 
+                if answer["document_id"] in multi_labels.multiple_document_ids:
+                    gold_spans = [{"offset_start": multi_labels.multiple_offset_start_in_docs[i],
+                                "offset_end": multi_labels.multiple_offset_start_in_docs[i] + len(multi_labels.multiple_answers[i]),
+                                "doc_id": multi_labels.multiple_document_ids[i]} for i in range(len(multi_labels.multiple_answers))] 
 
-                        predicted_span = {"offset_start": answer["offset_start"],
-                                        "offset_end": answer["offset_end"],
-                                        "doc_id": answer["document_id"]}
+                    predicted_span = {"offset_start": answer["offset_start"],
+                                    "offset_end": answer["offset_end"],
+                                    "doc_id": answer["document_id"]}
 
-                        best_f1_in_gold_spans = 0
-                        for gold_span in gold_spans:
-                            if gold_span["doc_id"] == predicted_span["doc_id"]:
-                                # check if overlap between gold answer and predicted answer
-                                if not found_answer:
-                                    self.metric_counts, found_answer = _count_overlap(gold_span, predicted_span, self.metric_counts, answer_idx)  # type: ignore
+                    best_f1_in_gold_spans = 0
+                    for gold_span in gold_spans:
+                        if gold_span["doc_id"] == predicted_span["doc_id"]:
+                            # check if overlap between gold answer and predicted answer
+                            if not found_answer:
+                                self.metric_counts, found_answer = _count_overlap(gold_span, predicted_span, self.metric_counts, answer_idx)  # type: ignore
 
-                                # check for exact match
-                                if not found_em:
-                                    self.metric_counts, found_em = _count_exact_match(gold_span, predicted_span, self.metric_counts, answer_idx)  # type: ignore
+                            # check for exact match
+                            if not found_em:
+                                self.metric_counts, found_em = _count_exact_match(gold_span, predicted_span, self.metric_counts, answer_idx)  # type: ignore
 
-                                # calculate f1
-                                current_f1 = _calculate_f1(gold_span, predicted_span)  # type: ignore
-                                if current_f1 > best_f1_in_gold_spans:
-                                    best_f1_in_gold_spans = current_f1
-                        # top-1 f1
-                        if answer_idx == 0:
-                            self.metric_counts["summed_f1_top1"] += best_f1_in_gold_spans
-                            self.metric_counts["summed_f1_top1_has_answer"] += best_f1_in_gold_spans
-                        if best_f1_in_gold_spans > best_f1:
-                            best_f1 = best_f1_in_gold_spans
+                            # calculate f1
+                            current_f1 = _calculate_f1(gold_span, predicted_span)  # type: ignore
+                            if current_f1 > best_f1_in_gold_spans:
+                                best_f1_in_gold_spans = current_f1
+                    # top-1 f1
+                    if answer_idx == 0:
+                        self.metric_counts["summed_f1_top1"] += best_f1_in_gold_spans
+                        self.metric_counts["summed_f1_top1_has_answer"] += best_f1_in_gold_spans
+                    if best_f1_in_gold_spans > best_f1:
+                        best_f1 = best_f1_in_gold_spans
 
-                    if found_em:
-                        break
+                if found_em:
+                    break
 
-                self.metric_counts["summed_f1_topk"] += best_f1
-                self.metric_counts["summed_f1_topk_has_answer"] += best_f1
+
+            self.metric_counts["summed_f1_topk"] += best_f1
+            self.metric_counts["summed_f1_topk_has_answer"] += best_f1
+
+            if self.debug:
+                    self.log.append({"predictions": predictions,
+                                     "gold_labels": multi_labels,
+                                     "top_k_f1": self.metric_counts["summed_f1_topk"] / self.query_count,
+                                     "top_k_em": self.metric_counts["exact_matches_topk"] / self.query_count
+                                     })
       
         return {**kwargs}, "output_1"
 
     def get_metrics(self):
-        return calculate_reader_metrics(self.metric_counts,self.query_count)
+        metrics = calculate_reader_metrics(self.metric_counts,self.query_count)
+        metrics.update(self.metric_counts)
+        return(metrics)
 
 
 
@@ -348,9 +358,19 @@ def full_eval_retriever_reader(
         k_retriever: int,
         k_reader_total: int,
         label_index: str = "label",
-        doc_index: str = "eval_document",
         label_origin: str = "gold_label",
 ):
+    """
+    Performs retriever/reader evaluation on evaluation documents in the DocumentStore.
+    The role of this function is - prepare data format for evaluation pipeline
+                                 - performs a single run (all the aueries) on the pipeline
+    the function does not return evaluation results as they are stored on EvalRetriever and EvalRetriever Objects 
+
+    :param pipeline:
+    :param document_store: DocumentStore containing the evaluation documents
+    :param label_index: Index/Table name where labeled questions are stored
+    :param doc_index: Index/Table name where documents that are used for evaluation are stored
+    """
     filters = {"origin": [label_origin]}
     labels = document_store.get_all_labels_aggregated(index=label_index, filters=filters)
     labels = [label for label in labels if label.question]
@@ -368,9 +388,9 @@ def full_eval_retriever_reader(
     for q, l in q_to_l_dict.items():
         res = pipeline.run(
             query=q,
-            top_k_retriever=10,
+            top_k_retriever = k_retriever,
             labels=l,
-            top_k_reader=10,
+            top_k_reader = k_reader_total,
         )
         results.append(res)
 

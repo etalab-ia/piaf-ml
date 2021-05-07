@@ -15,6 +15,7 @@ from haystack.preprocessor.preprocessor import PreProcessor
 sys.path.insert(0, os.path.abspath("./"))
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
+from src.evaluation.utils.utils_eval import EvalRetriever,EvalReader
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -106,3 +107,12 @@ def retriever_faq(document_store, gpu_available):
                                    use_gpu=gpu_available, model_format="sentence_transformers",
                                    pooling_strategy="reduce_max",
                                    emb_extraction_layer=-1)
+
+
+@pytest.fixture
+def Eval_Retriever():
+    return EvalRetriever()
+
+@pytest.fixture
+def Eval_Reader():
+    return EvalReader()

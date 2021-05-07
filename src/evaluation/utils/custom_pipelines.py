@@ -71,6 +71,17 @@ class TitleBM25QAPipeline(BaseStandardPipeline):
 
 class RetrieverReaderEvaluationPipeline(BaseStandardPipeline):
     def __init__(self, reader: BaseReader, retriever: BaseRetriever , eval_retriever , eval_reader):
+        """
+        Initialize an Evaluation Pipeline for Extractive Question Answering. This Pipeline is based on retriever reader architecture.
+        it includes two evaluation nodes :
+            - An EvalRetriever node after Retriever
+            - An EvalReader node after RetrReader
+
+        :param reader: Reader instance
+        :param retriever: Retriever instance
+        :param eval_retriever : EvalRetriever instance
+        :param eval_reader : EvalReader instance
+        """
 
         self.pipeline = Pipeline()
         self.pipeline.add_node(component=retriever, name="Retriever", inputs=["Query"])
@@ -102,6 +113,22 @@ class TitleBM25QAEvaluationPipeline(BaseStandardPipeline):
                 eval_retriever ,
                 eval_reader
                 ):
+
+        """
+        Initialize an Evaluation Pipeline for Extractive Question Answering. This Pipeline is based on on two retrievers and a reader.
+        The two retrievers used for this pipeline are :
+            - A TitleEmbeddingRetriever
+            - An ElasticsearchRetriever
+            
+        it includes two evaluation nodes :
+            - An EvalRetriever node after Retriever
+            - An EvalReader node after RetrReader
+
+        :param reader: Reader instance
+        :param retriever: Retriever instance
+        :param eval_retriever : EvalRetriever instance
+        :param eval_reader : EvalReader instance
+        """
        
         self.k_title_retriever = k_title_retriever
         self.k_bm25_retriever = k_bm25_retriever
