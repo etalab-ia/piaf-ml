@@ -101,5 +101,19 @@ best_fiches = [
     "F869"
 ]
 
+from pathlib import Path
+import json
 
-with open()
+with open(Path("./clients/dila/knowledge_base/squad.json"), 'r', encoding='UTF_8') as f:
+    data = json.load(f)['data']
+
+data_to_annotate = []
+
+for document in data:
+    if document['id'] in best_fiches:
+        data_to_annotate.append(document)
+
+json_to_annotate = {'version': '1.0', 'data': data_to_annotate}
+
+with open(Path("./clients/dila/knowledge_base/best_fiche.json"), 'w', encoding='UTF_8') as f:
+    json.dump(json_to_annotate, f)
