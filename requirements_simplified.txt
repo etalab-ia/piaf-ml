@@ -11,7 +11,7 @@ pytest
 python-ptrace
 qtconsole
 seaborn
-sentence-transformerss
+sentence-transformers
 scikit-optimize
 python-dotenv
 # alembic # Installed as dependency for mlflow
