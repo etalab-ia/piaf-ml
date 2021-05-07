@@ -183,7 +183,6 @@ if __name__ == '__main__':
     result_file_path = Path("./results/results_reader.csv")
     parameters_grid = list(ParameterGrid(param_grid=parameters))
     experiment_name = parameters["experiment_name"][0]
-
     device, n_gpu = initialize_device_settings(use_cuda=True)
     GPU_AVAILABLE = 1 if device.type == "cuda" else 0
 
@@ -217,6 +216,7 @@ if __name__ == '__main__':
             logger.info(f"Doing run with config : {param}")
             try:
                 with mlflow.start_run(run_name=idx) as run:
+
                     mlflow.log_params(param)
                     # START run
                     run_results = single_run(param)
@@ -224,7 +224,11 @@ if __name__ == '__main__':
                     logger.info(f'Reader Accuracy: {run_results["reader_topk_accuracy"]}')
                     logger.info(f'Reader topk f1: {run_results["reader_topk_f1"]}')
                     mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
-                    mlflow.log_artifact(f"./logs/root.log")
+                    try:
+                        mlflow.log_artifact(f"./logs/root.log")
+                    except Exception:
+                        logger.error(f"Could not upload log to artifact server. "
+                                     f"Still saved in logs/root_complete.log")
                 run_results.update(param)
                 save_results(result_file_path=result_file_path, results_list=run_results)
                 list_past_run_names = get_list_past_run(client, experiment_name)  # update list of past experiments

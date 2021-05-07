@@ -1,5 +1,5 @@
 parameters = {
-    "k_retriever": [1,2],
+    "k_retriever": [1],
     "k_title_retriever" : [10], # must be present, but only used when retriever_type == title_bm25
     "k_reader_per_candidate": [1],
     "k_reader_total": [1],
