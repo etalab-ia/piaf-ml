@@ -19,7 +19,7 @@ from haystack.reader.transformers import TransformersReader
 from haystack.preprocessor.preprocessor import PreProcessor
 from haystack.pipeline import ExtractiveQAPipeline
 
-from farm.utils import initialize_device_settings
+from farm.utils import initialize_device_settings, BaseMLLogger
 from sklearn.model_selection import ParameterGrid
 
 from src.evaluation.config.retriever_reader_eval_squad_config import parameters
@@ -32,7 +32,7 @@ from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline
 import mlflow
 from mlflow.tracking import MlflowClient
-
+BaseMLLogger.disable_logging = True
 load_dotenv()
 prepare_mlflow_server()
 
