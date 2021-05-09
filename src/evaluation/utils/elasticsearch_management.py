@@ -7,6 +7,7 @@ from elasticsearch import Elasticsearch
 
 port = '9200'
 
+
 def launch_ES():
     logging.info("Search for Elasticsearch ...")
     es = Elasticsearch([f'http://localhost:{port}/'], verify_certs=True)
@@ -28,12 +29,13 @@ def launch_ES():
     else:
         logging.info("Elasticsearch found !")
 
+
 def delete_indices(index='document'):
     logging.info(f"Delete index {index} inside Elasticsearch ...")
     es = Elasticsearch([f'http://localhost:{port}/'], verify_certs=True)
     es.indices.delete(index=index, ignore=[400, 404])
 
-def prepare_mapping (mapping, title_boosting_factor =1, embedding_dimension=512):
+
+def prepare_mapping(mapping, title_boosting_factor=1, embedding_dimension=512):
     mapping["mappings"]["properties"]["name"]["boost"] = title_boosting_factor
     mapping["mappings"]["properties"]["emb"]["dims"] = embedding_dimension
-

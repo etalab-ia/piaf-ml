@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.retriever.sparse import ElasticsearchRetriever
-from haystack.retriever.dense import EmbeddingRetriever
+from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
 from haystack.reader.transformers import TransformersReader
 from haystack.preprocessor.preprocessor import PreProcessor
 from haystack.pipeline import ExtractiveQAPipeline
@@ -32,6 +32,7 @@ from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline
 import mlflow
 from mlflow.tracking import MlflowClient
+
 BaseMLLogger.disable_logging = True
 load_dotenv()
 prepare_mlflow_server()
@@ -117,6 +118,20 @@ def single_run(parameters):
                                        use_gpu=GPU_AVAILABLE, model_format="transformers",
                                        pooling_strategy="reduce_max",
                                        emb_extraction_layer=-1)
+        p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
+
+    elif retriever_type == "dpr":
+        document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
+                                                    search_fields=["name", "text"],
+                                                    create_index=False, embedding_field="emb",
+                                                    embedding_dim=768, excluded_meta_data=["emb"],
+                                                    similarity='dot_product',
+                                                    custom_mapping=SQUAD_MAPPING)
+        retriever = DensePassageRetriever(document_store=document_store,
+                                          query_embedding_model="etalab-ia/dpr-question_encoder-fr_qa-camembert",
+                                          passage_embedding_model="etalab-ia/dpr-ctx_encoder-fr_qa-camembert",
+                                          infer_tokenizer_classes=True,
+                                          use_gpu=GPU_AVAILABLE)
         p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
 
     elif retriever_type == "title_bm25":
@@ -221,8 +236,8 @@ if __name__ == '__main__':
                     # START run
                     run_results = single_run(param)
                     logger.info(f"Run finished successfully")
-                    logger.info(f'Reader Accuracy: {run_results["reader_topk_accuracy"]}')
-                    logger.info(f'Reader topk f1: {run_results["reader_topk_f1"]}')
+                    logger.info(f'Reader Accuracy (has answer): {run_results["reader_topk_accuracy_has_answer"]}')
+                    logger.info(f'Reader topk f1 (has answer)   : {run_results["reader_topk_f1_has_answer"]}')
                     mlflow.log_metrics({k: v for k, v in run_results.items() if v is not None})
                     try:
                         mlflow.log_artifact(f"./logs/root.log")

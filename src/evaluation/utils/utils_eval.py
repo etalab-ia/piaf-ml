@@ -71,7 +71,7 @@ def eval_retriever(
 def get_retriever_metrics(retrieved_docs_list, question_label_dict_list):
     correct_retrievals = 0
     summed_avg_precision = 0.0
-    summed_reciprocal_rank = 0.0
+    summed_reciprocal_rank = []
 
     for question, retrieved_docs in tqdm(zip(question_label_dict_list, retrieved_docs_list)):
         gold_ids = question['gold_ids']
@@ -85,7 +85,7 @@ def get_retriever_metrics(retrieved_docs_list, question_label_dict_list):
                 relevant_docs_found += 1
                 if not found_relevant_doc:
                     correct_retrievals += 1
-                    summed_reciprocal_rank += 1 / (doc_idx + 1)
+                    summed_reciprocal_rank.append(1 / (doc_idx + 1))
                 current_avg_precision += relevant_docs_found / (doc_idx + 1)
                 found_relevant_doc = True
                 if relevant_docs_found == number_relevant_docs:
@@ -97,7 +97,7 @@ def get_retriever_metrics(retrieved_docs_list, question_label_dict_list):
     # Metrics
     number_of_questions = len(question_label_dict_list)
     recall = correct_retrievals / number_of_questions
-    mean_reciprocal_rank = summed_reciprocal_rank / number_of_questions
+    mean_reciprocal_rank = sum(summed_reciprocal_rank) / number_of_questions
     mean_avg_precision = summed_avg_precision / number_of_questions
 
     metrics = {
