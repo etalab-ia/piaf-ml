@@ -12,9 +12,9 @@ from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
 from haystack.retriever.sparse import ElasticsearchRetriever
 from haystack.preprocessor.preprocessor import PreProcessor
 
-from src.evaluation.utils.elasticsearch_management import delete_indices, prepare_mapping
 
 sys.path.insert(0, os.path.abspath("./"))
+from src.evaluation.utils.elasticsearch_management import delete_indices, prepare_mapping
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 

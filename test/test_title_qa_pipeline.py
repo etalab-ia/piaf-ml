@@ -7,6 +7,7 @@ from src.evaluation.utils.utils_eval import eval_titleQA_pipeline
 from src.evaluation.utils.custom_pipelines import TitleQAPipeline
 
 @pytest.mark.elasticsearch
+@pytest.skip
 def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retriever_faq):
     doc_index = "document"
     label_index = "label"
