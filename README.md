@@ -124,8 +124,8 @@ MLFLOW_TRACKING_SERVER_URI = https://mlflow.endpoint/
 #### Mlflow Specific Configutation
 To be able to upload artifacts into mlflow, you need to be able to `ssh` into the designated artifact server via a `ssh` key. Also, you need a local `ssh` config that specifies an identity file for the artifact-server domain. Such as: 
 ```
-Host mlflow.artifact.host
-    User someusername
+Host your.mlflow.remotehost.adress
+    User localhostusername
     IdentityFile ~/.ssh/your_private_key
 ```
 This requirement is needed **when using `sftp`** as your artifact endpoint protocol. 

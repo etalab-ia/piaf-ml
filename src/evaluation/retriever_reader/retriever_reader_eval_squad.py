@@ -24,7 +24,7 @@ from haystack.reader.transformers import TransformersReader
 from haystack.preprocessor.preprocessor import PreProcessor
 from haystack.pipeline import ExtractiveQAPipeline
 
-from farm.utils import initialize_device_settings
+from farm.utils import initialize_device_settings, BaseMLLogger
 from sklearn.model_selection import ParameterGrid
 
 from src.evaluation.config.retriever_reader_eval_squad_config import parameters
@@ -37,6 +37,7 @@ from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline
 from src.evaluation.utils.utils_optimizer import LoggingCallback, create_dimensions_from_parameters
 
+BaseMLLogger.disable_logging = True
 load_dotenv()
 prepare_mlflow_server()
 
@@ -53,7 +54,7 @@ def single_run(idx=None, **kwargs):
         Perform one run of the pipeline under testing with the parameters given in the config file.
         The results are saved in the mlflow instance.
         """
-
+    
     with mlflow.start_run(run_name=idx) as run:
         mlflow.log_params(kwargs)
 
@@ -189,11 +190,14 @@ def single_run(idx=None, **kwargs):
             mlflow.log_metrics({k: v for k, v in retriever_eval_results.items() if v is not None})
             logger.info(f"Run finished successfully")
             logger.info(f'Reader Accuracy: {retriever_eval_results["reader_topk_accuracy"]}')
-            mlflow.log_artifact(f"./logs/root.log")
+            try:
+                mlflow.log_artifact(f"./logs/root.log")
+            except Exception:
+                logger.error(f"Could not upload log to artifact server. "
+                             f"Still saved in logs/root_complete.log")
 
         except Exception as e:
             logging.error(f"Could not run this config: {kwargs}. Error {e}.")
-
 
     return retriever_eval_results
 
@@ -204,7 +208,6 @@ if __name__ == '__main__':
 
     parameters_grid = list(ParameterGrid(param_grid=parameters))
     experiment_name = parameters["experiment_name"][0]
-
     device, n_gpu = initialize_device_settings(use_cuda=True)
     GPU_AVAILABLE = 1 if device.type == "cuda" else 0
 
@@ -247,6 +250,7 @@ if __name__ == '__main__':
                 # Log again run with previous results
                 previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
                 with mlflow.start_run(run_name=idx) as run:
+
                     mlflow.log_params(param)
                     mlflow.log_metrics(previous_metrics)
 

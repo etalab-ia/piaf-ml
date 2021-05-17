@@ -1,7 +1,7 @@
 parameters = {
-    "k_retriever": [1,50],
-    "k_title_retriever" : [1,50], # must be present, but only used when retriever_type == title_bm25
-    "k_reader_per_candidate": [10,20],
+    "k_retriever": [1],
+    "k_title_retriever" : [10], # must be present, but only used when retriever_type == title_bm25
+    "k_reader_per_candidate": [1],
     "k_reader_total": [1],
     "reader_model_version": ["053b085d851196110d7a83d8e0f077d0a18470be"],
     "retriever_model_version": ["1a01b38498875d45f69b2a6721bf6fe87425da39"],
