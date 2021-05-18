@@ -56,7 +56,6 @@ def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retrie
         assert retriever_eval_results["exact_matches_topk"] == 8
         assert retriever_eval_results['reader_topk_accuracy'] == 0.9375 #15/16
         assert retriever_eval_results['reader_topk_accuracy_has_answer'] == 1.0 #15/15
-        assert retriever_eval_results['reader_topk_accuracy_has_answer'] == 1.0 #15/15
     elif k_reader_total == 1:
         assert retriever_eval_results["correct_readings_top1"] == retriever_eval_results["correct_readings_topk"]
         assert retriever_eval_results["correct_readings_top1_has_answer"] == retriever_eval_results["correct_readings_topk_has_answer"]
