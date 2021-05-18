@@ -178,7 +178,7 @@ def eval_retriever_reader(
     return metrics
 
 
-class Eval_Retriever(EvalRetriever):
+class PiafEvalRetriever(EvalRetriever):
     """
     This is a pipeline node that should be placed after a Retriever in order to assess its performance. Performance
     metrics are stored in this class and updated as each sample passes through it.
@@ -189,12 +189,8 @@ class Eval_Retriever(EvalRetriever):
         
         self.summed_avg_precision = 0.0
         self.summed_reciprocal_rank = 0.0
-
-        self.metrics = {
-            "recall": 0.0, #recall
-            "map": 0.0, #mean_average_precision
-            "mrr": 0.0 #mean_reciprocal_rank
-        }
+        self.map = 0.0, #mean_average_precision
+        self.mrr = 0.0 #mean_reciprocal_rank
 
 
 
@@ -212,9 +208,8 @@ class Eval_Retriever(EvalRetriever):
 
         #update metrics
         self.recall = self.correct_retrieval_count / self.query_count
-        self.metrics['recall'] = self.recall
-        self.metrics['map'] = self.summed_avg_precision / self.query_count 
-        self.metrics['mrr'] = self.summed_reciprocal_rank / self.query_count 
+        self.map = self.summed_avg_precision / self.query_count 
+        self.mrr = self.summed_reciprocal_rank / self.query_count 
         
         #if debug mode 
         if self.debug:
@@ -228,7 +223,6 @@ class Eval_Retriever(EvalRetriever):
         This function takes retriever_labels Multilabel object as well as the preedicted documents to update metric counts
         
         """  
-        
         relevant_docs_found = 0
         found_relevant_doc = False
         current_avg_precision = 0.0
@@ -255,10 +249,15 @@ class Eval_Retriever(EvalRetriever):
         return found_relevant_doc
 
     def get_metrics(self):
-        return self.metrics
+        return {
+                "recall": self.recall, 
+                "map": self.map, 
+                "mrr": self.mrr 
+                }
 
 
-class Eval_Reader(EvalReader):
+
+class PiafEvalReader(EvalReader):
     """
     This is a pipeline node that should be placed after a Reader in order to assess the performance of the Reader
     To extract the metrics in a dict form use EvalReader.get_metrics().
@@ -266,6 +265,7 @@ class Eval_Reader(EvalReader):
     def __init__(self):
 
         super().__init__(debug = True,open_domain = False)
+        
         self.metric_counts = {
         "correct_no_answers_top1" : 0,
         "correct_no_answers_topk" : 0,
@@ -286,6 +286,7 @@ class Eval_Reader(EvalReader):
         
     def run(self, labels, answers, **kwargs):
         """Run this node on one sample and its labels"""
+
         self.query_count += 1
 
         multi_labels = labels["reader"]
@@ -301,7 +302,6 @@ class Eval_Reader(EvalReader):
                                         "gold_labels": multi_labels,
                                         "top_1_no_answer": int(predictions[0] == ""),
                                         })
-
         
         else:
             found_answer = False

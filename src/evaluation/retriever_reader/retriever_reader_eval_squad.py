@@ -33,7 +33,7 @@ from src.evaluation.config.retriever_reader_eval_squad_config import parameters
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.utils.elasticsearch_management import launch_ES, delete_indices, prepare_mapping
 from src.evaluation.utils.mlflow_management import prepare_mlflow_server
-from src.evaluation.utils.utils_eval import save_results,full_eval_retriever_reader,Eval_Retriever,Eval_Reader
+from src.evaluation.utils.utils_eval import save_results,full_eval_retriever_reader,PiafEvalRetriever,PiafEvalReader
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline,RetrieverReaderEvaluationPipeline,TitleBM25QAEvaluationPipeline
 import mlflow
@@ -93,8 +93,8 @@ def single_run(parameters):
                                 tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
                                 use_gpu=gpu_id, top_k_per_candidate=k_reader_per_candidate)
                                 
-    eval_retriever = Eval_Retriever()
-    eval_reader = Eval_Reader()
+    eval_retriever = PiafEvalRetriever()
+    eval_reader = PiafEvalReader()
 
     if retriever_type == 'bm25':
 
@@ -184,6 +184,7 @@ def single_run(parameters):
 
     if retriever_type in ["sbert", "dpr", "title_bm25", "title"]:
         document_store.update_embeddings(retriever, index=doc_index)
+
 
     start = time.time()
 
