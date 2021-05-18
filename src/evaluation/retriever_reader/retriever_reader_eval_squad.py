@@ -185,22 +185,39 @@ def single_run(parameters):
     if retriever_type in ["sbert", "dpr", "title_bm25", "title"]:
         document_store.update_embeddings(retriever, index=doc_index)
 
-
+    retriever_reader_eval_results = {}
+    
     start = time.time()
 
     full_eval_retriever_reader(document_store=document_store, 
-                               pipeline=p,
-                               k_retriever=k_retriever, 
-                               k_reader_total=k_reader_total,
-                               label_index=label_index)
+                                pipeline=p,
+                                k_retriever=k_retriever, 
+                                k_reader_total=k_reader_total,
+                                label_index=label_index)
 
-    end = time.time()
-
-
-    retriever_reader_eval_results = eval_retriever.get_metrics()
+    retriever_reader_eval_results.update(eval_retriever.get_metrics())
     retriever_reader_eval_results.update(eval_reader.get_metrics())
+
+    logging.info(f"Retriever Recall:{retriever_reader_eval_results['recall']}")
+    logging.info(f"Retriever Mean Avg Precision:{retriever_reader_eval_results['map']}")
+    logging.info(f"Retriever Mean Reciprocal Rank:{retriever_reader_eval_results['mrr']}")
+    logging.info(f"Reader Accuracy:{retriever_reader_eval_results['reader_topk_accuracy_has_answer']}")
+    logging.info(f"reader_topk_f1:{retriever_reader_eval_results['reader_topk_f1']}")
+
+    # Log time per label in metrics
+    end = time.time()
+    time_per_label = (end - start) / document_store.get_label_count(index=label_index)
+    retriever_reader_eval_results.update({"time_per_label": time_per_label})
+
+
+    return retriever_reader_eval_results
+
+
+
+
     
-    print()
+    
+    '''print()
     retriever.print_time()
     print()
     print('Retreiver')
@@ -223,7 +240,7 @@ def single_run(parameters):
 
     retriever_reader_eval_results.update({"time_per_label": time_per_label})
 
-    return retriever_reader_eval_results
+    return retriever_reader_eval_results'''
 
 
 def add_extra_params(dict_params: dict):
