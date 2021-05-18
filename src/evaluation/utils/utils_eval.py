@@ -202,44 +202,57 @@ class Eval_Retriever(EvalRetriever):
         """Run this node on one sample and its labels"""
         self.query_count += 1
         retriever_labels = labels["retriever"]
-        relevant_docs_found = 0
-        current_avg_precision = 0.0
-               
-        correct_retrieval = True if self.correct_retrievals_count(retriever_labels, documents) > 0 else False
-    
-        self.correct_retrieval_count += correct_retrieval
-        self.recall = self.correct_retrieval_count / self.query_count
 
+
+        #call correct_retrievals_count if any document found we consider the retreiver operation correct
+        correct_retrieval = self.correct_retrievals_count(retriever_labels, documents)
+
+        #update correct_retrieval_count 
+        self.correct_retrieval_count += correct_retrieval
+
+        #update metrics
+        self.recall = self.correct_retrieval_count / self.query_count
         self.metrics['recall'] = self.recall
         self.metrics['map'] = self.summed_avg_precision / self.query_count 
         self.metrics['mrr'] = self.summed_reciprocal_rank / self.query_count 
         
+        #if debug mode 
         if self.debug:
             self.log.append({"documents": documents, "labels": labels, "correct_retrieval": correct_retrieval, **kwargs})
 
+        #returns the required elements for the next node in the pipeline
         return {"documents": documents, "labels": labels, "correct_retrieval": correct_retrieval, **kwargs}, "output_1"
 
     def correct_retrievals_count(self, retriever_labels, predictions):
+        """
+        This function takes retriever_labels Multilabel object as well as the preedicted documents to update metric counts
+        
+        """  
         
         relevant_docs_found = 0
         found_relevant_doc = False
         current_avg_precision = 0.0
-        correct_retrieval = 0
 
+        #extract the label document_ids (true relevant documents) and remove duplicated documents
         label_ids = list(set(retriever_labels.multiple_document_ids))
+
+        #check if the predicted document are relevant 
         for doc_idx, doc in enumerate(predictions):
             if doc.id in label_ids:
+                #if predicted is relevant update count
                 relevant_docs_found += 1
                 if not found_relevant_doc:
-                    correct_retrieval = 1
+                    #update summed_reciprocal_rank only for the first relevant predicted document 
                     self.summed_reciprocal_rank += 1 / (doc_idx + 1)
+                #update avg_precision each time a new relevant doc is found
                 current_avg_precision += relevant_docs_found / (doc_idx + 1)
                 found_relevant_doc = True
+        #if found relevant doc update summed_avg_precision
         if found_relevant_doc:
             all_relevant_docs = len(label_ids)
             self.summed_avg_precision += current_avg_precision / all_relevant_docs
-
-        return relevant_docs_found
+        #returns true if relevant doc is found
+        return found_relevant_doc
 
     def get_metrics(self):
         return self.metrics

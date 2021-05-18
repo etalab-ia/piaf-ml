@@ -95,7 +95,7 @@ class RetrieverReaderEvaluationPipeline(BaseStandardPipeline):
         """
         run function definition of the customized RetrieverReaderEvaluationPipeline 
 
-        :param query: string  (question or query )
+        :param query: string  (question or query)
         :param top_k_retriever: int
         :param top_k_reader : int
         :param labels : Dict of multilabel (has the form {{'retriever':multilabel},'reader':multilabel}})
