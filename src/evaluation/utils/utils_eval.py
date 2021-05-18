@@ -376,6 +376,10 @@ def full_eval_retriever_reader(
     labels = [label for label in labels if label.question]
     results=[]
 
+
+    test = document_store.get_all_documents_generator(index=label_index, filters=filters)
+    print(test)
+
     question_label_dict_list = []
     
     q_to_l_dict = {
@@ -384,6 +388,7 @@ def full_eval_retriever_reader(
         "reader": l
     } for l in labels
     }
+
 
     for q, l in q_to_l_dict.items():
         res = pipeline.run(

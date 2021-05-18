@@ -92,6 +92,14 @@ class RetrieverReaderEvaluationPipeline(BaseStandardPipeline):
 
 
     def run(self, query, top_k_retriever, top_k_reader, labels):
+        """
+        run function definition of the customized RetrieverReaderEvaluationPipeline 
+
+        :param query: string  (question or query )
+        :param top_k_retriever: int
+        :param top_k_reader : int
+        :param labels : Dict of multilabel (has the form {{'retriever':multilabel},'reader':multilabel}})
+        """
 
         output = self.pipeline.run(
             query=query,
