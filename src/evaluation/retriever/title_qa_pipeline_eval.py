@@ -30,19 +30,20 @@ def single_run(parameters):
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
 
     # Prepare framework
-    prepare_mapping(SQUAD_MAPPING, preprocessing, embedding_dimension=512)
+    prepare_mapping(mapping=SQUAD_MAPPING, title_boosting_factor=1, embedding_dimension=768)
 
     doc_index = "document_faq"
     label_index = "label_faq"
 
     document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
                                                 create_index=False, embedding_field="emb",
-                                                embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                embedding_dim=768, excluded_meta_data=["emb"], similarity='cosine',
                                                 custom_mapping=SQUAD_MAPPING)
 
     retriever = TitleEmbeddingRetriever(document_store=document_store,
-                                        embedding_model="distiluse-base-multilingual-cased",
-                                        use_gpu=GPU_AVAILABLE, model_format="sentence_transformers",
+                                        embedding_model="distilbert-base-multilingual-cased",
+                                        model_version="1a01b38498875d45f69b2a6721bf6fe87425da39",
+                                        use_gpu=GPU_AVAILABLE, model_format="transformers",
                                         pooling_strategy="reduce_max",
                                         emb_extraction_layer=-1)
 

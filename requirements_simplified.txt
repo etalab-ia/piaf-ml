@@ -8,12 +8,12 @@ pefile
 pip-chill
 pysftp
 pytest
+python-dotenv
 python-ptrace
 qtconsole
 seaborn
 sentence-transformers
 scikit-optimize
-python-dotenv
 # alembic # Installed as dependency for mlflow
 # aniso8601 # Installed as dependency for flask-restplus
 # appdirs # Installed as dependency for virtualenv
