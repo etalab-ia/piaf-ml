@@ -4,7 +4,6 @@ parameters = {
     "k_reader_per_candidate": [20],
     "k_reader_total": [3],
     "retriever_model_version": ["1a01b38498875d45f69b2a6721bf6fe87425da39"],
-    "dpr_model_version": [],
     "retriever_type": ["sbert"], # Can be bm25, sbert, dpr, title or title_bm25
     "squad_dataset": ["./clients/dila/knowledge_base/squad.json"],
     "filter_level": [None],
