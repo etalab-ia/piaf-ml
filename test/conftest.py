@@ -32,8 +32,7 @@ def elasticsearch_fixture():
             shell=True
         )
         status = subprocess.run(
-            [
-                'docker run -d --name haystack_test_elastic -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'],
+            ['docker run -d --name haystack_test_elastic -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'],
             shell=True
         )
         if status.returncode:
