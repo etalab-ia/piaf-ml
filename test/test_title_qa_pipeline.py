@@ -6,8 +6,11 @@ from haystack.document_store.base import BaseDocumentStore
 from src.evaluation.utils.utils_eval import eval_titleQA_pipeline
 from src.evaluation.utils.custom_pipelines import TitleQAPipeline
 
+
 @pytest.mark.elasticsearch
-def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retriever_faq):
+def test_eval_elastic_retriever_reader(
+    document_store: BaseDocumentStore, retriever_faq
+):
     doc_index = "document"
     label_index = "label"
 
@@ -16,8 +19,11 @@ def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retrie
     # add eval data (SQUAD format)
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
-    document_store.add_eval_data(filename=Path("./test/samples/squad/faq.json").as_posix(), doc_index=doc_index,
-                                 label_index=label_index)
+    document_store.add_eval_data(
+        filename=Path("./test/samples/squad/faq.json").as_posix(),
+        doc_index=doc_index,
+        label_index=label_index,
+    )
 
     document_store.update_embeddings(retriever_faq, index=doc_index)
 
@@ -26,15 +32,17 @@ def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retrie
 
     # eval retriever
     k_retriever = 3
-    retriever_eval_results = eval_titleQA_pipeline(document_store=document_store, pipeline=p,
-                                                   k_retriever=k_retriever,
-                                                   label_index=label_index)
+    retriever_eval_results = eval_titleQA_pipeline(
+        document_store=document_store,
+        pipeline=p,
+        k_retriever=k_retriever,
+        label_index=label_index,
+    )
 
     assert retriever_eval_results["correct_readings_top1"] == 7
     assert retriever_eval_results["correct_readings_topk"] == 9
-    assert retriever_eval_results['reader_topk_accuracy'] == 1.
-    assert retriever_eval_results['reader_top1_accuracy'] == 7/9
-
+    assert retriever_eval_results["reader_topk_accuracy"] == 1.0
+    assert retriever_eval_results["reader_top1_accuracy"] == 7 / 9
 
     # clean up
     document_store.delete_all_documents(index=doc_index)

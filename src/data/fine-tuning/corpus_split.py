@@ -1,17 +1,19 @@
 """
-This file splits a text file containing the SPF fiches raw text into two files: train.txt and test.txt.
-To use it, pass a percentage of the desired size for the train
+This file splits a text file containing the SPF fiches raw text into two files: train.txt and test.txt. To use it, pass
+a percentage of the desired size for the train
 """
+import os
+import sys
 # TODO: This should be included in mails_csv_txt
 from pathlib import Path
-import sys
-import os
+
 print(os.getcwd())
 
 if len(sys.argv) < 3:
-    print("Please indicate the path of the file to split and the train percentage. Exiting...")
+    print(
+        "Please indicate the path of the file to split and the train percentage. Exiting..."
+    )
     exit()
-
 
 
 path_file = Path(sys.argv[1])
