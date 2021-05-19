@@ -29,37 +29,37 @@ class GoogleRetriever(BaseRetriever):
         self.website = website
 
 
-def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[
-    Document]:
-    """
-        Scan through documents in DocumentStore and return a small number documents
-        that are most relevant to the query.
+    def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[
+        Document]:
+        """
+            Scan through documents in DocumentStore and return a small number documents
+            that are most relevant to the query.
 
-        :param query: The query
-        :param filters: A dictionary where the keys specify a metadata field and the value is a list of accepted values for that field
-        :param top_k: How many documents to return per query.
-        :param index: The name of the index in the DocumentStore from which to retrieve documents
-    """
+            :param query: The query
+            :param filters: A dictionary where the keys specify a metadata field and the value is a list of accepted values for that field
+            :param top_k: How many documents to return per query.
+            :param index: The name of the index in the DocumentStore from which to retrieve documents
+        """
 
-    if top_k is None:
-        top_k = self.top_k
-    if not self.document_store:
-        logger.error(
-            "Cannot perform retrieve() since DensePassageRetriever initialized with document_store=None")
-        return []
-    if index is None:
-        index = self.document_store.index
+        if top_k is None:
+            top_k = self.top_k
+        if not self.document_store:
+            logger.error(
+                "Cannot perform retrieve() since DensePassageRetriever initialized with document_store=None")
+            return []
+        if index is None:
+            index = self.document_store.index
 
-    query_website = f"site:{self.website} " + query  # add website restriction to query
+        query_website = f"site:{self.website} " + query  # add website restriction to query
 
-    gsearch_results = [url for url in search(query_website, tld="fr", num=top_k, stop=top_k,
-                                             pause=2)]  # the list of plain url retrieved by google
-
-    documents = []
-    for g in gsearch_results:
-        document_list = document_store.query("*", filters={"link": [g]})
-        if len(document_list) > 0:
-            documents.append(document_list[0])
+        gsearch_results = [url for url in search(query_website, tld="fr", num=top_k, stop=top_k,
+                                                 pause=2)]  # the list of plain url retrieved by google
+        # TODO sometimes the doc is not found we should still have top_k results
+        documents = []
+        for g in gsearch_results:
+            document_list = self.document_store.query("*", filters={"link": [g]})
+            if len(document_list) > 0:
+                documents.append(document_list[0])
 
         return documents
 
@@ -104,13 +104,13 @@ if __name__ == "__main__":
     )
 
     website = 'service-public.fr'
-    query = "comment refaire ma carte d'identité"
+    query = "'Puis-je choisir un fournisseur de gaz différent du fournisseur d\'électricité ?'"
     query_website = f"site:{website} " + query
 
     gsearch_results = [url for url in search(query_website, tld="fr", num=10, stop=10, pause=2)]
-    gsearch_results = []
-    for j in search(query, tld="fr", num=10, stop=10, pause=2):
-        gsearch_results.append(j)
+
     documents = []
     for g in gsearch_results:
-        documents.append(document_store.query("*", filters={"link": [g]}))
+        document_list = document_store.query("*", filters={"link": [g]})
+        if len(document_list) > 0:
+            documents.append(document_list[0])
