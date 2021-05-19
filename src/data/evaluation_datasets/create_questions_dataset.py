@@ -1,4 +1,4 @@
-'''
+"""
 This script creates a JSON file with fiches from service-public.fr that contain a question as title. It stores
 the question (the fiche title) and the text content of the fiche in a dict structure.
 The produced JSON file is known as the Questions Fiches dataset.
@@ -9,18 +9,18 @@ Usage:
 Arguments:
     <file_path>                     A required path parameter
     --cores=<n> CORES       Number of cores to use [default: 1:int]
-'''
+"""
 import json
 import logging
 import os
 import subprocess
+import xml.etree.ElementTree as ET
 from glob import glob
 from pathlib import Path
 
 from argopt import argopt
 from joblib import Parallel, delayed
 from tqdm import tqdm
-import xml.etree.ElementTree as ET
 
 
 def run(doc_path):
@@ -66,7 +66,9 @@ def main(doc_files_path: Path, n_jobs: int):
             tqdm.write(f"Converting file {doc_path}")
             job_output.append(run(doc_path))
     else:
-        job_output = Parallel(n_jobs=n_jobs)(delayed(run)(doc_path) for doc_path in tqdm(doc_paths))
+        job_output = Parallel(n_jobs=n_jobs)(
+            delayed(run)(doc_path) for doc_path in tqdm(doc_paths)
+        )
 
     clean_job_output = [j for j in job_output if j]
     with open("./data/questions_spf.json", "w") as outo:
@@ -76,7 +78,7 @@ def main(doc_files_path: Path, n_jobs: int):
     return doc_paths
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argopt(__doc__).parse_args()
     doc_files_path = parser.file_path
     n_jobs = parser.cores

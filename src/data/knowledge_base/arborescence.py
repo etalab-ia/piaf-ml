@@ -1,34 +1,35 @@
 """
 This file is used to generate the arborescence.json used to enrich the documents for filtering
-Usage:
-    arborescence.py <file_path> <output_path> [options]
+
+Usage: arborescence.py <file_path> <output_path> [options]
 
 Arguments:
     <file_path>             A path of a single XML fiche or a folder with multiple fiches XML
     <output_path>           A path where to store the extracted info
 """
 
+import json
+import os
+import xml.etree.ElementTree as ET
 from glob import glob
 from pathlib import Path
-import xml.etree.ElementTree as ET
 
 from argopt import argopt
 from tqdm import tqdm
 
-import os
-import json
-
 
 def concat_ID_and_name(id, name):
-    return id + '//' + name
+    return id + "//" + name
 
 
 def iter_fiches(study_root):
     fiches = []
-    for fiche in study_root.iter('Fiche'):
-        fiche_id = fiche.attrib['ID']
+    for fiche in study_root.iter("Fiche"):
+        fiche_id = fiche.attrib["ID"]
         fiche_name = fiche.text
-        if fiche_name == '\n':  # sometimes there are fiches that do not belong to the theme
+        if (
+            fiche_name == "\n"
+        ):  # sometimes there are fiches that do not belong to the theme
             continue
         fiche_txt = concat_ID_and_name(fiche_id, fiche_name)
         fiches.append(fiche_txt)
@@ -43,42 +44,54 @@ def extract_arbo_F_doc(doc_path):
     tree = ET.parse(doc_path)
     root = tree.getroot()
     audience = list(root.iter("Audience"))[0].text
-    titre = list(root.findall(".//dc:title", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
-    fiche = list(root.findall(".//dc:identifier", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
+    titre = list(
+        root.findall(
+            ".//dc:title", namespaces={"dc": "http://purl.org/dc/elements/1.1/"}
+        )
+    )[0].text
+    fiche = list(
+        root.findall(
+            ".//dc:identifier", namespaces={"dc": "http://purl.org/dc/elements/1.1/"}
+        )
+    )[0].text
 
     # Le theme n'est vide que quand il s'agit d'une fiche "Comment faire si..."
     try:
-        theme = root.find('Theme').find('Titre').text
-        theme_id = root.find('Theme').attrib['ID']
+        theme = root.find("Theme").find("Titre").text
+        theme_id = root.find("Theme").attrib["ID"]
         theme_txt = concat_ID_and_name(theme_id, theme)
     except:
-        theme = ''
+        theme = ""
 
     # Cinq cas différents (cas de base + 4 types de fiches spéciaux), on les traite différemment
     try:
-        dossier = root.find('DossierPere').find('Titre').text
-        dossier_id = root.find('DossierPere').attrib['ID']
+        dossier = root.find("DossierPere").find("Titre").text
+        dossier_id = root.find("DossierPere").attrib["ID"]
         dossier_txt = concat_ID_and_name(dossier_id, dossier)
     except:  # why ??
-        dossier_txt = list(root.findall(".//dc:type", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
-        if dossier_txt in ['Question-réponse', 'Comment faire si...']:
-            theme_txt = ''
-        elif dossier_txt == 'Dossier':
+        dossier_txt = list(
+            root.findall(
+                ".//dc:type", namespaces={"dc": "http://purl.org/dc/elements/1.1/"}
+            )
+        )[0].text
+        if dossier_txt in ["Question-réponse", "Comment faire si..."]:
+            theme_txt = ""
+        elif dossier_txt == "Dossier":
             pass
-        elif dossier_txt == 'Theme':
+        elif dossier_txt == "Theme":
             return None
     # Sous-themes pas toujours présents
     try:
-        sous_theme = root.find('SousThemePere').text
+        sous_theme = root.find("SousThemePere").text
     except AttributeError:
-        sous_theme = ''
+        sous_theme = ""
     # Sous-dossiers pas toujours présents
     sous_dossier_dict = {}
     try:
         sous_dossier = list(root.iter("SousDossierPere"))[0].text
     except IndexError:
-        sous_dossier = ''
-    sous_dossier_dict[sous_dossier] = [f'{fiche}//{titre}']
+        sous_dossier = ""
+    sous_dossier_dict[sous_dossier] = [f"{fiche}//{titre}"]
     dossier_dict = {dossier_txt: sous_dossier_dict}
     sous_theme_dict = {sous_theme: dossier_dict}
     theme_dict = {theme_txt: sous_theme_dict}
@@ -95,26 +108,32 @@ def extract_arbo_N_doc(doc_path):
     # for sous_theme in list(root.iter("SousTheme")):
 
     try:
-        type = root.attrib['type']
+        type = root.attrib["type"]
     except:
         print("not correct file -->" + doc_path)
         return {}
 
-    if type == 'Dossier':
-        theme = root.find('Theme').find('Titre').text
-        theme_id = root.find('Theme').attrib['ID']
+    if type == "Dossier":
+        theme = root.find("Theme").find("Titre").text
+        theme_id = root.find("Theme").attrib["ID"]
         theme_txt = concat_ID_and_name(theme_id, theme)
         try:
-            sous_theme = root.find('SousThemePere').text  # there might be no sous-theme
+            sous_theme = root.find("SousThemePere").text  # there might be no sous-theme
         except:
-            sous_theme = ''
-        dossier = list(root.findall(".//dc:title", namespaces={'dc': 'http://purl.org/dc/elements/1.1/'}))[0].text
-        dossier_id = root.attrib['ID']
+            sous_theme = ""
+        dossier = list(
+            root.findall(
+                ".//dc:title", namespaces={"dc": "http://purl.org/dc/elements/1.1/"}
+            )
+        )[0].text
+        dossier_id = root.attrib["ID"]
         dossier_txt = concat_ID_and_name(dossier_id, dossier)
         sous_dossier_dict = {}
-        if root.find('SousDossier') != None:  # case when there is one or several sous_dossier
-            for ss_dossier in root.iter('SousDossier'):
-                sous_dossier = ss_dossier.find('Titre').text
+        if (
+            root.find("SousDossier") != None
+        ):  # case when there is one or several sous_dossier
+            for ss_dossier in root.iter("SousDossier"):
+                sous_dossier = ss_dossier.find("Titre").text
                 list_fiches = iter_fiches(ss_dossier)
                 sous_dossier_dict[sous_dossier] = list_fiches
         else:  # case when there is no sous_dossier
@@ -139,15 +158,19 @@ def fill_arborescence_with_arbo_file(arborescence, arbo):
         else:
             dossier = list(arbo[theme][sous_theme].keys())[0]
             if dossier not in arborescence[theme][sous_theme].keys():
-                arborescence[theme][sous_theme][dossier] = arbo[theme][sous_theme][dossier]
+                arborescence[theme][sous_theme][dossier] = arbo[theme][sous_theme][
+                    dossier
+                ]
             else:
                 sous_dossier = list(arbo[theme][sous_theme][dossier].keys())[0]
                 if sous_dossier not in arborescence[theme][sous_theme][dossier].keys():
-                    arborescence[theme][sous_theme][dossier][sous_dossier] = arbo[theme][sous_theme][dossier][
-                        sous_dossier]
+                    arborescence[theme][sous_theme][dossier][sous_dossier] = arbo[
+                        theme
+                    ][sous_theme][dossier][sous_dossier]
                 else:
-                    arborescence[theme][sous_theme][dossier][sous_dossier] += arbo[theme][sous_theme][dossier][
-                        sous_dossier]
+                    arborescence[theme][sous_theme][dossier][sous_dossier] += arbo[
+                        theme
+                    ][sous_theme][dossier][sous_dossier]
     return arborescence
 
 
@@ -188,74 +211,54 @@ def complete_arbo_with_F_files(arborescence, doc_paths):
 
 
 def init_theme(theme):
-    if theme == '':
+    if theme == "":
         id = None
-        name = 'Autre'
+        name = "Autre"
     else:
-        id = theme.split('//')[0]
-        name = theme.split('//')[1]
-    return {'id': id,
-            'type': 'theme',
-            'name': name,
-            'data': []
-            }
+        id = theme.split("//")[0]
+        name = theme.split("//")[1]
+    return {"id": id, "type": "theme", "name": name, "data": []}
 
 
 def init_sous_theme(sous_theme):
     if sous_theme == "":
-        name = 'Autre'
+        name = "Autre"
     else:
         name = sous_theme
-    dict = {'id': None,
-            'type': 'sous_theme',
-            'name': name,
-            'data': []
-            }
+    dict = {"id": None, "type": "sous_theme", "name": name, "data": []}
     return dict
 
 
 def init_dossier(dossier):
-    if dossier == '':
+    if dossier == "":
         id = None
-        name = 'Autre'
-    elif '//' in dossier:
-        id = dossier.split('//')[0]
-        name = dossier.split('//')[1]
+        name = "Autre"
+    elif "//" in dossier:
+        id = dossier.split("//")[0]
+        name = dossier.split("//")[1]
     else:
         id = None
         name = dossier
-    return {'id': id,
-            'type': 'dossier',
-            'name': name,
-            'data': []
-            }
+    return {"id": id, "type": "dossier", "name": name, "data": []}
 
 
 def init_sous_dossier(sous_dossier):
     if sous_dossier == "":
-        name = 'Autre'
+        name = "Autre"
     else:
         name = sous_dossier
-    dict = {'id': None,
-            'type': 'sous_dossier',
-            'name': name,
-            'data': []
-            }
+    dict = {"id": None, "type": "sous_dossier", "name": name, "data": []}
     return dict
 
 
 def init_fiche(fiche):
-    if fiche == '':
+    if fiche == "":
         id = None
-        name = 'Autre'
+        name = "Autre"
     else:
-        id = fiche.split('//')[0]
-        name = fiche.split('//')[1]
-    return {'id': id,
-            'type': 'fiche',
-            'name': name,
-            'data': None
-            }
+        id = fiche.split("//")[0]
+        name = fiche.split("//")[1]
+    return {"id": id, "type": "fiche", "name": name, "data": None}
 
 
 def reformat_json(arborescence):
@@ -271,7 +274,9 @@ def reformat_json(arborescence):
             for dossier in arborescence[theme][sous_theme]:
                 dossier_dict = init_dossier(dossier)
                 dossier_data = []
-                sous_dossier_exists = len(arborescence[theme][sous_theme][dossier].keys()) > 1
+                sous_dossier_exists = (
+                    len(arborescence[theme][sous_theme][dossier].keys()) > 1
+                )
                 for sous_dossier in arborescence[theme][sous_theme][dossier].keys():
                     if sous_dossier_exists:
                         sous_dossier_dict = init_sous_dossier(sous_dossier)
@@ -280,21 +285,20 @@ def reformat_json(arborescence):
                         fiche_dict = init_fiche(fiche)
                         sous_dossier_data += [fiche_dict]
                     if sous_dossier_exists:
-                        sous_dossier_dict['data'] = sous_dossier_data
+                        sous_dossier_dict["data"] = sous_dossier_data
                         dossier_data += [sous_dossier_dict]
                 if not sous_dossier_exists:
                     dossier_data = sous_dossier_data
-                dossier_dict['data'] = dossier_data
+                dossier_dict["data"] = dossier_data
                 sous_theme_data += [dossier_dict]
             if sous_theme_exists:
-                sous_theme_dict['data'] = sous_theme_data
+                sous_theme_dict["data"] = sous_theme_data
                 theme_data += [sous_theme_dict]
         if not sous_theme_exists:
             theme_data = sous_theme_data
-        theme_dict['data'] = theme_data
+        theme_dict["data"] = theme_data
         all_data += [theme_dict]
-    return {'version': '1.0',
-            'data': all_data}
+    return {"version": "1.0", "data": all_data}
 
 
 def main(doc_files_path, output_path):
@@ -312,7 +316,7 @@ def main(doc_files_path, output_path):
     # if not doc_paths_N:
     #     raise Exception(f"Path {doc_paths} not found")
 
-    path = output_path / 'arborescence.json'
+    path = output_path / "arborescence.json"
     arborescence = fill_arborescence_with_N_files(doc_paths_N)
     arborescence = complete_arbo_with_F_files(arborescence, doc_paths_F)
 
@@ -321,11 +325,11 @@ def main(doc_files_path, output_path):
     if not output_path.exists():
         os.makedirs(output_path)
 
-    with open(path.as_posix(), "w", encoding='utf-8') as out_file:
+    with open(path.as_posix(), "w", encoding="utf-8") as out_file:
         json.dump(arborescence, out_file, indent=4, ensure_ascii=False)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argopt(__doc__).parse_args()
     doc_files_path = parser.file_path
     output_path = parser.output_path
