@@ -1,5 +1,6 @@
 import logging
 from typing import Optional, List
+from time import sleep
 
 from googlesearch import search
 from haystack import Document
@@ -60,7 +61,7 @@ class GoogleRetriever(BaseRetriever):
             document_list = self.document_store.query("*", filters={"link": [g]})
             if len(document_list) > 0:
                 documents.append(document_list[0])
-
+        sleep(3) # used for avoid http error 429 too many request
         return documents
 
 
