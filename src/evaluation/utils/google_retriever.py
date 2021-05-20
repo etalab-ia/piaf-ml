@@ -1,4 +1,6 @@
 import logging
+from random import randint
+from time import sleep
 from typing import Optional, List
 
 from googlesearch import search
@@ -33,7 +35,7 @@ class GoogleRetriever(BaseRetriever):
     @backoff.on_exception(backoff.expo, HTTPError, max_time=120)
     def get_gsearch_results(self, query, top_k):
         return [url for url in search(query, tld="fr", num=top_k, stop=top_k,
-                                                 pause=2)]
+                                                 pause=randint(30,120))]
 
     def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[
         Document]:
@@ -66,6 +68,9 @@ class GoogleRetriever(BaseRetriever):
             document_list = self.document_store.query("*", filters={"link": [g]})
             if len(document_list) > 0:
                 documents.append(document_list[0]) # used for avoid http error 429 too many request
+        rand_sleep = randint(60,300)
+        logger.info(f"Sleeping for {rand_sleep}s")
+        sleep(rand_sleep)
         return documents
 
 
