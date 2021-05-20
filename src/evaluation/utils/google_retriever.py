@@ -1,8 +1,9 @@
 import logging
 from typing import Optional, List
-from time import sleep
 
 from googlesearch import search
+import backoff
+from urllib.error import HTTPError
 from haystack import Document
 
 from haystack.retriever.base import BaseRetriever
@@ -29,6 +30,10 @@ class GoogleRetriever(BaseRetriever):
         self.top_k = top_k
         self.website = website
 
+    @backoff.on_exception(backoff.expo, HTTPError, max_time=120)
+    def get_gsearch_results(self, query, top_k):
+        return [url for url in search(query, tld="fr", num=top_k, stop=top_k,
+                                                 pause=2)]
 
     def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[
         Document]:
@@ -53,15 +58,14 @@ class GoogleRetriever(BaseRetriever):
 
         query_website = f"site:{self.website} " + query  # add website restriction to query
 
-        gsearch_results = [url for url in search(query_website, tld="fr", num=top_k, stop=top_k,
-                                                 pause=2)]  # the list of plain url retrieved by google
+        gsearch_results = self.get_gsearch_results(query_website, top_k) # the list of plain url retrieved by google
+
         # TODO sometimes the doc is not found we should still have top_k results
         documents = []
         for g in gsearch_results:
             document_list = self.document_store.query("*", filters={"link": [g]})
             if len(document_list) > 0:
-                documents.append(document_list[0])
-        sleep(3) # used for avoid http error 429 too many request
+                documents.append(document_list[0]) # used for avoid http error 429 too many request
         return documents
 
 
