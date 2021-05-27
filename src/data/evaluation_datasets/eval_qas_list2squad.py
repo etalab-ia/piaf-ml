@@ -1,10 +1,9 @@
 """
-Using the Questions Fiches Dataset, and after completing it with the span of each answer within the fiche text, we
-need this dataset into a SQuAD-format JSON file. This scripts accomplishes that.
-Transforms a list of [fiche_id, question, answer] into standard SQuAD format for evaluation.
+Using the Questions Fiches Dataset, and after completing it with the span of each answer within the fiche text, we need
+this dataset into a SQuAD-format JSON file. This scripts accomplishes that. Transforms a list of [fiche_id, question,
+answer] into standard SQuAD format for evaluation.
 
-Usage:
-    eval_qas_list2squad.py <qas_path> <context_path> <output_path>
+Usage: eval_qas_list2squad.py <qas_path> <context_path> <output_path>
 
 Arguments:
     <qas_path>              A path where to find the list of [fiche_id, question, answer] to transform
@@ -15,10 +14,11 @@ Arguments:
                                 (should use: '../../data/spf_qr_test.json')
 """
 
-import os
 import json
-from argopt import argopt
+import os
 from pathlib import Path
+
+from argopt import argopt
 
 
 def format_qas_as_squad(fiche_id, context, question, answer_start, answer_text):
@@ -26,23 +26,20 @@ def format_qas_as_squad(fiche_id, context, question, answer_start, answer_text):
     Once all parameters are found, formats in SQuAD-like output.
     """
     res = {
-        'title': fiche_id,
-        'paragraphs': [
+        "title": fiche_id,
+        "paragraphs": [
             {
-                'context': context,
-                'qas': [
+                "context": context,
+                "qas": [
                     {
-                        'question': question,
-                        'answers': [
-                            {
-                                'answer_start': answer_start,
-                                'text': answer_text
-                            }
-                        ]
+                        "question": question,
+                        "answers": [
+                            {"answer_start": answer_start, "text": answer_text}
+                        ],
                     }
-                ]
+                ],
             }
-        ]
+        ],
     }
     return res
 
@@ -52,12 +49,12 @@ def format_context_as_squad(fiche_id, context):
     For fiches which have no question, add them without qas.
     """
     res = {
-        'title': fiche_id,
-        'paragraphs': [
+        "title": fiche_id,
+        "paragraphs": [
             {
-                'context': context,
+                "context": context,
             }
-        ]
+        ],
     }
     return res
 
@@ -70,9 +67,9 @@ def list2squad(qas_path, context_path, output_path):
     missed = count = 0
     data = []
 
-    with open(qas_path, encoding='utf-8') as f:
+    with open(qas_path, encoding="utf-8") as f:
         qas = json.load(f)
-    with open(context_path, encoding='utf-8') as f:
+    with open(context_path, encoding="utf-8") as f:
         fiches = json.load(f)
 
     for fiche in fiches:
@@ -87,21 +84,27 @@ def list2squad(qas_path, context_path, output_path):
                     missed += 1
                 else:
                     count += 1
-                    data.append(format_qas_as_squad(fiche_id=fiche_id,
-                                                    context=context,
-                                                    question=question,
-                                                    answer_start=start,
-                                                    answer_text=answer))
+                    data.append(
+                        format_qas_as_squad(
+                            fiche_id=fiche_id,
+                            context=context,
+                            question=question,
+                            answer_start=start,
+                            answer_text=answer,
+                        )
+                    )
         if has_no_qas:
             data.append(format_context_as_squad(fiche_id=fiche_id, context=context))
 
-    with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump({'data': data}, f, indent=4, ensure_ascii=False)
-    print(f"Transformation done. Added {len(fiches)} fiches, including {count} with QAs.",
-          f"Could not parse {missed} out of {len(qas)} QAs.")
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump({"data": data}, f, indent=4, ensure_ascii=False)
+    print(
+        f"Transformation done. Added {len(fiches)} fiches, including {count} with QAs.",
+        f"Could not parse {missed} out of {len(qas)} QAs.",
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argopt(__doc__).parse_args()
     qas_path = Path(parser.qas_path)
     context_path = Path(parser.context_path)

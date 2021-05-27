@@ -1,5 +1,6 @@
 """
 Split PIAF dataset in train and test while keeping the following constraints:
+
  1. Do not mix contexts (Wikipedia paragraphs) in train and test.
  2. Keep only the questions with >3 answers in the test set
 
@@ -7,6 +8,7 @@ Split PIAF dataset in train and test while keeping the following constraints:
 
 import json
 from typing import List
+
 VERSION = "1.1"
 with open("./data/piaf_v1.1.json") as filo:
     piaf_train = json.load(filo)
@@ -21,13 +23,17 @@ for article in articles:
     for idx, context in enumerate(paragraphs):
         qas = context["qas"]
 
-        index_3_and_more = [(idx, len(qa["answers"])) for idx, qa in enumerate(qas)]  # [1, 1, 3]
+        index_3_and_more = [
+            (idx, len(qa["answers"])) for idx, qa in enumerate(qas)
+        ]  # [1, 1, 3]
 
         if any([v[1] >= 3 for v in index_3_and_more]):
             # if we have a question with more than 3 answers we add it to the test dataset
             # but first we should remove the questions that do not have >=3 questions
             test_context = dict(context)
-            test_context.update({"qas": [qas[v[0]] for v in index_3_and_more if v[1] >= 3]})
+            test_context.update(
+                {"qas": [qas[v[0]] for v in index_3_and_more if v[1] >= 3]}
+            )
             test_article_dict["paragraphs"].append(test_context)
             temp_id = idx
     if temp_id >= 0:
