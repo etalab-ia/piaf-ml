@@ -65,6 +65,23 @@ def save_dataset(modified_fquad, name='fquad_eval'):
     with open(res_file, 'w', encoding='UTF-8') as f:
         json.dump(modified_fquad, f)
 
+def count(squad):
+    context_count = 0
+    question_count = 0
+    answer_count = 0
+    for article in squad['data']:
+        for context in article['paragraphs']:
+            context_count += 1
+            for question in context['qas']:
+                if question["is_impossible"] == False:
+                    question_count += 1
+                    answer_count += len(question['answers'])
+                    if len(question['answers']) == 0:
+                        print(question["question"])
+    print(f'Nb context = {context_count}')
+    print(f'Nb question = {question_count}')
+    print(f'Nb answer = {answer_count}')
+
 
 def main(file_kb_fquad, file_test_fquad, name='fquad_eval'):
     with open(file_kb_fquad, encoding='UTF-8') as f_kb:
@@ -84,7 +101,24 @@ def main(file_kb_fquad, file_test_fquad, name='fquad_eval'):
 
 
 if __name__ == '__main__':
-    file_kb_fquad = Path("./test/samples/squad/small.json")
-    file_test_fquad = Path("./test/samples/squad/tiny.json")
+    file_kb_fquad = Path("./clients/dila/knowledge_base/squad.json")
+    file_test_fquad = Path("./data/evaluation-datasets/piaf-annotations.json")
 
-    main(file_kb_fquad, file_test_fquad, name = 'test')
+    with open(file_kb_fquad, encoding="UTF-8") as f_kb:
+        kb_fquad = json.load(f_kb)
+
+    count(kb_fquad)
+
+    with open(file_test_fquad, encoding="UTF-8") as f_test:
+        test_fquad = json.load(f_test)
+
+    add_is_impossible(test_fquad)
+    count(test_fquad)
+
+    merged = merge(kb_fquad, test_fquad)
+
+    count(merged)
+
+    with open(file_kb_fquad, 'w', encoding="UTF-8") as f_kb:
+        json.dump(merged, f_kb)
+    print(1)
