@@ -1,4 +1,5 @@
 import logging
+import json
 from random import randint, choice
 from time import sleep
 from typing import Optional, List
@@ -19,7 +20,8 @@ class GoogleRetriever(BaseRetriever):
     def __init__(self,
                  document_store: BaseDocumentStore,
                  top_k: int = 10,
-                 website: str = "service-public.fr"):
+                 website: str = "service-public.fr",
+                 retrieved_search_file: str = "./data/retrieved_search.json"):
         """
             The GoogleRetriever is intended for establishing a baseline of the final clients' expectations.
 
@@ -31,6 +33,8 @@ class GoogleRetriever(BaseRetriever):
         self.document_store = document_store
         self.top_k = top_k
         self.website = website
+        self.retrieved_search_file = Path(retrieved_search_file)
+        self.retrieved_search = self.load_retrieved_search()
         self.headers = [
             {
                 'authority': 'www.google.com',
@@ -75,12 +79,27 @@ class GoogleRetriever(BaseRetriever):
             'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Mobile Safari/537.36'
         ]
 
+    def load_retrieved_search(self):
+        data = {}
+        if self.retrieved_search_file.exists():
+            with open(self.retrieved_search_file, 'r') as f:
+                data = json.load(f)
+        return data
+
+    def dump_retrieved_search(self):
+        with open(self.retrieved_search_file, 'w') as f:
+            json.dump(self.retrieved_search, f)
+
+
     @backoff.on_exception(backoff.expo, HTTPError, max_time=120)
     def get_gsearch_results(self, query, top_k):
         rand_sleep = randint(60, 300)
         logger.info(f"Search then sleep for {rand_sleep}s")
-        return [url for url in search(query, tld="fr", num=top_k, stop=top_k,
+        retrieve_search = [url for url in search(query, tld="fr", num=top_k, stop=top_k,
                                       pause=rand_sleep, user_agent=choice(self.user_agents))]
+        self.retrieved_search[query] = retrieve_search
+        self.dump_retrieved_search()
+        return retrieve_search
 
     def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[
         Document]:
@@ -105,7 +124,8 @@ class GoogleRetriever(BaseRetriever):
 
         query_website = f"site:{self.website} " + query  # add website restriction to query
 
-        gsearch_results = self.get_gsearch_results(query_website, top_k)  # the list of plain url retrieved by google
+        if query_website not in self.retrieved_search.keys():
+            gsearch_results = self.get_gsearch_results(query_website, top_k)  # the list of plain url retrieved by google
 
         # TODO sometimes the doc is not found we should still have top_k results
         documents = []
