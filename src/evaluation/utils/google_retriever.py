@@ -1,7 +1,7 @@
 import logging
 import json
 from random import randint, choice
-from time import sleep
+from pathlib import Path
 from typing import Optional, List
 
 from googlesearch import search
