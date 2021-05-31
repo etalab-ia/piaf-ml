@@ -1,5 +1,5 @@
 import logging
-from random import randint
+from random import randint, choice
 from time import sleep
 from typing import Optional, List
 
@@ -31,11 +31,56 @@ class GoogleRetriever(BaseRetriever):
         self.document_store = document_store
         self.top_k = top_k
         self.website = website
+        self.headers = [
+            {
+                'authority': 'www.google.com',
+                'cache-control': 'max-age=0',
+                'upgrade-insecure-requests': '1',
+                'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Mobile Safari/537.36',
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                'sec-fetch-site': 'none',
+                'sec-fetch-mode': 'navigate',
+                'sec-fetch-user': '?1',
+                'sec-fetch-dest': 'document',
+                'accept-language': 'fr-FR,fr;q=0.9',
+            },
+            {
+                'authority': 'www.google.com',
+                'cache-control': 'max-age=0',
+                'upgrade-insecure-requests': '1',
+                'user-agent': 'Mozilla/5.0 (Android 4.4; Tablet; rv:70.0) Gecko/70.0 Firefox/70.0',
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                'service-worker-navigation-preload': '0rPUmQUGCAAQABgA',
+                'sec-fetch-site': 'none',
+                'sec-fetch-mode': 'navigate',
+                'sec-fetch-user': '?1',
+                'sec-fetch-dest': 'document',
+                'accept-language': 'fr-FR,fr;q=0.9'},
+            {
+                'authority': 'www.google.com',
+                'upgrade-insecure-requests': '1',
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36',
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                'service-worker-navigation-preload': '0rPUmQUGCAAQABgA',
+                'sec-fetch-site': 'same-origin',
+                'sec-fetch-mode': 'navigate',
+                'sec-fetch-user': '?1',
+                'sec-fetch-dest': 'document',
+                'referer': 'https://www.google.com/',
+                'accept-language': 'fr-FR,fr;q=0.9'}
+        ]
+        self.user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36',
+            'Mozilla/5.0 (Android 4.4; Tablet; rv:70.0) Gecko/70.0 Firefox/70.0',
+            'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Mobile Safari/537.36'
+        ]
 
     @backoff.on_exception(backoff.expo, HTTPError, max_time=120)
     def get_gsearch_results(self, query, top_k):
+        rand_sleep = randint(60, 300)
+        logger.info(f"Search then sleep for {rand_sleep}s")
         return [url for url in search(query, tld="fr", num=top_k, stop=top_k,
-                                                 pause=randint(30,120))]
+                                      pause=rand_sleep, user_agent=choice(self.user_agents))]
 
     def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[
         Document]:
@@ -60,17 +105,14 @@ class GoogleRetriever(BaseRetriever):
 
         query_website = f"site:{self.website} " + query  # add website restriction to query
 
-        gsearch_results = self.get_gsearch_results(query_website, top_k) # the list of plain url retrieved by google
+        gsearch_results = self.get_gsearch_results(query_website, top_k)  # the list of plain url retrieved by google
 
         # TODO sometimes the doc is not found we should still have top_k results
         documents = []
         for g in gsearch_results:
             document_list = self.document_store.query("*", filters={"link": [g]})
             if len(document_list) > 0:
-                documents.append(document_list[0]) # used for avoid http error 429 too many request
-        rand_sleep = randint(60,300)
-        logger.info(f"Sleeping for {rand_sleep}s")
-        sleep(rand_sleep)
+                documents.append(document_list[0])  # used for avoid http error 429 too many request
         return documents
 
 
