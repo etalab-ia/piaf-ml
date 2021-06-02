@@ -36,6 +36,7 @@ def single_run(parameters):
     split_length = parameters["split_length"]
     split_respect_sentence_boundary = parameters["split_respect_sentence_boundary"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
+    google_retriever_website = parameters["google_retriever_website"]
     # Prepare framework
 
     p = Pipeline()
@@ -125,7 +126,7 @@ def single_run(parameters):
             similarity="cosine",
             custom_mapping=SQUAD_MAPPING,
         )
-        retriever = GoogleRetriever(document_store=document_store)
+        retriever = GoogleRetriever(document_store=document_store, website=google_retriever_website)
         p.add_node(component=retriever, name="GoogleRetriever", inputs=["Query"])
 
     else:

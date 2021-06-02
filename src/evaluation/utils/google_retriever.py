@@ -108,7 +108,7 @@ class GoogleRetriever(BaseRetriever):
         else:
             query_website = query
 
-        if query_website not in self.retrieved_search.keys(): # Document not previously retrieved
+        if query_website not in self.retrieved_search.keys():# Document not previously retrieved
             logger.info(f"Query never performed, let me google that for you !")
             gsearch_results = self.get_gsearch_results(query_website, top_k)  # the list of plain url retrieved by google
         else:
