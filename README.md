@@ -93,26 +93,30 @@ python - m src.evaluation.retriever_reader.retriever_reader_eval_squad.py
 5. Note that the results will be saved in ``results/`` in a csv form. Also, mlruns will create a record in `mlruns`
 
 ## Project folder structure
+
 ```
 /piaf-ml/
+├── clients # Client specific deployment code
 ├── data
-│   ├── dense_dicts
-│   ├── evaludation-datasets #datasets available for performance evaluation 
-│   └── vXY # Your folder generated with Knowledge database
+│   ├── cached_dense_dicts
+│   ├── evaluation-datasets #datasets available for performance evaluation
+│   ├── knowledge-base
+│   └── vXY # Your folder generated with Knowledge database
 ├── logs # Here we will put our logs when we get to it :)
 ├── mlruns # The results saved by mlruns
 ├── notebooks # Notebooks with reports on experimentations
 ├── reports # Reports
 ├── results # Folder were all the results generated from evaluation scripts are stored
 ├── src
-│   ├── data # Script related to data generation
-│   │   └── notebooks # Notebooks for data generation 
-│   ├── evaluation
-│   │   ├── config # Configuration file
-│   │   ├── utils # somes utils dedicated to performance evaluation
-│   │   └── retriever_reader # script for evaluating the full pipeline 
-│   ├── models # Scripts related to training models
-│   └── util # Random functions that could be accessed from multiple places
+│   ├── data # Script related to data generation
+│   ├── evaluation # Scripts related to pipeline performance evaluation
+│   │   ├── config # Configuration files
+│   │   ├── results_analysis
+│   │   ├── retriever # Scripts for evaluating the retriever only
+│   │   ├── retriever_reader # Scripts for evaluating the full pipeline
+│   │   └── utils # Somes utils dedicated to performance evaluation
+│   └── models # Scripts related to training models
+└── test
 ```
 
 ## Set environment variables
