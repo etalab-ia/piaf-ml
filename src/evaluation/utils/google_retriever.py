@@ -20,14 +20,17 @@ class GoogleRetriever(BaseRetriever):
     def __init__(self,
                  document_store: BaseDocumentStore,
                  top_k: int = 10,
-                 website: str = "service-public.fr",
+                 website: str = None,
                  retrieved_search_file: str = "./data/retrieved_search.json"):
         """
             The GoogleRetriever is intended for establishing a baseline of the final clients' expectations.
+            It launches a search with google on an optional specific website and retrieves the links found by google.
+            It then searches in the database when the weblink for this document is available in the field 'link'.
 
             :param document_store: The documentstore that is used for retrieving documents
             :param top_k: How many documents to retrieve
             :param website: The website in which google has to find results. The url retrieved by google will then be search inside the document_store
+            :param retrieved_search_file: the path to the backup of the links retrieved by google. This must be a json
         """
 
         self.document_store = document_store
@@ -35,44 +38,6 @@ class GoogleRetriever(BaseRetriever):
         self.website = website
         self.retrieved_search_file = Path(retrieved_search_file)
         self.retrieved_search = self.load_retrieved_search()
-        self.headers = [
-            {
-                'authority': 'www.google.com',
-                'cache-control': 'max-age=0',
-                'upgrade-insecure-requests': '1',
-                'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Mobile Safari/537.36',
-                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-                'sec-fetch-site': 'none',
-                'sec-fetch-mode': 'navigate',
-                'sec-fetch-user': '?1',
-                'sec-fetch-dest': 'document',
-                'accept-language': 'fr-FR,fr;q=0.9',
-            },
-            {
-                'authority': 'www.google.com',
-                'cache-control': 'max-age=0',
-                'upgrade-insecure-requests': '1',
-                'user-agent': 'Mozilla/5.0 (Android 4.4; Tablet; rv:70.0) Gecko/70.0 Firefox/70.0',
-                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-                'service-worker-navigation-preload': '0rPUmQUGCAAQABgA',
-                'sec-fetch-site': 'none',
-                'sec-fetch-mode': 'navigate',
-                'sec-fetch-user': '?1',
-                'sec-fetch-dest': 'document',
-                'accept-language': 'fr-FR,fr;q=0.9'},
-            {
-                'authority': 'www.google.com',
-                'upgrade-insecure-requests': '1',
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36',
-                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-                'service-worker-navigation-preload': '0rPUmQUGCAAQABgA',
-                'sec-fetch-site': 'same-origin',
-                'sec-fetch-mode': 'navigate',
-                'sec-fetch-user': '?1',
-                'sec-fetch-dest': 'document',
-                'referer': 'https://www.google.com/',
-                'accept-language': 'fr-FR,fr;q=0.9'}
-        ]
         self.user_agents = [
             'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36',
             'Mozilla/5.0 (Android 4.4; Tablet; rv:70.0) Gecko/70.0 Firefox/70.0',
@@ -80,6 +45,10 @@ class GoogleRetriever(BaseRetriever):
         ]
 
     def load_retrieved_search(self):
+        """
+        This loads the previously retrieved results that are saved in the json file retrieved_search_file
+        :return: the data previously retrieved
+        """
         data = {}
         if self.retrieved_search_file.exists():
             with open(self.retrieved_search_file, 'r') as f:
@@ -87,12 +56,23 @@ class GoogleRetriever(BaseRetriever):
         return data
 
     def dump_retrieved_search(self):
+        """
+        This dumps the retrieved results in the json file retrieved_search_file
+        """
         with open(self.retrieved_search_file, 'w') as f:
             json.dump(self.retrieved_search, f)
 
 
     @backoff.on_exception(backoff.expo, HTTPError, max_time=120)
     def get_gsearch_results(self, query, top_k):
+        """
+        This function is used to retrieve the results from google.
+        To prevent the ban from google, it randomly picks a user agent in self.user_agents.
+        It also adds a random sleep of 1 to 3 minutes between requests.
+        :param query: the query to ask google
+        :param top_k: the number of answers to find
+        :return: a list of the urls of the google search results
+        """
         rand_sleep = randint(60, 300)
         logger.info(f"Search then sleep for {rand_sleep}s")
         retrieve_search = [url for url in search(query, tld="fr", num=top_k, stop=top_k,
@@ -111,6 +91,7 @@ class GoogleRetriever(BaseRetriever):
             :param filters: A dictionary where the keys specify a metadata field and the value is a list of accepted values for that field
             :param top_k: How many documents to return per query.
             :param index: The name of the index in the DocumentStore from which to retrieve documents
+            :return: a list of Document retrieved
         """
 
         if top_k is None:
@@ -122,17 +103,23 @@ class GoogleRetriever(BaseRetriever):
         if index is None:
             index = self.document_store.index
 
-        query_website = f"site:{self.website} " + query  # add website restriction to query
+        if self.website:
+            query_website = f"site:{self.website} " + query  # add website restriction to query
+        else:
+            query_website = query
 
-        if query_website not in self.retrieved_search.keys():
+        if query_website not in self.retrieved_search.keys(): # Document not previously retrieved
+            logger.info(f"Query never performed, let me google that for you !")
             gsearch_results = self.get_gsearch_results(query_website, top_k)  # the list of plain url retrieved by google
+        else:
+            logger.info("Let's look in previously found results")
+            gsearch_results = self.retrieved_search[query_website]
 
-        # TODO sometimes the doc is not found we should still have top_k results
         documents = []
         for g in gsearch_results:
             document_list = self.document_store.query("*", filters={"link": [g]})
             if len(document_list) > 0:
-                documents.append(document_list[0])  # used for avoid http error 429 too many request
+                documents.append(document_list[0])
         return documents
 
 
