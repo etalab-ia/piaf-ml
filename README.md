@@ -50,8 +50,13 @@ For now, the main use of this repo is for evaluation. The goal of the evaluation
 - etc. (be as specific as possible)
 ## Getting Started for development
 1. Clone this repo (for help see this [tutorial](https://help.github.com/articles/cloning-a-repository/)).
-2. Install [haystack](https://github.com/deepset-ai/haystack/). There are two methods for installing Haystack : via pip or via cloning the github repository (we try to use the `master` version of haystack so installing from the github repo is preferred). 
-4. Install requirements. Two options are available based on your prefered configuration: 
+2. Set the required environment variables, see [Set environment
+   variables](#set-environment-variables) below.
+2. Make sure gcc, make and the Python C API header files are installed on your
+   system
+  - On ubuntu:
+    - `sudo apt install gcc make python3-dev`
+3. Install requirements. Two options are available based on your prefered configuration: 
 * Using pip:
 `pip install -r requirements.txt`
 on Windows : `pip install -r requirements.txt -f https://download.pytorch.org/whl/torch_stable.html`
