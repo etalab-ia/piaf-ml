@@ -37,6 +37,8 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 GPU_AVAILABLE = torch.cuda.is_available()
+
+# TODO: Shouldn't this be loaded from the environment?
 USE_CACHE = True
 
 
