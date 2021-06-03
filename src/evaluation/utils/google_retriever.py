@@ -114,7 +114,7 @@ class GoogleRetriever(BaseRetriever):
         else:
             logger.info("Let's look in previously found results")
             gsearch_results = self.retrieved_search[query_website]
-            if len(gsearch_results) <= top_k:
+            if len(gsearch_results) >= top_k:
                 gsearch_results = gsearch_results[0:top_k]
             else:
                 logger.info(f"We did not previously gather enough results, googling again")
