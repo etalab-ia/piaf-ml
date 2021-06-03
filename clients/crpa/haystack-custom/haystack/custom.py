@@ -12,7 +12,7 @@ class TitleEmbeddingRetriever(EmbeddingRetriever):
         :param docs: List of documents to embed
         :return: Embeddings, one per input passage
         """
-        texts = [d.meta['name'] for d in docs]
+        texts = [d.meta["name"] for d in docs]
 
         return self.embed(texts)
 
@@ -28,9 +28,7 @@ class JoinDocumentsCustom(BaseComponent):
 
     outgoing_edges = 1
 
-    def __init__(
-        self, ks_retriever: List[int] = None
-    ):
+    def __init__(self, ks_retriever: List[int] = None):
         """
         :param ks_retriever: A node-wise list(length of list must be equal to the number of input nodes) of k_retriever kept for
                         the concatenation of the retrievers in the nodes. If set to None, the number of documents retrieved will be used
@@ -44,12 +42,16 @@ class JoinDocumentsCustom(BaseComponent):
         if self.ks_retriever:
             ks_retriever = self.ks_retriever
         else:
-            ks_retriever = [len(inputs[0]['documents']) for i in range(len(inputs))]
+            ks_retriever = [len(inputs[0]["documents"]) for i in range(len(inputs))]
         for input_from_node, k_retriever in zip(inputs, ks_retriever):
             for i, doc in enumerate(input_from_node["documents"]):
                 if i == k_retriever:
                     break
                 document_map[doc.id] = doc
         documents = document_map.values()
-        output = {"query": inputs[0]["query"], "documents": documents, "labels": inputs[0].get("labels", None)}
+        output = {
+            "query": inputs[0]["query"],
+            "documents": documents,
+            "labels": inputs[0].get("labels", None),
+        }
         return output, "output_1"

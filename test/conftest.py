@@ -27,17 +27,17 @@ def elasticsearch_fixture():
         client.info()
     except:
         print("Starting Elasticsearch ...")
+        status = subprocess.run(["docker rm haystack_test_elastic"], shell=True)
         status = subprocess.run(
-            ['docker rm haystack_test_elastic'],
-            shell=True
-        )
-        status = subprocess.run(
-            ['docker run -d --name haystack_test_elastic -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'],
-            shell=True
+            [
+                'docker run -d --name haystack_test_elastic -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'
+            ],
+            shell=True,
         )
         if status.returncode:
             raise Exception(
-                "Failed to launch Elasticsearch. Please check docker container logs.")
+                "Failed to launch Elasticsearch. Please check docker container logs."
+            )
         time.sleep(30)
 
 
@@ -55,7 +55,7 @@ def gpu_id(gpu_available):
     return gpu_id
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def preprocessor():
     # test with preprocessor
     preprocessor = PreProcessor(
@@ -65,12 +65,12 @@ def preprocessor():
         split_by="word",
         split_length=50,
         split_overlap=0,  # this must be set to 0 at the data of writting this: 22 01 2021
-        split_respect_sentence_boundary=False
+        split_respect_sentence_boundary=False,
     )
     return preprocessor
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def document_store(elasticsearch_fixture):
     prepare_mapping(mapping=SQUAD_MAPPING, embedding_dimension=768)
 
@@ -88,9 +88,12 @@ def document_store(elasticsearch_fixture):
 @pytest.fixture
 def reader(gpu_id):
     k_reader = 3
-    reader = TransformersReader(model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
-                                tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
-                                use_gpu=gpu_id, top_k_per_candidate=k_reader)
+    reader = TransformersReader(
+        model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
+        tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
+        use_gpu=gpu_id,
+        top_k_per_candidate=k_reader,
+    )
     return reader
 
 
@@ -108,7 +111,6 @@ def retriever_emb(document_store, gpu_available):
                               pooling_strategy="reduce_max",
                               emb_extraction_layer=-1)
 
-
 @pytest.fixture
 def retriever_dpr(document_store, gpu_available):
     return DensePassageRetriever(document_store=document_store,
@@ -120,8 +122,11 @@ def retriever_dpr(document_store, gpu_available):
 
 @pytest.fixture
 def retriever_faq(document_store, gpu_available):
-    return TitleEmbeddingRetriever(document_store=document_store,
-                                   embedding_model="distiluse-base-multilingual-cased",
-                                   use_gpu=gpu_available, model_format="sentence_transformers",
-                                   pooling_strategy="reduce_max",
-                                   emb_extraction_layer=-1)
+    return TitleEmbeddingRetriever(
+        document_store=document_store,
+        embedding_model="distiluse-base-multilingual-cased",
+        use_gpu=gpu_available,
+        model_format="sentence_transformers",
+        pooling_strategy="reduce_max",
+        emb_extraction_layer=-1,
+    )

@@ -30,6 +30,7 @@ pymilvus
 #selenium
 #webdriver-manager
 SPARQLWrapper
+mmh3
 # customisation
 sentence-transformers
 pytest

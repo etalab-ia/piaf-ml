@@ -15,7 +15,7 @@ Pull requests are the best way to propose changes to the codebase (we use [Githu
 2. If you've created new functions make sure there are properly documented. 
 3. If you've added code that should be tested, add tests. We use `pytest`. 
 4. If you've changed APIs, update the documentation.
-5. Ensure the test suite passes. We use GitHub Actions for automating the test (*) 
+5. Ensure the test suite passes. We use GitHub Actions for automating the test 
 6. Issue that pull request!
 7. One reviewer will be added to each PR. The reviewer will review your PR, may ask for changes. Once this is done he will merge your PR in `master`
 
@@ -28,8 +28,6 @@ Pull requests are the best way to propose changes to the codebase (we use [Githu
     - @Guillim
     - @psorianom
     - @Rob192
-
-(*) Note that the GitHub Actions will use `requirements_simplified.txt` for setting up the virtual environment for the testing. 
 
 ## Report bugs using Github's [issues](https://github.com/briandk/transcriptase-atom/issues)
 We use GitHub issues to track public bugs. Report a bug by [opening a new issue](); it's that easy!

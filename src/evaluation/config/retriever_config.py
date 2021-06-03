@@ -6,7 +6,7 @@ parameters = {
     "weighted_precision": [True],
     "filter_level": [None],
     "preprocessing": [True],
-    "use_cache": [True]
+    "use_cache": [True],
 }
 # rules:
 # corpus and retriever type requires reloading ES indexing
