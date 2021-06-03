@@ -4,6 +4,7 @@ from pathlib import Path
 from haystack.document_store.base import BaseDocumentStore
 from haystack.pipeline import Pipeline
 
+from src.evaluation.utils.elasticsearch_management import delete_indices
 from src.evaluation.utils.utils_eval import eval_retriever
 from src.data.evaluation_datasets import prepare_fquad_eval
 
@@ -118,18 +119,14 @@ def test_prepare_fquad_eval(document_store):
 
 
 @pytest.mark.elasticsearch
-@pytest.mark.parametrize(
-    "retriever_type,recall_expected,mrr_expected",
-    [("bm25", 15 / 16, 14 / 16), ("sbert", 1, (5 * 1 / 2 + 11) / 16)],
-)
-def test_eval_elastic_retriever(
-    document_store: BaseDocumentStore,
-    retriever_bm25,
-    retriever_emb,
-    retriever_type,
-    recall_expected,
-    mrr_expected,
-):
+@pytest.mark.parametrize("retriever_type,recall_expected,mrr_expected",
+                         [
+                             ("bm25", 15 / 16, 14 / 16),
+                             ("sbert", 1., ((4 * 1 / 2) + (1 * 1/3) + 11) / 16),
+                             ("dpr", 1., (1 * 1 / 2 + 15) / 16)
+                         ])
+def test_eval_elastic_retriever(document_store: BaseDocumentStore, retriever_bm25, retriever_emb, retriever_dpr,
+                                retriever_type, recall_expected, mrr_expected):
     doc_index = "document"
     label_index = "label"
 
@@ -140,6 +137,9 @@ def test_eval_elastic_retriever(
     elif retriever_type == "sbert":
         retriever = retriever_emb
         p.add_node(component=retriever, name="SBertRetriever", inputs=["Query"])
+    elif retriever_type == "dpr":
+        retriever = retriever_dpr
+        p.add_node(component=retriever, name="DPRRetriever", inputs=["Query"])
     else:
         raise Exception(
             f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr"
@@ -148,12 +148,13 @@ def test_eval_elastic_retriever(
     # add eval data (SQUAD format)
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
-    document_store.add_eval_data(
-        filename=Path("./test/samples/squad/tiny.json").as_posix(),
-        doc_index=doc_index,
-        label_index=label_index,
-    )
-    document_store.update_embeddings(retriever_emb, index=doc_index)
+    document_store.add_eval_data(filename=Path("./test/samples/squad/tiny.json").as_posix(), doc_index=doc_index,
+                                 label_index=label_index)
+    if retriever_type == "sbert":
+        document_store.update_embeddings(retriever_emb, index=doc_index)
+    elif retriever_type == "dpr":
+        document_store.update_embeddings(retriever_dpr, index=doc_index)
+
     assert document_store.get_document_count(index=doc_index) == 3  # number of contexts
     assert document_store.get_label_count(index=label_index) == 20  # number of answers
 
@@ -166,9 +167,5 @@ def test_eval_elastic_retriever(
         doc_index=doc_index,
     )
 
-    assert retriever_eval_results["recall"] == recall_expected
-    assert retriever_eval_results["mrr"] == mrr_expected
-
-    # clean up
-    document_store.delete_all_documents(index=doc_index)
-    document_store.delete_all_documents(index=label_index)
+    assert recall_expected == pytest.approx(retriever_eval_results["recall"], abs=1e-4)
+    assert mrr_expected == pytest.approx(retriever_eval_results["mrr"], abs=1e-4)

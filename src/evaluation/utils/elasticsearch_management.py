@@ -8,6 +8,7 @@ from elasticsearch import Elasticsearch
 port = "9200"
 
 
+
 def launch_ES():
     logging.info("Search for Elasticsearch ...")
     es = Elasticsearch([f"http://localhost:{port}/"], verify_certs=True)

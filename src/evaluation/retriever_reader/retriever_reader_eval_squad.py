@@ -17,7 +17,7 @@ from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.pipeline import ExtractiveQAPipeline
 from haystack.preprocessor.preprocessor import PreProcessor
 from haystack.reader.transformers import TransformersReader
-from haystack.retriever.dense import EmbeddingRetriever
+from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
 from haystack.retriever.sparse import ElasticsearchRetriever
 from mlflow.tracking import MlflowClient
 from sklearn.model_selection import ParameterGrid
@@ -154,6 +154,20 @@ def single_run(idx=None, **kwargs):
                 pooling_strategy="reduce_max",
                 emb_extraction_layer=-1,
             )
+            p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
+
+        elif retriever_type == "dpr":
+            document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
+                                                        search_fields=["name", "text"],
+                                                        create_index=False, embedding_field="emb",
+                                                        embedding_dim=768, excluded_meta_data=["emb"],
+                                                        similarity='dot_product',
+                                                        custom_mapping=SQUAD_MAPPING)
+            retriever = DensePassageRetriever(document_store=document_store,
+                                              query_embedding_model="etalab-ia/dpr-question_encoder-fr_qa-camembert",
+                                              passage_embedding_model="etalab-ia/dpr-ctx_encoder-fr_qa-camembert",
+                                              infer_tokenizer_classes=True,
+                                              use_gpu=GPU_AVAILABLE)
             p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
 
         elif retriever_type == "title_bm25":
@@ -300,9 +314,9 @@ if __name__ == "__main__":
     if os.getenv("USE_OPTIMIZATION") == "True":
         dimensions = create_dimensions_from_parameters(parameters)
 
+
         @use_named_args(dimensions=dimensions)
         def single_run_optimization(**kwargs):
-            # try:
             return 1 - single_run(**kwargs)["reader_topk_accuracy_has_answer"]
 
         n_calls = int(os.getenv("OPTIMIZATION_NCALLS"))
@@ -346,11 +360,9 @@ if __name__ == "__main__":
 
                 # For debugging purpose, we keep a copy of the results in a csv form
                 run_results.update(param)
-                save_results(
-                    result_file_path=result_file_path, results_list=run_results
-                )
+
+                save_results(result_file_path=result_file_path, results_list=run_results)
 
                 clean_log()
-
                 # update list of past experiments
                 list_past_run_names = get_list_past_run(client, experiment_name)
