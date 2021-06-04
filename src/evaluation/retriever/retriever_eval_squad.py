@@ -17,6 +17,7 @@ from src.evaluation.config.retriever_eval_squad_config import parameters
 from src.evaluation.utils.elasticsearch_management import (delete_indices,
                                                            launch_ES,
                                                            prepare_mapping)
+from src.evaluation.utils.google_retriever import GoogleRetriever
 from src.evaluation.utils.utils_eval import eval_retriever, save_results
 
 
@@ -29,32 +30,43 @@ def single_run(parameters):
     evaluation_data = Path(parameters["squad_dataset"])
     retriever_type = parameters["retriever_type"]
     k = parameters["k"]
+    title_boosting_factor = parameters["boosting"]
     preprocessing = parameters["preprocessing"]
     split_by = parameters["split_by"]
     split_length = parameters["split_length"]
     split_respect_sentence_boundary = parameters["split_respect_sentence_boundary"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
+    google_retriever_website = parameters["google_retriever_website"]
     # Prepare framework
 
     p = Pipeline()
 
-    prepare_mapping(SQUAD_MAPPING, preprocessing, embedding_dimension=512)
-
+    # indexes for the elastic search
     doc_index = "document_xp"
     label_index = "label_xp"
 
     # deleted indice for elastic search to make sure mappings are properly passed
     delete_indices(index=doc_index)
+    delete_indices(index=label_index)
 
-    preprocessor = PreProcessor(
-        clean_empty_lines=False,
-        clean_whitespace=False,
-        clean_header_footer=False,
-        split_by=split_by,
-        split_length=split_length,
-        split_overlap=0,  # this must be set to 0 at the data of writting this: 22 01 2021
-        split_respect_sentence_boundary=split_respect_sentence_boundary,
+    prepare_mapping(
+        mapping=SQUAD_MAPPING,
+        title_boosting_factor=title_boosting_factor,
+        embedding_dimension=768,
     )
+
+    if preprocessing:
+        preprocessor = PreProcessor(
+            clean_empty_lines=False,
+            clean_whitespace=False,
+            clean_header_footer=False,
+            split_by=split_by,
+            split_length=split_length,
+            split_overlap=0,  # this must be set to 0 at the data of writting this: 22 01 2021
+            split_respect_sentence_boundary=False,  # the support for this will soon be removed : 29 01 2021
+        )
+    else:
+        preprocessor = None
 
     if retriever_type == "bm25":
 
@@ -63,9 +75,11 @@ def single_run(parameters):
             username="",
             password="",
             index=doc_index,
+            search_fields=["name", "text"],
             create_index=False,
             embedding_field="emb",
-            embedding_dim=512,
+            scheme="",
+            embedding_dim=768,
             excluded_meta_data=["emb"],
             similarity="cosine",
             custom_mapping=SQUAD_MAPPING,
@@ -79,9 +93,10 @@ def single_run(parameters):
             username="",
             password="",
             index=doc_index,
+            search_fields=["name", "text"],
             create_index=False,
             embedding_field="emb",
-            embedding_dim=512,
+            embedding_dim=768,
             excluded_meta_data=["emb"],
             similarity="cosine",
             custom_mapping=SQUAD_MAPPING,
@@ -95,13 +110,31 @@ def single_run(parameters):
             emb_extraction_layer=-1,
         )
         p.add_node(component=retriever, name="SBertRetriever", inputs=["Query"])
+
+    elif retriever_type == "google":
+        document_store = ElasticsearchDocumentStore(
+            host="localhost",
+            username="",
+            password="",
+            index=doc_index,
+            search_fields=["name", "text"],
+            create_index=False,
+            embedding_field="emb",
+            scheme="",
+            embedding_dim=768,
+            excluded_meta_data=["emb"],
+            similarity="cosine",
+            custom_mapping=SQUAD_MAPPING,
+        )
+        retriever = GoogleRetriever(document_store=document_store, website=google_retriever_website)
+        p.add_node(component=retriever, name="GoogleRetriever", inputs=["Query"])
+
     else:
         raise Exception(
-            f"You chose {retriever_type}. Choose one from bm25, sbert, or dpr"
+            f"You chose {retriever_type}. Choose one from bm25, sbert, google or dpr"
         )
 
-    document_store.delete_all_documents(index=doc_index)
-    document_store.delete_all_documents(index=label_index)
+    # Add evaluation data to Elasticsearch document store
     document_store.add_eval_data(
         evaluation_data.as_posix(),
         doc_index=doc_index,
