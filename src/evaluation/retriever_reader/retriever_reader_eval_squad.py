@@ -295,7 +295,6 @@ if __name__ == "__main__":
         "./results/optimize_result.z"
     )  # used for storing results of scikit optimize
 
-    parameters_grid = list(ParameterGrid(param_grid=parameters))
     experiment_name = parameters["experiment_name"][0]
     device, n_gpu = initialize_device_settings(use_cuda=True)
     GPU_AVAILABLE = 1 if device.type == "cuda" else 0
@@ -313,7 +312,6 @@ if __name__ == "__main__":
 
     if os.getenv("USE_OPTIMIZATION") == "True":
         dimensions = create_dimensions_from_parameters(parameters)
-
 
         @use_named_args(dimensions=dimensions)
         def single_run_optimization(**kwargs):
