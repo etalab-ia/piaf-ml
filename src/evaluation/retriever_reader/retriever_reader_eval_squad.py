@@ -297,9 +297,9 @@ def single_run(idx=None, **kwargs):
 
 
 if __name__ == "__main__":
-    result_file_path = Path("./results/results_reader.csv")  # file used for debbugging
+    result_file_path = Path("./output/results_reader.csv")  # file used for debbugging
     optimize_result_file_path = Path(
-        "./results/optimize_result.z"
+        "./output/optimize_result.z"
     )  # used for storing results of scikit optimize
 
     experiment_name = parameters["experiment_name"][0]

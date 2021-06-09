@@ -13,7 +13,7 @@ from sklearn.preprocessing import OneHotEncoder
 # TODO : balance the data
 
 # Read the data
-X_full = pd.read_csv("./results/analysis_results.csv")
+X_full = pd.read_csv("./output/analysis_results.csv")
 
 X_full = X_full[X_full.level == "theme"]  # take only the theme experiment
 
