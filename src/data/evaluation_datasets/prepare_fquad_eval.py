@@ -83,10 +83,9 @@ def merge(kb_fquad, test_fquad):
     return modified_fquad
 
 
-def save_dataset(modified_fquad, name="fquad_eval"):
+def save_dataset(modified_fquad, path):
     """save the dataset in the /data/evaluation-datasets folder"""
-    res_file = Path("./data/evaluation-datasets") / (name + ".json")
-    with open(res_file, "w", encoding="UTF-8") as f:
+    with open(path, "w", encoding="UTF-8") as f:
         json.dump(modified_fquad, f)
 
 def count(squad):
@@ -107,7 +106,7 @@ def count(squad):
     print(f'Nb answer = {answer_count}')
 
 
-def main(file_kb_fquad, file_test_fquad, name="fquad_eval"):
+def main(file_kb_fquad, file_test_fquad, modified_fquad_path):
     with open(file_kb_fquad, encoding="UTF-8") as f_kb:
         kb_fquad = json.load(f_kb)
 
@@ -121,7 +120,7 @@ def main(file_kb_fquad, file_test_fquad, name="fquad_eval"):
     modified_fquad = merge(kb_fquad, test_fquad)
 
     # todo: add a merging of the different paragraphs
-    save_dataset(modified_fquad, name)
+    save_dataset(modified_fquad, modified_fquad_path)
 
 
 if __name__ == '__main__':

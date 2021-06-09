@@ -99,13 +99,17 @@ def test_prepare_fquad_eval(document_store):
     # add eval data (SQUAD format)
     document_store.delete_all_documents(index="test_eval_document")
     document_store.delete_all_documents(index="test_feedback")
+
+    fquad_eval_file = Path("./output/test/sample/squad/fquad_eval.json")
+    fquad_eval_file.parent.mkdir(parents=True, exist_ok=True)
+
     prepare_fquad_eval.main(
-        Path("./test/samples/squad/small.json"),
-        Path("./test/samples/squad/tiny.json"),
-        name="small",
+        file_kb_fquad = Path("./test/samples/squad/small.json"),
+        file_test_fquad = Path("./test/samples/squad/tiny.json"),
+        modified_fquad_path = fquad_eval_file
     )
     document_store.add_eval_data(
-        filename=Path("./data/evaluation-datasets/small.json").as_posix(),
+        filename = fquad_eval_file.as_posix(),
         doc_index="test_eval_document",
         label_index="test_feedback",
     )
