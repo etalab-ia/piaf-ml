@@ -97,15 +97,8 @@ python - m src.evaluation.retriever_reader.retriever_reader_eval_squad.py
 ```
 /piaf-ml/
 ├── clients # Client specific deployment code
-├── data
-│   ├── cached_dense_dicts
-│   ├── evaluation-datasets #datasets available for performance evaluation
-│   ├── knowledge-base
-│   └── vXY # Your folder generated with Knowledge database
 ├── logs # Here we will put our logs when we get to it :)
-├── mlruns # The results saved by mlruns
 ├── notebooks # Notebooks with reports on experimentations
-├── reports # Reports
 ├── results # Folder were all the results generated from evaluation scripts are stored
 ├── src
 │   ├── data # Script related to data generation
@@ -116,7 +109,7 @@ python - m src.evaluation.retriever_reader.retriever_reader_eval_squad.py
 │   │   ├── retriever_reader # Scripts for evaluating the full pipeline
 │   │   └── utils # Somes utils dedicated to performance evaluation
 │   └── models # Scripts related to training models
-└── test
+└── test # Unit tests
 ```
 
 ## Set environment variables
