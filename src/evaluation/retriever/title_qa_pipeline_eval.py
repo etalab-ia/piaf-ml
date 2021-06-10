@@ -101,7 +101,7 @@ def single_run(parameters):
 
 
 if __name__ == "__main__":
-    result_file_path = Path("./results/results.csv")
+    result_file_path = Path("./output/results.csv")
     parameters_grid = list(ParameterGrid(param_grid=parameters))
 
     device, n_gpu = initialize_device_settings(use_cuda=True)

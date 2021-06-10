@@ -9,7 +9,7 @@ from sklearn.preprocessing import PolynomialFeatures
 if __name__ == "__main__":
     from pathlib import Path
 
-    data = pd.read_csv(Path("./results/runs.csv"))
+    data = pd.read_csv(Path("./output/runs.csv"))
     y = data["reader_topk_accuracy_has_answer"]
     X = data[["k_reader_per_candidate", "k_reader_total", "k_retriever"]]
 

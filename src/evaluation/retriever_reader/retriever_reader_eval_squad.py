@@ -73,9 +73,7 @@ def single_run(idx=None, **kwargs):
         reader_model_version = kwargs["reader_model_version"]
         retriever_model_version = kwargs["retriever_model_version"]
         split_by = kwargs["split_by"]
-        split_length = int(
-            kwargs["split_length"]
-        )  # this is intended to convert numpy.int64 to int
+        split_length = int(kwargs["split_length"])  # this is intended to convert numpy.int64 to int
         title_boosting_factor = kwargs["boosting"]
 
         # indexes for the elastic search
@@ -99,7 +97,7 @@ def single_run(idx=None, **kwargs):
                 clean_header_footer=False,
                 split_by=split_by,
                 split_length=split_length,
-                split_overlap=0,  # this must be set to 0 at the data of writting this: 22 01 2021
+                split_overlap=0,  # this must be set to 0 at the date of writting this: 22 01 2021
                 split_respect_sentence_boundary=False,  # the support for this will soon be removed : 29 01 2021
             )
         else:
@@ -157,17 +155,26 @@ def single_run(idx=None, **kwargs):
             p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
 
         elif retriever_type == "dpr":
-            document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=doc_index,
-                                                        search_fields=["name", "text"],
-                                                        create_index=False, embedding_field="emb",
-                                                        embedding_dim=768, excluded_meta_data=["emb"],
-                                                        similarity='dot_product',
-                                                        custom_mapping=SQUAD_MAPPING)
-            retriever = DensePassageRetriever(document_store=document_store,
-                                              query_embedding_model="etalab-ia/dpr-question_encoder-fr_qa-camembert",
-                                              passage_embedding_model="etalab-ia/dpr-ctx_encoder-fr_qa-camembert",
-                                              infer_tokenizer_classes=True,
-                                              use_gpu=GPU_AVAILABLE)
+            document_store = ElasticsearchDocumentStore(
+                host="localhost",
+                username="",
+                password="",
+                index=doc_index,
+                search_fields=["name", "text"],
+                create_index=False,
+                embedding_field="emb",
+                embedding_dim=768,
+                excluded_meta_data=["emb"],
+                similarity='dot_product',
+                custom_mapping=SQUAD_MAPPING,
+            )
+            retriever = DensePassageRetriever(
+                document_store=document_store,
+                query_embedding_model="etalab-ia/dpr-question_encoder-fr_qa-camembert",
+                passage_embedding_model="etalab-ia/dpr-ctx_encoder-fr_qa-camembert",
+                infer_tokenizer_classes=True,
+                use_gpu=GPU_AVAILABLE,
+            )
             p = ExtractiveQAPipeline(reader=reader, retriever=retriever)
 
         elif retriever_type == "title_bm25":
@@ -232,7 +239,7 @@ def single_run(idx=None, **kwargs):
 
         else:
             logging.error(
-                f"You chose {retriever_type}. Choose one from bm25, sbert, dpr or title_bm25"
+                f"You chose {retriever_type}. Choose one from bm25, sbert, dpr, title_bm25 or title."
             )
             raise Exception(f"Wrong retriever type for {retriever_type}.")
 
@@ -290,12 +297,11 @@ def single_run(idx=None, **kwargs):
 
 
 if __name__ == "__main__":
-    result_file_path = Path("./results/results_reader.csv")  # file used for debbugging
+    result_file_path = Path("./output/results_reader.csv")  # file used for debbugging
     optimize_result_file_path = Path(
-        "./results/optimize_result.z"
+        "./output/optimize_result.z"
     )  # used for storing results of scikit optimize
 
-    parameters_grid = list(ParameterGrid(param_grid=parameters))
     experiment_name = parameters["experiment_name"][0]
     device, n_gpu = initialize_device_settings(use_cuda=True)
     GPU_AVAILABLE = 1 if device.type == "cuda" else 0
@@ -313,7 +319,6 @@ if __name__ == "__main__":
 
     if os.getenv("USE_OPTIMIZATION") == "True":
         dimensions = create_dimensions_from_parameters(parameters)
-
 
         @use_named_args(dimensions=dimensions)
         def single_run_optimization(**kwargs):

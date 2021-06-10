@@ -37,6 +37,8 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 GPU_AVAILABLE = torch.cuda.is_available()
+
+# TODO: Shouldn't this be loaded from the environment?
 USE_CACHE = True
 
 
@@ -497,7 +499,7 @@ def compute_score(
 
 if __name__ == "__main__":
 
-    result_file_path = Path("./results/results.csv")
+    result_file_path = Path("./output/results.csv")
     parameters_grid = list(ParameterGrid(param_grid=parameters))
     all_results = []
     launch_ES()

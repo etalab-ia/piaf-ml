@@ -93,40 +93,33 @@ python - m src.evaluation.retriever_reader.retriever_reader_eval_squad.py
 5. Note that the results will be saved in ``results/`` in a csv form. Also, mlruns will create a record in `mlruns`
 
 ## Project folder structure
+
 ```
 /piaf-ml/
-├── data
-│   ├── dense_dicts
-│   ├── evaludation-datasets #datasets available for performance evaluation 
-│   └── vXY # Your folder generated with Knowledge database
+├── clients # Client specific deployment code
 ├── logs # Here we will put our logs when we get to it :)
-├── mlruns # The results saved by mlruns
 ├── notebooks # Notebooks with reports on experimentations
-├── reports # Reports
 ├── results # Folder were all the results generated from evaluation scripts are stored
 ├── src
-│   ├── data # Script related to data generation
-│   │   └── notebooks # Notebooks for data generation 
-│   ├── evaluation
-│   │   ├── config # Configuration file
-│   │   ├── utils # somes utils dedicated to performance evaluation
-│   │   └── retriever_reader # script for evaluating the full pipeline 
-│   ├── models # Scripts related to training models
-│   └── util # Random functions that could be accessed from multiple places
+│   ├── data # Script related to data generation
+│   ├── evaluation # Scripts related to pipeline performance evaluation
+│   │   ├── config # Configuration files
+│   │   ├── results_analysis
+│   │   ├── retriever # Scripts for evaluating the retriever only
+│   │   ├── retriever_reader # Scripts for evaluating the full pipeline
+│   │   └── utils # Somes utils dedicated to performance evaluation
+│   └── models # Scripts related to training models
+└── test # Unit tests
 ```
 
 ## Set environment variables
 
-Certain capabilities of this codebase (e.g., using a remote mlflow endpoint) need a set of environment variables to work properly. We use `python-dotenv` to read the contents of a `.env` file that sits at the root of the project. This file is not tracked by git for security reasons. Still, in order for everything to work properly, you need to create such a file in your local code, again, at the root of the project, such as `piaf-ml/.env`. 
+Certain capabilities of this codebase (e.g., using a remote mlflow endpoint) need a set of environment variables to work properly. We use `python-dotenv` to read the contents of a `.env` file that sits at the root of the project. This file is not tracked by git for security reasons. Still, in order for everything to work properly, you need to create such a file in your local code, again, at the root of the project, such as `piaf-ml/.env`.
 
-As of now, a sample `.env` file looks like this:
+A template which describes the different environment variables is provided in `.env.template`. Copy it to `.env` and edit it to your needs.
 
-```
-MLFLOW_TRACKING_USERNAME=someusername
-MLFLOW_TRACKING_PASSWORD=somepassword
-MLFLOW_TRACKING_SERVER_URI = https://mlflow.endpoint/
-```
 #### Mlflow Specific Configutation
+
 To be able to upload artifacts into mlflow, you need to be able to `ssh` into the designated artifact server via a `ssh` key. Also, you need a local `ssh` config that specifies an identity file for the artifact-server domain. Such as: 
 ```
 Host your.mlflow.remotehost.adress

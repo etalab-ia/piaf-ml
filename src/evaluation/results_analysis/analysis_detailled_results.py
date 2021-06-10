@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 
 def read_experiment(xp_name):
-    df_results = pd.read_csv("./results/results.csv")
+    df_results = pd.read_csv("./output/results.csv")
     retriever_type = df_results.loc[df_results["experiment_id"] == xp_name][
         "retriever_type"
     ].values[0]
@@ -31,7 +31,7 @@ def read_experiment(xp_name):
         "lemma_preprocessing": lemma_preprocessing,
     }
     dict = {
-        "data": json.load(open(f"./results/{xp_name}_detailed_results.json")),
+        "data": json.load(open(f"./output/{xp_name}_detailed_results.json")),
         "meta": meta,
     }
     return dict
@@ -152,4 +152,4 @@ for xp_name in tqdm(list_xp):
     file = read_experiment(xp_name)
     df = read_json_detailed_results(file, df)
 
-save_results(Path("./results/analysis_results.csv"), df)
+save_results(Path("./output/analysis_results.csv"), df)
