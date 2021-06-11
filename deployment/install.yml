@@ -1,7 +1,8 @@
 ---
 - hosts: sandbox
-  tasks:
-    - name: Test
-      ansible.builtin.debug:
-        var: ansible_facts
-
+#  tasks:
+#    - name: Test
+#      ansible.builtin.debug:
+#        var: ansible_facts
+  roles:
+    - { role: nginx, tags: ["install"]}

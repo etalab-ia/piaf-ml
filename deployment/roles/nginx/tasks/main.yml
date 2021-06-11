@@ -1,0 +1,20 @@
+---
+- name: nginx configuration file
+  ansible.builtin.template:
+    src: piaf
+#    TODO 2021-06-11: this should be the target destination
+#    dest: /etc/nginx/sites-available/piaf
+    dest: /home/mbitard/piaf_nginx
+    mode: 0644
+#    owner: root
+#    group: root
+    backup: yes
+  register: nginx_configuration_file
+#  become: true
+
+- name: reload nginx configuration
+  ansible.builtin.systemd:
+    name: nginx.service
+    state: reloaded
+  when: nginx_configuration_file.changed
+  become: true
