@@ -1,0 +1,11 @@
+---
+- name: "{{ client }} | Installing haystack"
+  ansible.builtin.debug:
+    msg: Haystack will be installed on port {{ deployments[client].haystack_port }}
+- name: "{{ client }} | clone haystack"
+  ansible.builtin.git:
+    repo: 'https://github.com/deepset-ai/haystack.git'
+    # TODO 2021-06-11 change to guillim before merging. Have a common user where all is stored?
+    dest: /home/mbitard/haystack_{{ client }}
+    version: master
+    depth: 1

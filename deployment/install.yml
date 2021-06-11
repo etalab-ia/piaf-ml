@@ -1,8 +1,11 @@
 ---
 - hosts: sandbox
-#  tasks:
-#    - name: Test
-#      ansible.builtin.debug:
-#        var: ansible_facts
+  tasks:
+    - name: Install haystack
+      include_role:
+        name: 'haystack'
+      loop: "{{ deployments.keys() }}"
+      loop_control:
+        loop_var: client
   roles:
     - { role: nginx, tags: ["install"]}
