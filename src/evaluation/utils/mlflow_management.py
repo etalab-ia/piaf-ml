@@ -49,8 +49,10 @@ def hash_piaf_code():
 
 def get_list_past_run(client, experiment_name):
     """
-    This function returns the list of the past experiments :param client: the mlflow client :param experiment_name: the
-    name of the experiment :return: the list of the past experiments
+    This function returns the list of the past experiments 
+    :param client: the mlflow client 
+    :param experiment_name: the name of the experiment 
+    :return: the list of the past experiments
     """
     try:
         experiment_id = client.get_experiment_by_name(experiment_name).experiment_id
@@ -72,8 +74,8 @@ def create_run_ids(parameters_grid):
     for the git commit of the code, the hash for the knowledge_base being used for testing, the hash for the params of
     the run.
 
-    :param parameters_grid: the parameter grid created from the configuration file :return: the run_ids: a list of run
-    ids
+    :param parameters_grid: the parameter grid created from the configuration file 
+    :return: the run_ids: a list of run ids
     """
     git_commit = subprocess.check_output(
         "git rev-parse --short HEAD", encoding="utf-8", shell=True

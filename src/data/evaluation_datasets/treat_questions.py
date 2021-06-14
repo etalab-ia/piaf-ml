@@ -17,7 +17,8 @@ print("loading completed !")
 
 def remove_tags(line, tag_name):
     """
-    :param line: the line from the xlm file :param tag_name: the name of the tag you want to remove :return: string
+    :param line: the line from the xlm file 
+    :param tag_name: the name of the tag you want to remove :return: string
     without the xml tags
     """
     return line.replace(f"<{tag_name}>", "").replace(f"</{tag_name}>", "")
