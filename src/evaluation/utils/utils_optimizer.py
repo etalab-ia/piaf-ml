@@ -15,8 +15,9 @@ class tqdm_skopt(object):
 
 def create_dimensions_from_parameters(parameters):
     """
-    This function creates dimensions for the scikit optimize experiment :param parameters: config file :return: list of
-    dimensions for scikit optimize
+    This function creates dimensions for the scikit optimize experiment 
+    :param parameters: config file 
+    :return: list of dimensions for scikit optimize
     """
     dim1 = Integer(
         name="k_retriever",

@@ -15,9 +15,10 @@ def add_eval_data_from_file(
     Read Documents + Labels from a SQuAD-style file. Document and Labels can then be indexed to the DocumentStore and be
     used for evaluation.
 
-    :param retriever_emb: the dense retriever to embed the text :param filename: Path to file in SQuAD format :param
-    max_docs: This sets the number of documents that will be loaded. By default, this is set to None, thus reading in
-    all available eval documents. :return: (List of Documents, List of Labels)
+    :param retriever_emb: the dense retriever to embed the text 
+    :param filename: Path to file in SQuAD format 
+    :param max_docs: This sets the number of documents that will be loaded. By default, this is set to None, thus reading in all available eval documents. 
+    :return: (List of Documents, List of Labels)
     """
 
     docs: List[Document] = []

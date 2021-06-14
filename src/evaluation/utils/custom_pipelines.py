@@ -63,8 +63,10 @@ class TitleBM25QAPipeline(BaseStandardPipeline):
             - An ElasticsearchRetriever
         The output of the two retrievers are concatenated based on the number of k_retriever passed for each retrievers.
 
-        :param reader: Reader instance :param retriever: Retriever instance :param k_title_retriever: int :param
-        k_bm25_retriever: int
+        :param reader: Reader instance 
+        :param retriever: Retriever instance 
+        :param k_title_retriever: int 
+        :param k_bm25_retriever: int
         """
         self.k_title_retriever = k_title_retriever
         self.k_bm25_retriever = k_bm25_retriever

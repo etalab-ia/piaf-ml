@@ -139,10 +139,11 @@ def eval_retriever_reader(
           - "f1": Average overlap between predicted answers and their corresponding correct answers
           - "top_n_accuracy": Proportion of predicted answers that overlap with correct answer
 
-    :param pipeline: :param document_store: DocumentStore containing the evaluation documents :param device: The device
-    on which the tensors should be processed. Choose from "cpu" and "cuda". :param label_index: Index/Table name where
-    labeled questions are stored :param doc_index: Index/Table name where documents that are used for evaluation are
-    stored
+    :param pipeline:
+    :param document_store: DocumentStore containing the evaluation documents
+    :param device: The device on which the tensors should be processed. Choose from "cpu" and "cuda".
+    :param label_index: Index/Table name where labeled questions are stored
+    :param doc_index: Index/Table name where documents that are used for evaluation are stored
     """
 
     # extract all questions for evaluation
@@ -519,10 +520,11 @@ def eval_titleQA_pipeline(
           - "f1": Average overlap between predicted answers and their corresponding correct answers
           - "top_n_accuracy": Proportion of predicted answers that overlap with correct answer
 
-    :param label_origin: the label for the correct answers :param k_retriever: the number of answers to retrieve from
-    the TitleQAPipeline :param pipeline: The titleQAPipeline :param document_store: DocumentStore containing the
-    evaluation documents and the embeddings of the titles :param label_index: Index/Table name where labeled questions
-    are stored
+    :param label_origin: the label for the correct answers 
+    :param k_retriever: the number of answers to retrieve from the TitleQAPipeline 
+    :param pipeline: The titleQAPipeline 
+    :param document_store: DocumentStore containing the evaluation documents and the embeddings of the titles 
+    :param label_index: Index/Table name where labeled questions are stored
     """
 
     # extract all questions for evaluation
