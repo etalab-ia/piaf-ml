@@ -72,6 +72,7 @@ def single_run(idx=None, **kwargs):
         preprocessing = kwargs["preprocessing"]
         reader_model_version = kwargs["reader_model_version"]
         retriever_model_version = kwargs["retriever_model_version"]
+        dpr_model_version = kwargs["dpr_model_version"]
         split_by = kwargs["split_by"]
         split_length = int(kwargs["split_length"])  # this is intended to convert numpy.int64 to int
         title_boosting_factor = kwargs["boosting"]
@@ -172,6 +173,7 @@ def single_run(idx=None, **kwargs):
                 document_store=document_store,
                 query_embedding_model="etalab-ia/dpr-question_encoder-fr_qa-camembert",
                 passage_embedding_model="etalab-ia/dpr-ctx_encoder-fr_qa-camembert",
+                model_version=dpr_model_version,
                 infer_tokenizer_classes=True,
                 use_gpu=GPU_AVAILABLE,
             )
@@ -279,9 +281,6 @@ def single_run(idx=None, **kwargs):
                 {k: v for k, v in retriever_eval_results.items() if v is not None}
             )
             logger.info(f"Run finished successfully")
-            logger.info(
-                f'Reader Accuracy: {retriever_eval_results["reader_topk_accuracy"]}'
-            )
             try:
                 mlflow.log_artifact(f"./logs/root.log")
             except Exception:
