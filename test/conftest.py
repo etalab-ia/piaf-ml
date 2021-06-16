@@ -116,6 +116,7 @@ def retriever_dpr(document_store, gpu_available):
     return DensePassageRetriever(document_store=document_store,
                                  query_embedding_model="etalab-ia/dpr-question_encoder-fr_qa-camembert",
                                  passage_embedding_model="etalab-ia/dpr-ctx_encoder-fr_qa-camembert",
+                                 model_version="v1.0",
                                  infer_tokenizer_classes=True,
                                  use_gpu=gpu_available)
 
