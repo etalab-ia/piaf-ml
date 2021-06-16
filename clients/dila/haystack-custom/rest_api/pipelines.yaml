@@ -1,3 +1,4 @@
+version: '0.7'
 
 components:    # define all the building-blocks for Pipeline
   - name: ElasticsearchDocumentStore
@@ -15,11 +16,12 @@ components:    # define all the building-blocks for Pipeline
     type: ElasticsearchRetriever
     params:
       document_store: ElasticsearchDocumentStore    # params can reference other components defined in the YAML
-      top_k: 5
+      top_k: 1
   - name: TitleEmbRetriever
     type: TitleEmbeddingRetriever
     params:
       document_store: ElasticsearchDocumentStore    # params can reference other components defined in the YAML
+      top_k: 1
       embedding_model: distiluse-base-multilingual-cased
       model_format: sentence_transformers
       use_gpu: False
@@ -34,7 +36,7 @@ components:    # define all the building-blocks for Pipeline
     params:
       model_name_or_path: etalab-ia/camembert-base-squadFR-fquad-piaf
       tokenizer: etalab-ia/camembert-base-squadFR-fquad-piaf
-      top_k_per_candidate: 4
+      top_k_per_candidate: 20
       context_window_size: 200
       return_no_answers: False
       use_gpu: -1
