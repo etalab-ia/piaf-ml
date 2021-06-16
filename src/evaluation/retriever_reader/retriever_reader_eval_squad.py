@@ -173,7 +173,7 @@ def single_run(idx=None, **kwargs):
                 document_store=document_store,
                 query_embedding_model="etalab-ia/dpr-question_encoder-fr_qa-camembert",
                 passage_embedding_model="etalab-ia/dpr-ctx_encoder-fr_qa-camembert",
-                model_version="v1.0",
+                model_version=dpr_model_version,
                 infer_tokenizer_classes=True,
                 use_gpu=GPU_AVAILABLE,
             )
