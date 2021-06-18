@@ -1,0 +1,7 @@
+---
+- hosts: sandbox
+  tasks:
+    - ansible.builtin.debug:
+        msg: "Wiping and inserting data for client {{ client }}"
+  roles:
+    - { role: prepare_data }
