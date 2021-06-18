@@ -5,6 +5,7 @@
       ansible.builtin.file:
         path: "{{ installation_directory }}"
         state: directory
+        group: piaf-deployment
     - name: Install haystack
       include_role:
         name: 'haystack'

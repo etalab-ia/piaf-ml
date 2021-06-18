@@ -21,6 +21,6 @@ services:
   elasticsearch:
     image: "elasticsearch:7.9.2"
     volumes:
-      - "{{ installation_directory }}/elasticsearch_data_{{ client }}/:/usr/share/elasticsearch/data"
+      - "{{ client_elasticsearch_data_folder }}:/usr/share/elasticsearch/data"
     environment:
       - discovery.type=single-node

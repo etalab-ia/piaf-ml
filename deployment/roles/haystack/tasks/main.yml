@@ -2,10 +2,13 @@
 - name: "{{ client }} | Installing haystack"
   ansible.builtin.debug:
     msg: Haystack will be installed on port {{ deployments[client].haystack_port }}
+- name: "{{ client }} | Setting client installation folder"
+  ansible.builtin.set_fact:
+    client_installation_directory: "{{ installation_directory }}/haystack_{{ client }}"
 - name: "{{ client }} | clone haystack"
   ansible.builtin.git:
     repo: 'https://github.com/deepset-ai/haystack.git'
-    dest: "{{ installation_directory }}/haystack_{{ client }}"
+    dest: "{{ client_installation_directory }}"
     version: "{{ haystack_commit }}"
     update: no
   register: haystack
@@ -13,32 +16,51 @@
 - name: "{{ client }} | force clone haystack"
   ansible.builtin.git:
     repo: 'https://github.com/deepset-ai/haystack.git'
-    dest: "{{ installation_directory }}/haystack_{{ client }}"
+    dest: "{{ client_installation_directory }}"
     version: "{{ haystack_commit }}"
     force: yes
   when: not haystack.after.startswith(haystack_commit)
+- name: "{{ client }} | change group ownership (https://github.com/ansible/ansible/issues/51601)"
+  file:
+    path: "{{ client_installation_directory }}/haystack" # this should be as same as `dest` above
+    group: "piaf-deployment"
+    state: directory
+    recurse: yes
 - name: "{{ client }} | copy init.py"
   ansible.builtin.copy:
     src: __init__.py
-    dest: "{{ installation_directory }}/haystack_{{ client }}/haystack/__init__.py"
+    dest: "{{ client_installation_directory }}/haystack/__init__.py"
+    group: piaf-deployment
 - name: "{{ client }} | copy custom.py"
   ansible.builtin.copy:
     src: custom.py
-    dest: "{{ installation_directory }}/haystack_{{ client }}/haystack/custom.py"
+    dest: "{{ client_installation_directory }}/haystack/custom.py"
+    group: piaf-deployment
 - name: "{{ client }} | add dependency to requirements.txt"
   ansible.builtin.lineinfile:
-    path: "{{ installation_directory }}/haystack_{{ client }}/requirements.txt"
+    path: "{{ client_installation_directory }}/requirements.txt"
     line: "{{ item }}"
   loop: "{{ haystack_python_dependencies }}"
+- name: "{{ client }} | Setting client elasticsearch data folder"
+  ansible.builtin.set_fact:
+    client_elasticsearch_data_folder: "{{ installation_directory }}/elasticsearch_data_{{ client }}/"
 - name: "{{ client }} | configure docker-compose"
   ansible.builtin.template:
     src: docker-compose.yml
-    dest: "{{ installation_directory }}/haystack_{{ client }}/docker-compose.yml"
+    dest: "{{ client_installation_directory }}/docker-compose.yml"
+    group: piaf-deployment
 - name: "{{ client }} | copy pipelines.yml"
   ansible.builtin.copy:
     src: ../../../clients/{{ client }}/pipelines.yaml
-    dest: "{{ installation_directory }}/haystack_{{ client }}/rest_api/pipelines.yaml"
-- name: Install docker python package
+    dest: "{{ client_installation_directory }}/rest_api/pipelines.yaml"
+    group: piaf-deployment
+- name: "{{ client }} | Make sure elasticsearch data folder exists"
+  ansible.builtin.file:
+    path: "{{ client_elasticsearch_data_folder }}"
+    state: directory
+    group: piaf-deployment
+    mode: 0777
+- name: "{{ client }} | Install docker python package"
   pip:
     executable: pip3
     extra_args: --user
@@ -48,8 +70,4 @@
     - docker-compose
 - name: "{{ client }} | Create and start haystack"
   community.docker.docker_compose:
-    project_src: "{{ installation_directory }}/haystack_{{ client }}/"
-    project_name: "haystack_{{ client }}"
-  register: docker_compose_output
-- ansible.builtin.debug:
-    var: docker_compose_output
+    project_src: "{{ client_installation_directory }}/"
