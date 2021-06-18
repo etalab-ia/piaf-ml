@@ -17,13 +17,3 @@ Every deployer should:
 ## Configuration
 
 in the `hosts.yml` file, you will configure every client in the sandbox.
-
-## Todo
-
-* [x] Have a folder for installing haystack instances, instead of `/home/guillim`
-    * `/data/piaf-ml/{client}`
-* [x] Have a group (suggestion name: `piaf-deployment`) of users allowed to deploy piaf-ml
-    * [x] this group should be able to `systemctl reload nginx` --> %piaf ALL= NOPASSWD: /usr/bin/systemctl reload nginx
-    * [x] the file `/etc/nginx/sites-available/piaf` should belong to the group `piaf`
-* **OR**
-    * Have all the users in the sudoers, but it's more dangerous
