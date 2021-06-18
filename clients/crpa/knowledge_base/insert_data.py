@@ -19,21 +19,13 @@ from haystack.reader.transformers import TransformersReader
 from haystack.preprocessor.preprocessor import PreProcessor
 from haystack.pipeline import Pipeline, ExtractiveQAPipeline
 
-from farm.utils import initialize_device_settings
-from sklearn.model_selection import ParameterGrid
-
-
-evaluation_data = Path("./data/dataset.json")
-k_retriever = 20
-k_title_retriever = 10
-k_reader_per_candidate = 5
-k_reader_total = 3
+evaluation_data = Path("./data/squad.json")
 preprocessing = True
 split_by = "word"
 split_length = 1000
 title_boosting_factor = 1
 
-ES_host = "haystack_crpa_elasticsearch_1"
+ES_host = "elasticsearch"
 
 from typing import List
 import numpy as np
@@ -49,7 +41,7 @@ class TitleEmbeddingRetriever(EmbeddingRetriever):
         """
         texts = [d.meta["name"] for d in docs]
 
-        return self.embed(texts)
+        return self.embedding_encoder.embed(texts)
 
 
 import subprocess
@@ -190,7 +182,7 @@ preprocessor = PreProcessor(
 )
 
 document_store = ElasticsearchDocumentStore(
-    host="haystack_crpa_elasticsearch_1",
+    host="elasticsearch",
     username="",
     password="",
     index=doc_index,

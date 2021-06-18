@@ -14,7 +14,7 @@ class TitleEmbeddingRetriever(EmbeddingRetriever):
         """
         texts = [d.meta["name"] for d in docs]
 
-        return self.embed(texts)
+        return self.embedding_encoder.embed(texts)
 
 
 class JoinDocumentsCustom(BaseComponent):

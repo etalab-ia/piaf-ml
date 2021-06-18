@@ -11,6 +11,7 @@ Every deployer should:
 * Install [ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) on your machine
 * With `make install`, you will install haystack for every clients configured in hosts.yml
   * This is (and must remain) idempotent, it can be relaunched any time you want.
+  * If your ssh user is different from your machine user, override it with `PIAF_MACHINE_USER='guillim' make install`
 
 ## Configuration
 
