@@ -11,7 +11,7 @@
 - name: copy squad.json
   ansible.builtin.copy:
     src: "../../../clients/{{ client }}/knowledge_base/squad.json"
-    dest: "{{ client_haystack_data_folder }}/insert_data.py"
+    dest: "{{ client_haystack_data_folder }}/squad.json"
     mode: 0777
     group: piaf-deployment
 # We don't use service or systemd module because we have only the right to use sudo on this command
