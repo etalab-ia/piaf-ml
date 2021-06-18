@@ -6,6 +6,3 @@ endif
 
 install:
 	@${ANSIBLE} -u ${PIAF_MACHINE_USER} install.yml
-
-#setup:
-#	@${ANSIBLE} setup.yml

@@ -5,11 +5,9 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - {{ deployments[client].haystack_port }}:8000
+      - "{{ deployments[client].haystack_port }}:8000"
     volumes:
-      # Optional: mount your own models from disk into the container
-      - "./models:/home/user/models"
-      - "./data:/home/user/data"
+      - "{{ client_haystack_data_folder }}:/home/user/data"
     environment:
       - DB_HOST=elasticsearch
       - QUERY_PIPELINE_NAME=query2

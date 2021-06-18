@@ -44,6 +44,9 @@
 - name: "{{ client }} | Setting client elasticsearch data folder"
   ansible.builtin.set_fact:
     client_elasticsearch_data_folder: "{{ installation_directory }}/elasticsearch_data_{{ client }}/"
+- name: "{{ client }} | Setting client haystack data folder"
+  ansible.builtin.set_fact:
+    client_haystack_data_folder: "{{ installation_directory }}/haystack_data_{{ client }}/"
 - name: "{{ client }} | configure docker-compose"
   ansible.builtin.template:
     src: docker-compose.yml
@@ -57,6 +60,12 @@
 - name: "{{ client }} | Make sure elasticsearch data folder exists"
   ansible.builtin.file:
     path: "{{ client_elasticsearch_data_folder }}"
+    state: directory
+    group: piaf-deployment
+    mode: 0777
+- name: "{{ client }} | Make sure haystack data folder exists"
+  ansible.builtin.file:
+    path: "{{ client_haystack_data_folder }}"
     state: directory
     group: piaf-deployment
     mode: 0777
