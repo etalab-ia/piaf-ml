@@ -1,0 +1,109 @@
+server {
+    server_name piaf.datascience.etalab.studio;
+
+    location /app/ {
+	rewrite ^/app(.*) $1 break;
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /piafagent/ {
+        rewrite ^/piafagent(.*) $1 break;
+        proxy_pass http://localhost:8080;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+
+
+# for the DILA demo [can be deleted after june 2021]
+    location /dila/ {
+        rewrite ^/dila(.*) $1 break;
+        proxy_pass http://localhost:8004;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /piafagent_dila/ {
+        rewrite ^/piafagent_dila(.*) $1 break;
+        proxy_pass http://localhost:8084;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+# end of dila
+
+
+# for the CNIL demo [can be deleted after mars 2021]
+    location /cnil/ {
+        rewrite ^/cnil(.*) $1 break;
+        proxy_pass http://localhost:8002;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /piafagent_cnil/ {
+        rewrite ^/piafagent_cnil(.*) $1 break;
+        proxy_pass http://localhost:8082;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+# end of cnil
+
+# for the CRPA demo [can be deleted after june 2021]
+    location /crpa/ {
+        rewrite ^/crpa(.*) $1 break;
+        proxy_pass http://localhost:8003;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /piafagent_crpa/ {
+        rewrite ^/piafagent_crpa(.*) $1 break;
+        proxy_pass http://localhost:8083;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+# end of CRPA
+
+
+# for the DILA demo [can be deleted after may 2021]
+    location /piafanno/ {
+        rewrite ^/piafanno(.*) $1 break;
+        proxy_pass http://localhost:8006;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+# endof piafannoDILA
+
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/piaf.datascience.etalab.studio/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/piaf.datascience.etalab.studio/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+
+server {
+    if ($host = piaf.datascience.etalab.studio) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    server_name piaf.datascience.etalab.studio;
+    listen 80;
+    return 404; # managed by Certbot
+
+
+}

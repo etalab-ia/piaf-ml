@@ -5,7 +5,51 @@
 - name: "{{ client }} | clone haystack"
   ansible.builtin.git:
     repo: 'https://github.com/deepset-ai/haystack.git'
-    # TODO 2021-06-11 change to guillim before merging. Have a common user where all is stored?
-    dest: /home/mbitard/haystack_{{ client }}
-    version: master
-    depth: 1
+    dest: "{{ installation_directory }}/haystack_{{ client }}"
+    version: "{{ haystack_commit }}"
+    update: no
+  register: haystack
+#  We are needing that since we are modifying files in the git repo below
+- name: "{{ client }} | force clone haystack"
+  ansible.builtin.git:
+    repo: 'https://github.com/deepset-ai/haystack.git'
+    dest: "{{ installation_directory }}/haystack_{{ client }}"
+    version: "{{ haystack_commit }}"
+    force: yes
+  when: not haystack.after.startswith(haystack_commit)
+- name: "{{ client }} | copy init.py"
+  ansible.builtin.copy:
+    src: __init__.py
+    dest: "{{ installation_directory }}/haystack_{{ client }}/haystack/__init__.py"
+- name: "{{ client }} | copy custom.py"
+  ansible.builtin.copy:
+    src: custom.py
+    dest: "{{ installation_directory }}/haystack_{{ client }}/haystack/custom.py"
+- name: "{{ client }} | add dependency to requirements.txt"
+  ansible.builtin.lineinfile:
+    path: "{{ installation_directory }}/haystack_{{ client }}/requirements.txt"
+    line: "{{ item }}"
+  loop: "{{ haystack_python_dependencies }}"
+- name: "{{ client }} | configure docker-compose"
+  ansible.builtin.template:
+    src: docker-compose.yml
+    dest: "{{ installation_directory }}/haystack_{{ client }}/docker-compose.yml"
+- name: "{{ client }} | copy pipelines.yml"
+  ansible.builtin.copy:
+    src: ../../../clients/{{ client }}/pipelines.yaml
+    dest: "{{ installation_directory }}/haystack_{{ client }}/rest_api/pipelines.yaml"
+- name: Install docker python package
+  pip:
+    executable: pip3
+    extra_args: --user
+    name: "{{ item }}"
+  loop:
+    - docker
+    - docker-compose
+- name: "{{ client }} | Create and start haystack"
+  community.docker.docker_compose:
+    project_src: "{{ installation_directory }}/haystack_{{ client }}/"
+    project_name: "haystack_{{ client }}"
+  register: docker_compose_output
+- ansible.builtin.debug:
+    var: docker_compose_output

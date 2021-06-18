@@ -1,6 +1,10 @@
 ---
 - hosts: sandbox
   tasks:
+    - name: Make sure installation directory exist
+      ansible.builtin.file:
+        path: "{{ installation_directory }}"
+        state: directory
     - name: Install haystack
       include_role:
         name: 'haystack'

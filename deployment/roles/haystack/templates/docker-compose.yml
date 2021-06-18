@@ -5,8 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - 8003:8000
-    container_name: haystack-api
+      - {{ deployments[client].haystack_port }}:8000
     volumes:
       # Optional: mount your own models from disk into the container
       - "./models:/home/user/models"
@@ -14,14 +13,12 @@ services:
     environment:
       - DB_HOST=elasticsearch
       - QUERY_PIPELINE_NAME=query2
+      - ROOT_PATH=/{{ client }}
     restart: always
     depends_on:
       - elasticsearch
     command: "/bin/bash -c 'sleep 15 && gunicorn rest_api.application:app -b 0.0.0.0 -k uvicorn.workers.UvicornWorker --workers 1 --timeout 180 --preload'"
   elasticsearch:
-    container_name: elasticsearch
-    image: "guillim/crpa:v0"
-    ports:
-      - 9203:9200
+    image: "elasticsearch:7.9.2"
     environment:
       - discovery.type=single-node
