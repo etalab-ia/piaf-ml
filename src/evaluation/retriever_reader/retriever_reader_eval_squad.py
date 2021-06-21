@@ -198,11 +198,11 @@ def single_run(parameters):
     retriever_reader_eval_results.update(eval_retriever.get_metrics())
     retriever_reader_eval_results.update(eval_reader.get_metrics())
 
-    logging.info(f"Retriever Recall:{retriever_reader_eval_results['recall']}")
-    logging.info(f"Retriever Mean Avg Precision:{retriever_reader_eval_results['map']}")
-    logging.info(f"Retriever Mean Reciprocal Rank:{retriever_reader_eval_results['mrr']}")
-    logging.info(f"Reader Accuracy:{retriever_reader_eval_results['reader_topk_accuracy_has_answer']}")
-    logging.info(f"reader_topk_f1:{retriever_reader_eval_results['reader_topk_f1']}")
+    logging.info(f"Retriever Recall: {retriever_reader_eval_results['recall']}")
+    logging.info(f"Retriever Mean Avg Precision: {retriever_reader_eval_results['map']}")
+    logging.info(f"Retriever Mean Reciprocal Rank: {retriever_reader_eval_results['mrr']}")
+    logging.info(f"Reader Accuracy: {retriever_reader_eval_results['reader_topk_accuracy_has_answer']}")
+    logging.info(f"reader_topk_f1: {retriever_reader_eval_results['reader_topk_f1']}")
 
     # Log time per label in metrics
     end = time.time()
@@ -213,34 +213,6 @@ def single_run(parameters):
     return retriever_reader_eval_results
 
 
-
-
-    
-    
-    '''print()
-    retriever.print_time()
-    print()
-    print('Retreiver')
-    print("---------------")
-    print("Retriever Recall:", retriever_reader_eval_results["recall"])
-    print("Retriever Mean Avg Precision:", retriever_reader_eval_results["map"])
-    print("Retriever Mean Reciprocal Rank:",retriever_reader_eval_results["mrr"])
-
-    print()
-    reader.print_time()   
-    print() 
-    print('Reader')
-    print("---------------")
-    print("Reader Accuracy:", retriever_reader_eval_results["reader_topk_accuracy"])
-    print("reader_topk_f1:", retriever_reader_eval_results["reader_topk_f1"])
-    print()
-
-
-    time_per_label = (end - start) / document_store.get_label_count(index=label_index)
-
-    retriever_reader_eval_results.update({"time_per_label": time_per_label})
-
-    return retriever_reader_eval_results'''
 
 
 def add_extra_params(dict_params: dict):
