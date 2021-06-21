@@ -27,7 +27,7 @@ from tqdm import tqdm
 
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.config.retriever_reader_eval_squad_config import parameters
-from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline
+from src.evaluation.utils.custom_pipelines import TitleBM25QAPipeline, HottestReaderPipeline
 from src.evaluation.utils.elasticsearch_management import (delete_indices,
                                                            launch_ES,
                                                            prepare_mapping)
@@ -69,6 +69,7 @@ def single_run(idx=None, **kwargs):
         k_title_retriever = kwargs["k_title_retriever"]
         k_reader_per_candidate = kwargs["k_reader_per_candidate"]
         k_reader_total = kwargs["k_reader_total"]
+        threshold_score = kwargs["threshold_score"]
         preprocessing = kwargs["preprocessing"]
         reader_model_version = kwargs["reader_model_version"]
         retriever_model_version = kwargs["retriever_model_version"]
@@ -212,6 +213,42 @@ def single_run(idx=None, **kwargs):
             # used to make sure the p.run method returns enough candidates
             k_retriever = max(k_retriever, k_title_retriever)
 
+        elif retriever_type == "hot_reader":
+            document_store = ElasticsearchDocumentStore(
+                host="localhost",
+                username="",
+                password="",
+                index=doc_index,
+                search_fields=["name", "text"],
+                create_index=False,
+                embedding_field="emb",
+                embedding_dim=768,
+                excluded_meta_data=["emb"],
+                similarity="cosine",
+                custom_mapping=SQUAD_MAPPING,
+            )
+            retriever = TitleEmbeddingRetriever(
+                document_store=document_store,
+                embedding_model="distilbert-base-multilingual-cased",
+                model_version=retriever_model_version,
+                use_gpu=GPU_AVAILABLE,
+                model_format="transformers",
+                pooling_strategy="reduce_max",
+                emb_extraction_layer=-1,
+            )
+            retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
+            p = HottestReaderPipeline(
+                reader=reader,
+                retriever_title=retriever,
+                retriever_bm25=retriever_bm25,
+                k_title_retriever=k_title_retriever,
+                k_bm25_retriever=k_retriever,
+                threshold_score=threshold_score,
+            )
+
+            # used to make sure the p.run method returns enough candidates
+            k_retriever = max(k_retriever, k_title_retriever)
+
         elif retriever_type == "title":
             document_store = ElasticsearchDocumentStore(
                 host="localhost",
@@ -251,47 +288,47 @@ def single_run(idx=None, **kwargs):
             preprocessor=preprocessor,
         )
 
-        if retriever_type in ["sbert", "dpr", "title_bm25", "title"]:
+        if retriever_type in ["sbert", "dpr", "title_bm25", "title", "hot_reader"]:
             document_store.update_embeddings(retriever, index=doc_index)
 
         retriever_eval_results = {}
+        # try:
+        start = time.time()
+        retriever_eval_results = eval_retriever_reader(
+            document_store=document_store,
+            pipeline=p,
+            k_retriever=k_retriever,
+            k_reader_total=k_reader_total,
+            label_index=label_index,
+        )
+        logging.info(
+            f"Reader Accuracy:{retriever_eval_results['reader_topk_accuracy_has_answer']}"
+        )
+
+        # Log time per label in metrics
+        end = time.time()
+        time_per_label = (end - start) / document_store.get_label_count(
+            index=label_index
+        )
+        retriever_eval_results.update({"time_per_label": time_per_label})
+
+        mlflow.log_metrics(
+            {k: v for k, v in retriever_eval_results.items() if v is not None}
+        )
+        logger.info(f"Run finished successfully")
+        logger.info(
+            f'Reader Accuracy: {retriever_eval_results["reader_topk_accuracy"]}'
+        )
         try:
-            start = time.time()
-            retriever_eval_results = eval_retriever_reader(
-                document_store=document_store,
-                pipeline=p,
-                k_retriever=k_retriever,
-                k_reader_total=k_reader_total,
-                label_index=label_index,
-            )
-            logging.info(
-                f"Reader Accuracy:{retriever_eval_results['reader_topk_accuracy_has_answer']}"
+            mlflow.log_artifact(f"./logs/root.log")
+        except Exception:
+            logger.error(
+                f"Could not upload log to artifact server. "
+                f"Still saved in logs/root_complete.log"
             )
 
-            # Log time per label in metrics
-            end = time.time()
-            time_per_label = (end - start) / document_store.get_label_count(
-                index=label_index
-            )
-            retriever_eval_results.update({"time_per_label": time_per_label})
-
-            mlflow.log_metrics(
-                {k: v for k, v in retriever_eval_results.items() if v is not None}
-            )
-            logger.info(f"Run finished successfully")
-            logger.info(
-                f'Reader Accuracy: {retriever_eval_results["reader_topk_accuracy"]}'
-            )
-            try:
-                mlflow.log_artifact(f"./logs/root.log")
-            except Exception:
-                logger.error(
-                    f"Could not upload log to artifact server. "
-                    f"Still saved in logs/root_complete.log"
-                )
-
-        except Exception as e:
-            logging.error(f"Could not run this config: {kwargs}. Error {e}.")
+        # except Exception as e:
+        #     logging.error(f"Could not run this config: {kwargs}. Error {e}.")
 
     return retriever_eval_results
 
