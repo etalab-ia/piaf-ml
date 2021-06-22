@@ -1,33 +1,19 @@
 """
-WARNING: This script is a one-shot script.
-This script creates a single SQuAD format SPF evaluation dataset. This file is the merge of these three elements:
+WARNING: This script is a one-shot script. This script creates a single SQuAD format SPF evaluation dataset. This file
+is the merge of these three elements:
+
 1. The uni-fiche JSON files created from the original SPF xml files (these files contain the dossier,theme metadata)
 2. The 105 annotated Question Fiches dataset (data/squad-style-datasets/spf_qr_test.json)
-3. The ~530 Question Fiches dataset  (data/questions_spf.json)
+3. The ~530 Question Fiches dataset (data/questions_spf.json)
 
-The output should resemble this :
-{
-  "version": "v1.0",
-  "data": [{
-    'title': 'Immatriculer un véhicule d'occasione',
-    'sous_theme': '',
-    'categorie': "Carte grise (certificat d'immatriculation)",
-    'sous_dossier': 'Immatriculer un véhicule',
-    'reference': "Immatriculer un véhicule d'occasion",
-    'id': 'F1050',
-    'paragraphs': [{
-        'context': "Carte grise\xa0:..."
-        'qas': [
-            {'question':"J'ai acheter ...?"
-             'answers': [ ... ]
-             "is_impossible": False
+The output should resemble this : { "version": "v1.0", "data": [{ 'title': 'Immatriculer un véhicule d'occasione',
+'sous_theme': '', 'categorie': "Carte grise (certificat d'immatriculation)", 'sous_dossier': 'Immatriculer un véhicule',
+'reference': "Immatriculer un véhicule d'occasion", 'id': 'F1050', 'paragraphs': [{ 'context': "Carte grise\xa0:..."
+'qas': [ {'question':"J'ai acheter ...?" 'answers': [ ... ] "is_impossible": False
 
-            }]
-        }]
-    }]
+            }] }] }]
 
-Usage:
-    create_spf_squad_dataset.py <spf_fiches_folder> <annotated_questions_spf>
+Usage: create_spf_squad_dataset.py <spf_fiches_folder> <annotated_questions_spf>
 
 Arguments:
     <spf_fiches_folder>             A path where to find the list of [fiche_id, question, answer] to transform
@@ -41,10 +27,11 @@ from pathlib import Path
 from argopt import argopt
 
 
-def create_squad_dataset(spf_fiches_folder: Path,
-                         annotated_questions_spf_path: Path):
+def create_squad_dataset(spf_fiches_folder: Path, annotated_questions_spf_path: Path):
     # 1. Read all the fiches JSON files
-    spf_jsons_paths = [Path(f) for f in glob.glob(spf_fiches_folder.as_posix() + "/*.json")]
+    spf_jsons_paths = [
+        Path(f) for f in glob.glob(spf_fiches_folder.as_posix() + "/*.json")
+    ]
     dict_spf_jsons = {}
     for path in spf_jsons_paths:
         with open(path) as filo:
@@ -64,10 +51,14 @@ def create_squad_dataset(spf_fiches_folder: Path,
                 answered_questions_fiches_ids.append(fiche["title"])
                 continue
             else:
-                non_answered_question_fiches_ids.append(fiche['title'])
-    all_questions_fiches = answered_questions_fiches_ids + non_answered_question_fiches_ids
+                non_answered_question_fiches_ids.append(fiche["title"])
+    all_questions_fiches = (
+        answered_questions_fiches_ids + non_answered_question_fiches_ids
+    )
 
-    non_question_fiches = [f for f in list(dict_spf_jsons.keys()) if f not in all_questions_fiches]
+    non_question_fiches = [
+        f for f in list(dict_spf_jsons.keys()) if f not in all_questions_fiches
+    ]
     # 3. Begin with the creation of a SQuAD forma dataset from SPF jsons
     spf_data = []
     for fiche_id in non_question_fiches + all_questions_fiches:
@@ -87,33 +78,40 @@ def create_squad_dataset(spf_fiches_folder: Path,
         else:
             print(f"Fiche {fiche_id} has no arborescence")
             squad_dict["title"] = fiche_content["text"].split("\n")[0][:-3]
-            squad_dict.update({
-                'sous_theme': '',
-                'categorie': '',
-                'sous_dossier': '',
-                'reference': squad_dict["title"],
-                'id': fiche_id
-            })
+            squad_dict.update(
+                {
+                    "sous_theme": "",
+                    "categorie": "",
+                    "sous_dossier": "",
+                    "reference": squad_dict["title"],
+                    "id": fiche_id,
+                }
+            )
         squad_dict["paragraphs"] = [
             {
                 "context": context,
                 "qas": [
                     {
-                        "question": "" if fiche_id in non_question_fiches else squad_dict["title"],
-                        "answers": [
-                            {"answer_start": -1, "text": ""}] if fiche_id not in answered_questions_fiches_ids else
-                        dict_question_spf[fiche_id]["paragraphs"][0]["qas"][0]["answers"],
-                        "is_impossible": False
+                        "question": ""
+                        if fiche_id in non_question_fiches
+                        else squad_dict["title"],
+                        "answers": [{"answer_start": -1, "text": ""}]
+                        if fiche_id not in answered_questions_fiches_ids
+                        else dict_question_spf[fiche_id]["paragraphs"][0]["qas"][0][
+                            "answers"
+                        ],
+                        "is_impossible": False,
                     }
-                ]
+                ],
             }
         ]
         spf_data.append(squad_dict)
 
     # 4. Save the new dataset
-    new_dataset = {"version": 1.0,
-                   "data": spf_data}
-    with open(annotated_questions_spf_path.parent / Path("full_spf_squad.json"), "w") as filo:
+    new_dataset = {"version": 1.0, "data": spf_data}
+    with open(
+        annotated_questions_spf_path.parent / Path("full_spf_squad.json"), "w"
+    ) as filo:
         json.dump(new_dataset, filo, indent=4, ensure_ascii=False)
 
 
@@ -121,9 +119,11 @@ def main():
     parser = argopt(__doc__).parse_args()
     spf_fiches_folder = Path(parser.spf_fiches_folder)
     annotated_questions_spf_path = Path(parser.annotated_questions_spf)
-    create_squad_dataset(spf_fiches_folder=spf_fiches_folder,
-                         annotated_questions_spf_path=annotated_questions_spf_path)
+    create_squad_dataset(
+        spf_fiches_folder=spf_fiches_folder,
+        annotated_questions_spf_path=annotated_questions_spf_path,
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

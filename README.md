@@ -50,8 +50,13 @@ For now, the main use of this repo is for evaluation. The goal of the evaluation
 - etc. (be as specific as possible)
 ## Getting Started for development
 1. Clone this repo (for help see this [tutorial](https://help.github.com/articles/cloning-a-repository/)).
-2. Install [haystack](https://github.com/deepset-ai/haystack/). There are two methods for installing Haystack : via pip or via cloning the github repository (we try to use the `master` version of haystack so installing from the github repo is preferred). 
-4. Install requirements. Two options are available based on your prefered configuration: 
+2. Set the required environment variables, see [Set environment
+   variables](#set-environment-variables) below.
+2. Make sure gcc, make and the Python C API header files are installed on your
+   system
+  - On ubuntu:
+    - `sudo apt install gcc make python3-dev`
+3. Install requirements. Two options are available based on your prefered configuration: 
 * Using pip:
 `pip install -r requirements.txt`
 on Windows : `pip install -r requirements.txt -f https://download.pytorch.org/whl/torch_stable.html`
@@ -88,27 +93,40 @@ python - m src.evaluation.retriever_reader.retriever_reader_eval_squad.py
 5. Note that the results will be saved in ``results/`` in a csv form. Also, mlruns will create a record in `mlruns`
 
 ## Project folder structure
+
 ```
 /piaf-ml/
-├── data
-│   ├── dense_dicts
-│   ├── evaludation-datasets #datasets available for performance evaluation 
-│   └── vXY # Your folder generated with Knowledge database
+├── clients # Client specific deployment code
 ├── logs # Here we will put our logs when we get to it :)
-├── mlruns # The results saved by mlruns
 ├── notebooks # Notebooks with reports on experimentations
-├── reports # Reports
 ├── results # Folder were all the results generated from evaluation scripts are stored
 ├── src
-│   ├── data # Script related to data generation
-│   │   └── notebooks # Notebooks for data generation 
-│   ├── evaluation
-│   │   ├── config # Configuration file
-│   │   ├── utils # somes utils dedicated to performance evaluation
-│   │   └── retriever_reader # script for evaluating the full pipeline 
-│   ├── models # Scripts related to training models
-│   └── util # Random functions that could be accessed from multiple places
+│   ├── data # Script related to data generation
+│   ├── evaluation # Scripts related to pipeline performance evaluation
+│   │   ├── config # Configuration files
+│   │   ├── results_analysis
+│   │   ├── retriever # Scripts for evaluating the retriever only
+│   │   ├── retriever_reader # Scripts for evaluating the full pipeline
+│   │   └── utils # Somes utils dedicated to performance evaluation
+│   └── models # Scripts related to training models
+└── test # Unit tests
 ```
+
+## Set environment variables
+
+Certain capabilities of this codebase (e.g., using a remote mlflow endpoint) need a set of environment variables to work properly. We use `python-dotenv` to read the contents of a `.env` file that sits at the root of the project. This file is not tracked by git for security reasons. Still, in order for everything to work properly, you need to create such a file in your local code, again, at the root of the project, such as `piaf-ml/.env`.
+
+A template which describes the different environment variables is provided in `.env.template`. Copy it to `.env` and edit it to your needs.
+
+#### Mlflow Specific Configutation
+
+To be able to upload artifacts into mlflow, you need to be able to `ssh` into the designated artifact server via a `ssh` key. Also, you need a local `ssh` config that specifies an identity file for the artifact-server domain. Such as: 
+```
+Host your.mlflow.remotehost.adress
+    User localhostusername
+    IdentityFile ~/.ssh/your_private_key
+```
+This requirement is needed **when using `sftp`** as your artifact endpoint protocol. 
 
 ## How to deploy PIAF
 
@@ -172,8 +190,10 @@ Follow README.md on the [PiafAgent repo](https://github.com/etalab-ia/piaf_agent
 * [P. Soriano](https://github.com/psorianom)
 
 **Past Members :**
-
 * [J. Denes](https://github.com/jdenes)
+
+## How to contribute to this project 
+We love your input! We want to make contributing to this project as easy and transparent as possible : see our [contribution rules](https://github.com/etalab-ia/piaf-ml/blob/master/.github/contributing.md)
 
 ## Contact
 * Feel free to contact the team at piaf@data.gouv.fr with any questions or if you are interested in contributing!

@@ -26,12 +26,22 @@ def convert_json_files_to_dicts(dir_path: str) -> List[dict]:
                 jsonDoc = json.load(doc)
                 text = jsonDoc["text"]
         else:
-            raise Exception(f"Indexing of {path.suffix} files is not currently supported.")
+            raise Exception(
+                f"Indexing of {path.suffix} files is not currently supported."
+            )
 
-        documents.append({"text": text, "meta": {"name": path.name,
-                                                 "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}"}})
+        documents.append(
+            {
+                "text": text,
+                "meta": {
+                    "name": path.name,
+                    "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
+                },
+            }
+        )
 
     return documents
+
 
 def convert_json_files_v10_to_dicts(dir_path: str) -> List[dict]:
     """
@@ -54,28 +64,39 @@ def convert_json_files_v10_to_dicts(dir_path: str) -> List[dict]:
     for path in file_paths:
         if path.suffix.lower() == ".json":
             with open(path) as doc:
+
                 def get_arbo(dict, level):
                     try:
                         return dict[level]
-                    except: #in case the level does not exist or there is no dict at all
+                    except:  # in case the level does not exist or there is no dict at all
                         return "N.A"
+
                 jsonDoc = json.load(doc)
                 text = jsonDoc["text"]
-                arborescence = jsonDoc['arborescence']
-                audience = get_arbo(arborescence, 'audience')
-                theme = get_arbo(arborescence, 'theme')
-                sous_theme = get_arbo(arborescence, 'sous_theme')
-                dossier = get_arbo(arborescence, 'dossier')
-                sous_dossier = get_arbo(arborescence, 'sous_dossier')
+                arborescence = jsonDoc["arborescence"]
+                audience = get_arbo(arborescence, "audience")
+                theme = get_arbo(arborescence, "theme")
+                sous_theme = get_arbo(arborescence, "sous_theme")
+                dossier = get_arbo(arborescence, "dossier")
+                sous_dossier = get_arbo(arborescence, "sous_dossier")
         else:
-            raise Exception(f"Indexing of {path.suffix} files is not currently supported.")
+            raise Exception(
+                f"Indexing of {path.suffix} files is not currently supported."
+            )
 
-        documents.append({"text": text, "meta": {"name": path.name,
-                                                 "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
-                                                 'audience': audience,
-                                                 'theme': theme,
-                                                 'sous_theme': sous_theme,
-                                                 'dossier': dossier,
-                                                 'sous_dossier': sous_dossier}})
+        documents.append(
+            {
+                "text": text,
+                "meta": {
+                    "name": path.name,
+                    "link": f"https://www.service-public.fr/particuliers/vosdroits/{path.name.split('--', 1)[0]}",
+                    "audience": audience,
+                    "theme": theme,
+                    "sous_theme": sous_theme,
+                    "dossier": dossier,
+                    "sous_dossier": sous_dossier,
+                },
+            }
+        )
 
     return documents

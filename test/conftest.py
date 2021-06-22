@@ -8,11 +8,13 @@ import torch
 from elasticsearch import Elasticsearch
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
 from haystack.reader.transformers import TransformersReader
-from haystack.retriever.dense import EmbeddingRetriever
+from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
 from haystack.retriever.sparse import ElasticsearchRetriever
 from haystack.preprocessor.preprocessor import PreProcessor
 
+
 sys.path.insert(0, os.path.abspath("./"))
+from src.evaluation.utils.elasticsearch_management import delete_indices, prepare_mapping
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.utils_eval import PiafEvalRetriever,PiafEvalReader
@@ -26,24 +28,24 @@ def elasticsearch_fixture():
         client.info()
     except:
         print("Starting Elasticsearch ...")
+        status = subprocess.run(["docker rm haystack_test_elastic"], shell=True)
         status = subprocess.run(
-            ['docker rm haystack_test_elastic'],
-            shell=True
-        )
-        status = subprocess.run(
-            ['docker run -d --name haystack_test_elastic -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'],
-            shell=True
+            [
+                'docker run -d --name haystack_test_elastic -p 9200:9200 -e "discovery.type=single-node" elasticsearch:7.6.2'
+            ],
+            shell=True,
         )
         if status.returncode:
             raise Exception(
-                "Failed to launch Elasticsearch. Please check docker container logs.")
+                "Failed to launch Elasticsearch. Please check docker container logs."
+            )
         time.sleep(30)
-
 
 
 @pytest.fixture
 def gpu_available():
     return torch.cuda.is_available()
+
 
 @pytest.fixture
 def gpu_id(gpu_available):
@@ -54,7 +56,7 @@ def gpu_id(gpu_available):
     return gpu_id
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def preprocessor():
     # test with preprocessor
     preprocessor = PreProcessor(
@@ -63,29 +65,38 @@ def preprocessor():
         clean_header_footer=False,
         split_by="word",
         split_length=50,
-        split_overlap=0, #this must be set to 0 at the data of writting this: 22 01 2021
-        split_respect_sentence_boundary=False
+        split_overlap=0,  # this must be set to 0 at the data of writting this: 22 01 2021
+        split_respect_sentence_boundary=False,
     )
     return preprocessor
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def document_store(elasticsearch_fixture):
-    document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index="document",
+    prepare_mapping(mapping=SQUAD_MAPPING, embedding_dimension=768)
+
+    document_index = "document"
+    document_store = ElasticsearchDocumentStore(host="localhost", username="", password="", index=document_index,
                                                 create_index=False, embedding_field="emb",
-                                                embedding_dim=512, excluded_meta_data=["emb"], similarity='cosine',
+                                                embedding_dim=768, excluded_meta_data=["emb"], similarity='cosine',
                                                 custom_mapping=SQUAD_MAPPING)
     yield document_store
-    document_store.delete_all_documents(index='document')
+    # clean up
+    delete_indices(index=document_index)
+    delete_indices(index="label")
 
 
 @pytest.fixture
 def reader(gpu_id):
     k_reader = 3
-    reader = TransformersReader(model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
-                                tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
-                                use_gpu=gpu_id,top_k_per_candidate=k_reader)
+    reader = TransformersReader(
+        model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
+        tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
+        use_gpu=gpu_id,
+        top_k_per_candidate=k_reader,
+    )
     return reader
+
 
 @pytest.fixture
 def retriever_bm25(document_store):
@@ -95,18 +106,33 @@ def retriever_bm25(document_store):
 @pytest.fixture
 def retriever_emb(document_store, gpu_available):
     return EmbeddingRetriever(document_store=document_store,
-                              embedding_model="distiluse-base-multilingual-cased",
-                              use_gpu=gpu_available, model_format="sentence_transformers",
+                              embedding_model="distilbert-base-multilingual-cased",
+                              model_version="1a01b38498875d45f69b2a6721bf6fe87425da39",
+                              use_gpu=gpu_available, model_format="transformers",
                               pooling_strategy="reduce_max",
                               emb_extraction_layer=-1)
 
 @pytest.fixture
+def retriever_dpr(document_store, gpu_available):
+    return DensePassageRetriever(document_store=document_store,
+                                 query_embedding_model="etalab-ia/dpr-question_encoder-fr_qa-camembert",
+                                 passage_embedding_model="etalab-ia/dpr-ctx_encoder-fr_qa-camembert",
+                                 model_version="v1.0",
+                                 infer_tokenizer_classes=True,
+                                 use_gpu=gpu_available)
+
+
+@pytest.fixture
 def retriever_faq(document_store, gpu_available):
-    return TitleEmbeddingRetriever(document_store=document_store,
-                                   embedding_model="distiluse-base-multilingual-cased",
-                                   use_gpu=gpu_available, model_format="sentence_transformers",
-                                   pooling_strategy="reduce_max",
-                                   emb_extraction_layer=-1)
+    return TitleEmbeddingRetriever(
+        document_store=document_store,
+        embedding_model="distiluse-base-multilingual-cased",
+        use_gpu=gpu_available,
+        model_format="sentence_transformers",
+        pooling_strategy="reduce_max",
+        emb_extraction_layer=-1,
+    )
+
 
 
 @pytest.fixture
@@ -116,3 +142,4 @@ def Eval_Retriever():
 @pytest.fixture
 def Eval_Reader():
     return PiafEvalReader()
+    

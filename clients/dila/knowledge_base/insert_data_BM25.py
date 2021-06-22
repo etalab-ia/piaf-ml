@@ -8,81 +8,70 @@ logger = logging.getLogger(__name__)
 
 
 ANALYZER_DEFAULT = {
-     "analysis": {
-         "filter": {
-             "french_elision": {
-                 "type": "elision",
-                 "articles_case": True,
-                 "articles": [
-                     "l", "m", "t", "qu", "n", "s",
-                     "j", "d", "c", "jusqu", "quoiqu",
-                     "lorsqu", "puisqu"
-                 ]
-             },
-             "french_stop": {
-                 "type": "stop",
-                 "stopwords": "_french_"
-             },
-             "french_stemmer": {
-                 "type": "stemmer",
-                 "language": "light_french"
-             }
-         },
-         "analyzer": {
-             "default": {
-                 "tokenizer": "standard",
-                 "filter": [
-                     "french_elision",
-                     "lowercase",
-                     "french_stop",
-                     "french_stemmer"
-                 ]
-             }
-         }
-     }
+    "analysis": {
+        "filter": {
+            "french_elision": {
+                "type": "elision",
+                "articles_case": True,
+                "articles": [
+                    "l",
+                    "m",
+                    "t",
+                    "qu",
+                    "n",
+                    "s",
+                    "j",
+                    "d",
+                    "c",
+                    "jusqu",
+                    "quoiqu",
+                    "lorsqu",
+                    "puisqu",
+                ],
+            },
+            "french_stop": {"type": "stop", "stopwords": "_french_"},
+            "french_stemmer": {"type": "stemmer", "language": "light_french"},
+        },
+        "analyzer": {
+            "default": {
+                "tokenizer": "standard",
+                "filter": [
+                    "french_elision",
+                    "lowercase",
+                    "french_stop",
+                    "french_stemmer",
+                ],
+            }
+        },
+    }
 }
 
 
 MAPPING = {
-   "mappings":{
-      "properties":{
-         "link":{
-            "type":"keyword"
-         },
-         "name":{
-            "type":"keyword"
-         },
-         "text":{
-            "type":"text"
-         },
-         "question_sparse": {
-            "type": "text"
-         },
-         "embedding": {
-            "type": "dense_vector",
-            "dims": 512
-         },
-         "audience":{
-            "type":"keyword"
-         },
-         "theme":{
-            "type":"keyword"
-         },
-         "sous_theme":{
-            "type":"keyword"
-         },
-         "dossier":{
-            "type":"keyword"
-         },
-         "sous_dossier":{
-            "type":"keyword"
-         }
-      }
-   },
-   "settings": ANALYZER_DEFAULT
+    "mappings": {
+        "properties": {
+            "link": {"type": "keyword"},
+            "name": {"type": "keyword"},
+            "text": {"type": "text"},
+            "question_sparse": {"type": "text"},
+            "embedding": {"type": "dense_vector", "dims": 512},
+            "audience": {"type": "keyword"},
+            "theme": {"type": "keyword"},
+            "sous_theme": {"type": "keyword"},
+            "dossier": {"type": "keyword"},
+            "sous_dossier": {"type": "keyword"},
+        }
+    },
+    "settings": ANALYZER_DEFAULT,
 }
 
-document_store = ElasticsearchDocumentStore(host="haystack_elasticsearch_1", username="", password="", index="document_elasticsearch", custom_mapping=MAPPING)
+document_store = ElasticsearchDocumentStore(
+    host="haystack_elasticsearch_1",
+    username="",
+    password="",
+    index="document_elasticsearch",
+    custom_mapping=MAPPING,
+)
 
 # New way of getting docs from SQuAD like format
 from haystack.preprocessor.utils import eval_data_from_json
@@ -102,7 +91,7 @@ document_store.write_documents(dicts)
 # def convert_json_files_to_dicts(dir_path: str):
 #     file_paths = [p for p in Path(dir_path).glob("**/*")]
 #     documents = []
-    
+
 #     for path in tqdm(file_paths):
 #         if path.suffix.lower() == ".json":
 #             with open(path) as doc:
@@ -130,8 +119,7 @@ document_store.write_documents(dicts)
 #                                    "dossier": dossier,
 #                                    "sous_dossier": sous_dossier}})
 #     return documents
-    
-    
+
 
 # dicts = convert_json_files_to_dicts(dir_path="data/v14")
 # document_store.write_documents(dicts)
