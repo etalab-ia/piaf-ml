@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.abspath("./"))
 from src.evaluation.utils.elasticsearch_management import delete_indices, prepare_mapping
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
+from src.evaluation.utils.utils_eval import PiafEvalRetriever,PiafEvalReader
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -131,3 +132,14 @@ def retriever_faq(document_store, gpu_available):
         pooling_strategy="reduce_max",
         emb_extraction_layer=-1,
     )
+
+
+
+@pytest.fixture
+def Eval_Retriever():
+    return PiafEvalRetriever()
+
+@pytest.fixture
+def Eval_Reader():
+    return PiafEvalReader()
+    
