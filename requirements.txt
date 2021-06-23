@@ -2,7 +2,7 @@ argopt
 backoff
 construct
 cython
-farm-haystack==0.8.0
+-e git+https://github.com/deepset-ai/haystack.git@41a1c8329d75a62a012cff170da4093995a9f388#egg=farm_haystack
 google
 ipywidgets
 jupyter-console
