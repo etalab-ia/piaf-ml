@@ -5,7 +5,7 @@ This is to automate the installation of piaf-ml on the datascience sandbox
 Every deployer should:
 
 * Have SSH access to the machine
-* Belong to the group `piaf` or be a sudoer
+* Belong to the group `piaf-deployment` or be a sudoer
 
 ## Usage
 
