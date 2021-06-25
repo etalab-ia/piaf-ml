@@ -14,7 +14,6 @@
     dest: "{{ client_haystack_data_folder }}/squad.json"
     mode: 0777
     group: piaf-deployment
-# We don't use service or systemd module because we have only the right to use sudo on this command
 - name: wipe data and rewrite everything
   community.docker.docker_container_exec:
     container: "haystack_{{ client }}_haystack-api_1"
