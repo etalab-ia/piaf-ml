@@ -12,4 +12,4 @@ ifndef PIAF_CLIENT
 	@echo "Specify the PIAF_CLIENT you want to work on"
 	exit 1
 endif
-	@${ANSIBLE} wipe_and_insert_data.yml --extra-vars "client=${PIAF_CLIENT}"
+	@${ANSIBLE} -u ${PIAF_MACHINE_USER} wipe_and_insert_data.yml --extra-vars "client=${PIAF_CLIENT}"

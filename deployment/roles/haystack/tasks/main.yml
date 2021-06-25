@@ -80,3 +80,4 @@
 - name: "{{ client }} | Create and start haystack"
   community.docker.docker_compose:
     project_src: "{{ client_installation_directory }}/"
+    build: yes
