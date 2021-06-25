@@ -1,0 +1,43 @@
+# {{ ansible_managed }}
+# commit: {{ lookup('pipe', 'git rev-parse --short HEAD') }}
+server {
+    server_name piaf.datascience.etalab.studio;
+
+
+{% for deployment in deployments %}
+# for the {{ deployment | upper }} demo
+    location /{{ deployment }}/ {
+        rewrite ^/{{ deployment }}(.*) $1 break;
+        proxy_pass http://localhost:{{ deployments[deployment].haystack_port }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /piafagent_{{ deployment }}/ {
+        return 301 https://search.piaf.etalab.studio/{{ deployment }}/;
+    }
+# end of {{ deployment | upper }}
+{% endfor %}
+
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/piaf.datascience.etalab.studio/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/piaf.datascience.etalab.studio/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+
+server {
+    if ($host = piaf.datascience.etalab.studio) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    server_name piaf.datascience.etalab.studio;
+    listen 80;
+    return 404; # managed by Certbot
+}
+
+# {{ ansible_managed }}
+# commit: {{ lookup('pipe', 'git rev-parse --short HEAD') }}

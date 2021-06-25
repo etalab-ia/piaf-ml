@@ -1,0 +1,18 @@
+---
+- name: nginx configuration file
+  ansible.builtin.template:
+    src: piaf
+    dest: /etc/nginx/sites-available/piaf
+    mode: 0664
+    group: piaf-deployment
+    backup: yes
+  register: nginx_configuration_file
+# We don't use service or systemd module because we have only the right to use sudo on this command
+- name: reload nginx configuration
+  ansible.builtin.command:
+    argv:
+      - sudo
+      - systemctl
+      - reload
+      - nginx
+  when: nginx_configuration_file.changed
