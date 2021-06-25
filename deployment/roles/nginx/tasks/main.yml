@@ -2,9 +2,7 @@
 - name: nginx configuration file
   ansible.builtin.template:
     src: piaf
-#    TODO 2021-06-11: this should be the target destination
-#    dest: /etc/nginx/sites-available/piaf
-    dest: /data/piaf-ml/piaf_nginx
+    dest: /etc/nginx/sites-available/piaf
     mode: 0664
     group: piaf-deployment
     backup: yes
