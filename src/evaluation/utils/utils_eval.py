@@ -5,8 +5,9 @@ from typing import Dict, List, Union
 
 import pandas as pd
 from haystack.document_store.base import BaseDocumentStore
-from haystack.eval import eval_counts_reader, calculate_reader_metrics, _count_no_answer, _calculate_f1, _count_overlap, \
-    _count_exact_match, EvalRetriever, EvalReader
+from haystack.eval import eval_counts_reader, calculate_reader_metrics, \
+    _count_no_answer, _calculate_f1, _count_overlap, _count_exact_match, \
+    EvalDocuments, EvalAnswers
 from haystack.pipeline import Pipeline
 from tqdm import tqdm
 
@@ -200,7 +201,7 @@ def eval_retriever_reader(
     return metrics
 
 
-class PiafEvalRetriever(EvalRetriever):
+class PiafEvalRetriever(EvalDocuments):
     """
     This is a pipeline node that should be placed after a Retriever in order to assess its performance. Performance
     metrics are stored in this class and updated as each sample passes through it.
@@ -318,7 +319,7 @@ class PiafEvalRetriever(EvalRetriever):
         }
 
 
-class PiafEvalReader(EvalReader):
+class PiafEvalReader(EvalAnswers):
     """
     This is a pipeline node that should be placed after a Reader in order to assess the performance of the Reader
     To extract the metrics in a dict form use EvalReader.get_metrics().
