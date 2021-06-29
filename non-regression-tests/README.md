@@ -8,3 +8,4 @@ Usage:
 3. Create the file `known_hosts` and fill it with the mlflow server public key
    (use ssh-keyscan or connect once manually and copy the content of
    `~/.ssh/known_hosts`)
+4. Run `docker-compose up -d`
