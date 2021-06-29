@@ -147,3 +147,7 @@ data/vosdroits-latest
 output/
 cached_dense_dicts/
 .env
+
+# Configuration files
+non-regression-tests/known_hosts
+non-regression-tests/.env

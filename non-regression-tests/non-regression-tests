@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+# Strict shell: crash if anything goes wrong
+set -euo pipefail
+
+PIAF_ML_SRC=/usr/local/src/piaf-ml
+NON_REG_TESTS_SRC=/usr/local/src/non-regression-tests
+LOCKFILE=/var/lock/non-regression-tests/.lock
+ENV=$NON_REG_TESTS_SRC/.env
+
+# Manually load and export the required environment variables. Those are wiped
+# out when running via cron.
+set -a
+source $ENV
+set +a
+
+# If already running, exit.
+# If lockfile is present and it contains the PID of a running process, exit
+if [[ -e $LOCKFILE ]] && kill -0 $(cat $LOCKFILE)
+then
+    echo "Another instance of $0 already running with pid $(cat $LOCKFILE). Exiting."
+    exit 1
+fi
+
+
+# Write current PID to lockfile
+mkdir -p $(dirname $LOCKFILE)
+echo $$ > $LOCKFILE
+
+cd $PIAF_ML_SRC
+
+# TODO AFTERMERGE use master branch
+git fetch origin non-regression-test
+git reset --hard origin/non-regression-test
+
+pip install -r requirements.txt
+
+export PYTHONPATH=$PIAF_ML_SRC
+python3 $NON_REG_TESTS_SRC/non-regression-tests.py
+
+rm $LOCKFILE
