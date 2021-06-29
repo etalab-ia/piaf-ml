@@ -10,8 +10,6 @@ from src.evaluation.retriever_reader.retriever_reader_eval_squad import \
 from src.evaluation.config.retriever_reader_eval_squad_config import \
     parameters, parameter_tuning_options
 
-# TODO GPUBRO use default retriever type. This is just for testing
-parameters["retriever_type"] = ["bm25"] # Can be bm25, sbert, dpr, title or title_bm25
 parameters["squad_dataset"] = ["/usr/local/share/non-regression-tests/fquad_eval.json"]
 parameter_tuning_options["experiment_name"] = "non-regression-test"
 

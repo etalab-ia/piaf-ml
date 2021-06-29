@@ -28,9 +28,8 @@ echo $$ > $LOCKFILE
 
 cd $PIAF_ML_SRC
 
-# TODO AFTERMERGE use master branch
-git fetch origin non-regression-test
-git reset --hard origin/non-regression-test
+git fetch origin master
+git reset --hard origin/master
 
 # If there is no new commit since last run, don't run.
 LAST_COMMIT_FILE=/var/lib/non-regression-tests/last_commit_run

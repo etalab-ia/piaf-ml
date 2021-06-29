@@ -4,8 +4,7 @@ RUN apt-get update
 RUN apt-get install --yes git
 RUN git clone https://github.com/etalab-ia/piaf-ml.git
 WORKDIR "/usr/local/src/piaf-ml"
-# TODO AFTERMERGE use main branch
-RUN git checkout non-regression-test
+RUN git checkout master
 
 # Add timezone to prevent tzdata installation from blocking
 # https://dev.to/setevoy/docker-configure-tzdata-and-timezone-during-build-20bk
