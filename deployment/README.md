@@ -18,6 +18,10 @@ Every deployer should:
 With `make install`, you will install haystack for every client configured in hosts.yml 
 > This is (and must remain) idempotent.
 
+### `PIAF_CLIENT=dila make reinstall`
+With `PIAF_CLIENT=dila make reinstall`, you will install haystack just for this client. 
+It will not change the nginx configuration, so it should **not** be used for a first installation
+> This is (and must remain) idempotent.
 
 ### `PIAF_CLIENT=dila make wipe_and_insert_data`
 
