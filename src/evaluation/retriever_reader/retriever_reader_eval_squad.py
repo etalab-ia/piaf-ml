@@ -19,6 +19,7 @@ from haystack.reader.transformers import TransformersReader
 from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
 from haystack.retriever.sparse import ElasticsearchRetriever
 from mlflow.tracking import MlflowClient
+import pprint
 from sklearn.model_selection import ParameterGrid
 from skopt import dump, gp_minimize
 from skopt.utils import use_named_args
@@ -28,8 +29,6 @@ from tqdm import tqdm
 from src.evaluation.utils.utils_eval import save_results,full_eval_retriever_reader,PiafEvalRetriever,PiafEvalReader
 from src.evaluation.utils.custom_pipelines import RetrieverReaderEvaluationPipeline,TitleBM25QAEvaluationPipeline
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
-from src.evaluation.config.retriever_reader_eval_squad_config import \
-        parameters, parameter_tuning_options
 from src.evaluation.utils.elasticsearch_management import (delete_indices,
                                                            launch_ES,
                                                            prepare_mapping)
@@ -39,7 +38,7 @@ from src.evaluation.utils.mlflow_management import (add_extra_params,
                                                     prepare_mlflow_server)
 from src.evaluation.utils.TitleEmbeddingRetriever import \
     TitleEmbeddingRetriever
-from src.evaluation.utils.utils_o/timizer import (
+from src.evaluation.utils.utils_optimizer import (
     LoggingCallback, create_dimensions_from_parameters)
 
 BaseMLLogger.disable_logging = True
@@ -406,14 +405,22 @@ def grid_search(parameters, mlflow_client, experiment_name, use_cache = False,
 
 
 
-if __name__ == "__main__":
+def tune_pipeline(
+    parameters,
+    parameter_tuning_options,
+    elasticsearch_hostname,
+    elasticsearch_port):
+    """
+    Run the parameter tuning method for the whole pipeline based on the
+    parameters.
+    """
+
+    logger.info("\n---- Parameters ----\n" + pprint.pformat(parameters))
+    logger.info("\n---- Parameter tuning options ----\n" + pprint.pformat(parameter_tuning_options))
 
     experiment_name = parameter_tuning_options["experiment_name"]
     device, n_gpu = initialize_device_settings(use_cuda=True)
     GPU_AVAILABLE = 1 if device.type == "cuda" else 0
-    elasticsearch_hostname = os.getenv("ELASTICSEARCH_HOSTNAME") or "localhost"
-    elasticsearch_port = int(os.getenv("ELASTICSEARCH_PORT")) or 9200
-
 
     if GPU_AVAILABLE:
         gpu_id = torch.cuda.current_device()
@@ -451,3 +458,16 @@ if __name__ == "__main__":
             parameter_tuning_options["tuning_method"],
             file = sys.stderr)
         exit(1)
+
+
+
+
+if __name__ == "__main__":
+    from src.evaluation.config.retriever_reader_eval_squad_config import \
+            parameters, parameter_tuning_options
+
+    tune_pipeline(
+        parameters,
+        parameter_tuning_options,
+        elasticsearch_hostname = os.getenv("ELASTICSEARCH_HOSTNAME") or "localhost",
+        elasticsearch_port = int(os.getenv("ELASTICSEARCH_PORT")) or 9200)
