@@ -5,15 +5,15 @@ import time
 
 from elasticsearch import Elasticsearch
 
-port = "9200"
 
 
 
-def launch_ES():
+
+def launch_ES(hostname = "localhost", port = "9200"):
     logging.info("Search for Elasticsearch ...")
-    es = Elasticsearch([f"http://localhost:{port}/"], verify_certs=True)
+    es = Elasticsearch([f"http://{hostname}:{port}/"], verify_certs=True)
     if not es.ping():
-        logging.info("Elasticsearch not found !")
+        logging.info(f"Elasticsearch not found at http://{hostname}:{port}!")
         logging.info("Starting Elasticsearch ...")
         if platform.system() == "Windows":
             status = subprocess.run(
@@ -33,9 +33,9 @@ def launch_ES():
         logging.info("Elasticsearch found !")
 
 
-def delete_indices(index="document"):
+def delete_indices(hostname = "localhost", port = "9200", index="document"):
     logging.info(f"Delete index {index} inside Elasticsearch ...")
-    es = Elasticsearch([f"http://localhost:{port}/"], verify_certs=True)
+    es = Elasticsearch([f"http://{hostname}:{port}/"], verify_certs=True)
     es.indices.delete(index=index, ignore=[400, 404])
 
 

@@ -54,7 +54,8 @@ else:
     n_gpu = -1
 
 
-def single_run(idx=None, **kwargs):
+def single_run(idx=None, elasticsearch_hostname = "localhost",
+    elasticsearch_port = 9200, **kwargs):
     """
     Perform one run of the pipeline under testing with the parameters given in the config file. The results are
     saved in the mlflow instance.
@@ -83,8 +84,8 @@ def single_run(idx=None, **kwargs):
         label_index = "label_xp"
 
         # deleted indice for elastic search to make sure mappings are properly passed
-        delete_indices(index=doc_index)
-        delete_indices(index=label_index)
+        delete_indices(elasticsearch_hostname, elasticsearch_port, index=doc_index)
+        delete_indices(elasticsearch_hostname, elasticsearch_port, index=label_index)
 
         prepare_mapping(
             mapping=SQUAD_MAPPING,
@@ -118,7 +119,8 @@ def single_run(idx=None, **kwargs):
 
         if retriever_type == "bm25":
             document_store = ElasticsearchDocumentStore(
-                host="localhost",
+                host=elasticsearch_hostname,
+                port=elasticsearch_port,
                 username="",
                 password="",
                 index=doc_index,
@@ -141,7 +143,8 @@ def single_run(idx=None, **kwargs):
 
         elif retriever_type == "sbert":
             document_store = ElasticsearchDocumentStore(
-                host="localhost",
+                host=elasticsearch_hostname,
+                port=elasticsearch_port,
                 username="",
                 password="",
                 index=doc_index,
@@ -171,7 +174,8 @@ def single_run(idx=None, **kwargs):
 
         elif retriever_type == "dpr":
             document_store = ElasticsearchDocumentStore(
-                host="localhost",
+                host=elasticsearch_hostname,
+                port=elasticsearch_port,
                 username="",
                 password="",
                 index=doc_index,
@@ -200,7 +204,8 @@ def single_run(idx=None, **kwargs):
 
         elif retriever_type == "title_bm25":
             document_store = ElasticsearchDocumentStore(
-                host="localhost",
+                host=elasticsearch_hostname,
+                port=elasticsearch_port,
                 username="",
                 password="",
                 index=doc_index,
@@ -235,7 +240,8 @@ def single_run(idx=None, **kwargs):
 
         elif retriever_type == "title":
             document_store = ElasticsearchDocumentStore(
-                host="localhost",
+                host=elasticsearch_hostname,
+                port=elasticsearch_port,
                 username="",
                 password="",
                 index=doc_index,
@@ -335,6 +341,9 @@ if __name__ == "__main__":
     experiment_name = parameter_tuning_options["experiment_name"]
     device, n_gpu = initialize_device_settings(use_cuda=True)
     GPU_AVAILABLE = 1 if device.type == "cuda" else 0
+    elasticsearch_hostname = os.getenv("ELASTICSEARCH_HOSTNAME") or "localhost"
+    elasticsearch_port = int(os.getenv("ELASTICSEARCH_PORT")) or 9200
+
 
     if GPU_AVAILABLE:
         gpu_id = torch.cuda.current_device()
@@ -343,7 +352,7 @@ if __name__ == "__main__":
 
     all_results = []
 
-    launch_ES()
+    launch_ES(elasticsearch_hostname, elasticsearch_port)
     client = MlflowClient()
     mlflow.set_experiment(experiment_name=experiment_name)
 
@@ -352,7 +361,11 @@ if __name__ == "__main__":
 
         @use_named_args(dimensions=dimensions)
         def single_run_optimization(**kwargs):
-            return 1 - single_run(**kwargs)["reader_topk_accuracy_has_answer"]
+            return 1 - single_run(
+                    elasticsearch_hostname = elasticsearch_hostname, 
+                    elasticsearch_port = elasticsearch_port, 
+                    **kwargs
+                )["reader_topk_accuracy_has_answer"]
 
         n_calls = parameter_tuning_options["optimization_ncalls"]
         res = gp_minimize(
@@ -391,7 +404,11 @@ if __name__ == "__main__":
 
             else:  # run notalready done or USE_CACHE set to False or not set
                 logging.info(f"Doing run with config : {param}")
-                run_results = single_run(idx=idx, **param)
+                run_results = single_run( 
+                        idx=idx, 
+                        elasticsearch_hostname=elasticsearch_hostname,
+                        elasticsearch_port=elasticsearch_port,
+                        **param)
 
                 # For debugging purpose, we keep a copy of the results in a csv form
                 run_results.update(param)
