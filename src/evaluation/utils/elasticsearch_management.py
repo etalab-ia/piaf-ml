@@ -8,7 +8,6 @@ from elasticsearch import Elasticsearch
 
 
 
-
 def launch_ES(hostname = "localhost", port = "9200"):
     logging.info("Search for Elasticsearch ...")
     es = Elasticsearch([f"http://{hostname}:{port}/"], verify_certs=True)
@@ -30,7 +29,7 @@ def launch_ES(hostname = "localhost", port = "9200"):
         if status.returncode:
             raise Exception("Failed to launch Elasticsearch.")
     else:
-        logging.info("Elasticsearch found !")
+        logging.info(f"Elasticsearch found at http://{hostname}:{port}")
 
 
 def delete_indices(hostname = "localhost", port = "9200", index="document"):
