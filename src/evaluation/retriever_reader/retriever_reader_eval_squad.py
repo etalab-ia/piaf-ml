@@ -39,7 +39,7 @@ from src.evaluation.utils.mlflow_management import (add_extra_params,
                                                     prepare_mlflow_server)
 from src.evaluation.utils.TitleEmbeddingRetriever import \
     TitleEmbeddingRetriever
-from src.evaluation.utils.utils_optimizer import (
+from src.evaluation.utils.utils_o/timizer import (
     LoggingCallback, create_dimensions_from_parameters)
 
 BaseMLLogger.disable_logging = True
@@ -54,8 +54,12 @@ else:
     n_gpu = -1
 
 
-def single_run(idx=None, elasticsearch_hostname = "localhost",
-    elasticsearch_port = 9200, **kwargs):
+def single_run(
+    idx=None,
+    gpu_id = -1,
+    elasticsearch_hostname = "localhost",
+    elasticsearch_port = 9200,
+    **kwargs):
     """
     Perform one run of the pipeline under testing with the parameters given in the config file. The results are
     saved in the mlflow instance.
@@ -327,16 +331,82 @@ def single_run(idx=None, elasticsearch_hostname = "localhost",
 
         except Exception as e:
             logging.error(f"Could not run this config: {kwargs}. Error {e}.")
-        
+
     return retriever_reader_eval_results
 
 
 
+
+def optimize(parameters, n_calls, result_file_path, gpu_id = -1,
+            elasticsearch_hostname = "localhost",
+            elasticsearch_port = 9200):
+
+    dimensions = create_dimensions_from_parameters(parameters)
+
+    @use_named_args(dimensions=dimensions)
+    def single_run_optimization(**kwargs):
+        return 1 - single_run(gpu_id = gpu_id, 
+            elasticsearch_hostname = elasticsearch_hostname, 
+            elasticsearch_port = elasticsearch_port, **kwargs)["reader_topk_accuracy_has_answer"]
+
+    res = gp_minimize(
+        single_run_optimization,
+        dimensions,
+        n_calls=n_calls,
+        callback=LoggingCallback(n_calls),
+        n_jobs=-1,
+    )
+    dump(res, result_file_path, store_objective=True)
+
+
+
+
+def grid_search(parameters, mlflow_client, experiment_name, use_cache = False,
+    result_file_path = Path("./output/results_reader.csv"), gpu_id = -1,
+    elasticsearch_hostname = "localhost", elasticsearch_port = 9200):
+    parameters_grid = list(ParameterGrid(param_grid=parameters))
+    list_run_ids = create_run_ids(parameters_grid)
+    list_past_run_names = get_list_past_run(mlflow_client, experiment_name)
+
+    for idx, param in tqdm(
+        zip(list_run_ids, parameters_grid),
+        total=len(list_run_ids),
+        desc="GridSearch",
+        unit="config",
+    ):
+        add_extra_params(param)
+        if (
+            idx in list_past_run_names.keys() and use_cache
+        ):  # run not done
+            logging.info(
+                f"Config {param} already done and found in mlflow. Not doing it again."
+            )
+            # Log again run with previous results
+            previous_metrics = mlflow_client.get_run(list_past_run_names[idx]).data.metrics
+            with mlflow.start_run(run_name=idx) as run:
+
+                mlflow.log_params(param)
+                mlflow.log_metrics(previous_metrics)
+
+        else:  # run notalready done or USE_CACHE set to False or not set
+            logging.info(f"Doing run with config : {param}")
+            run_results = single_run(idx = idx, gpu_id = gpu_id, 
+                elasticsearch_hostname = elasticsearch_hostname, 
+                elasticsearch_port = elasticsearch_port, **param)
+
+            # For debugging purpose, we keep a copy of the results in a csv form
+            run_results.update(param)
+
+            save_results(result_file_path=result_file_path, results_list=run_results)
+
+            clean_log()
+            # update list of past experiments
+            list_past_run_names = get_list_past_run(mlflow_client, experiment_name)
+
+
+
+
 if __name__ == "__main__":
-    result_file_path = Path("./output/results_reader.csv")  # file used for debbugging
-    optimize_result_file_path = Path(
-        "./output/optimize_result.z"
-    )  # used for storing results of scikit optimize
 
     experiment_name = parameter_tuning_options["experiment_name"]
     device, n_gpu = initialize_device_settings(use_cuda=True)
@@ -357,67 +427,25 @@ if __name__ == "__main__":
     mlflow.set_experiment(experiment_name=experiment_name)
 
     if parameter_tuning_options["tuning_method"] == "optimization":
-        dimensions = create_dimensions_from_parameters(parameters)
-
-        @use_named_args(dimensions=dimensions)
-        def single_run_optimization(**kwargs):
-            return 1 - single_run(
-                    elasticsearch_hostname = elasticsearch_hostname, 
-                    elasticsearch_port = elasticsearch_port, 
-                    **kwargs
-                )["reader_topk_accuracy_has_answer"]
-
-        n_calls = parameter_tuning_options["optimization_ncalls"]
-        res = gp_minimize(
-            single_run_optimization,
-            dimensions,
-            n_calls=n_calls,
-            callback=LoggingCallback(n_calls),
-            n_jobs=-1,
-        )
-        dump(res, optimize_result_file_path, store_objective=True)
+        optimize(
+            parameters = parameters,
+            n_calls = parameter_tuning_options["optimization_ncalls"],
+            result_file_path = Path("./output/optimize_result.z"),
+            gpu_id = gpu_id,
+            elasticsearch_hostname = elasticsearch_hostname,
+            elasticsearch_port = elasticsearch_port)
 
     elif parameter_tuning_options["tuning_method"] == "grid_search":
-        parameters_grid = list(ParameterGrid(param_grid=parameters))
-        list_run_ids = create_run_ids(parameters_grid)
-        list_past_run_names = get_list_past_run(client, experiment_name)
+        grid_search(
+            parameters = parameters,
+            mlflow_client = client,
+            experiment_name = parameter_tuning_options["experiment_name"],
+            use_cache = parameter_tuning_options["use_cache"],
+            gpu_id = gpu_id,
+            result_file_path = Path("./output/results_reader.csv"),
+            elasticsearch_hostname = elasticsearch_hostname,
+            elasticsearch_port = elasticsearch_port)
 
-        for idx, param in tqdm(
-            zip(list_run_ids, parameters_grid),
-            total=len(list_run_ids),
-            desc="GridSearch",
-            unit="config",
-        ):
-            add_extra_params(param)
-            if (
-                idx in list_past_run_names.keys() and parameter_tuning_options["use_cache"]
-            ):  # run not done
-                logging.info(
-                    f"Config {param} already done and found in mlflow. Not doing it again."
-                )
-                # Log again run with previous results
-                previous_metrics = client.get_run(list_past_run_names[idx]).data.metrics
-                with mlflow.start_run(run_name=idx) as run:
-
-                    mlflow.log_params(param)
-                    mlflow.log_metrics(previous_metrics)
-
-            else:  # run notalready done or USE_CACHE set to False or not set
-                logging.info(f"Doing run with config : {param}")
-                run_results = single_run( 
-                        idx=idx, 
-                        elasticsearch_hostname=elasticsearch_hostname,
-                        elasticsearch_port=elasticsearch_port,
-                        **param)
-
-                # For debugging purpose, we keep a copy of the results in a csv form
-                run_results.update(param)
-
-                save_results(result_file_path=result_file_path, results_list=run_results)
-
-                clean_log()
-                # update list of past experiments
-                list_past_run_names = get_list_past_run(client, experiment_name)
     else:
         print("Unknown parameter tuning method: ",
             parameter_tuning_options["tuning_method"],
