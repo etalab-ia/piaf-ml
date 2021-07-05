@@ -22,12 +22,14 @@ from mlflow.tracking import MlflowClient
 from sklearn.model_selection import ParameterGrid
 from skopt import dump, gp_minimize
 from skopt.utils import use_named_args
+import sys
 from tqdm import tqdm
 
 from src.evaluation.utils.utils_eval import save_results,full_eval_retriever_reader,PiafEvalRetriever,PiafEvalReader
 from src.evaluation.utils.custom_pipelines import RetrieverReaderEvaluationPipeline,TitleBM25QAEvaluationPipeline
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
-from src.evaluation.config.retriever_reader_eval_squad_config import parameters
+from src.evaluation.config.retriever_reader_eval_squad_config import \
+        parameters, parameter_tuning_options
 from src.evaluation.utils.elasticsearch_management import (delete_indices,
                                                            launch_ES,
                                                            prepare_mapping)
@@ -330,7 +332,7 @@ if __name__ == "__main__":
         "./output/optimize_result.z"
     )  # used for storing results of scikit optimize
 
-    experiment_name = parameters["experiment_name"][0]
+    experiment_name = parameter_tuning_options["experiment_name"]
     device, n_gpu = initialize_device_settings(use_cuda=True)
     GPU_AVAILABLE = 1 if device.type == "cuda" else 0
 
@@ -345,14 +347,14 @@ if __name__ == "__main__":
     client = MlflowClient()
     mlflow.set_experiment(experiment_name=experiment_name)
 
-    if os.getenv("USE_OPTIMIZATION") == "True":
+    if parameter_tuning_options["tuning_method"] == "optimization":
         dimensions = create_dimensions_from_parameters(parameters)
 
         @use_named_args(dimensions=dimensions)
         def single_run_optimization(**kwargs):
             return 1 - single_run(**kwargs)["reader_topk_accuracy_has_answer"]
 
-        n_calls = int(os.getenv("OPTIMIZATION_NCALLS"))
+        n_calls = parameter_tuning_options["optimization_ncalls"]
         res = gp_minimize(
             single_run_optimization,
             dimensions,
@@ -362,7 +364,7 @@ if __name__ == "__main__":
         )
         dump(res, optimize_result_file_path, store_objective=True)
 
-    else:
+    elif parameter_tuning_options["tuning_method"] == "grid_search":
         parameters_grid = list(ParameterGrid(param_grid=parameters))
         list_run_ids = create_run_ids(parameters_grid)
         list_past_run_names = get_list_past_run(client, experiment_name)
@@ -375,7 +377,7 @@ if __name__ == "__main__":
         ):
             add_extra_params(param)
             if (
-                idx in list_past_run_names.keys() and os.getenv("USE_CACHE") == "True"
+                idx in list_past_run_names.keys() and parameter_tuning_options["use_cache"]
             ):  # run not done
                 logging.info(
                     f"Config {param} already done and found in mlflow. Not doing it again."
@@ -399,3 +401,8 @@ if __name__ == "__main__":
                 clean_log()
                 # update list of past experiments
                 list_past_run_names = get_list_past_run(client, experiment_name)
+    else:
+        print("Unknown parameter tuning method: ",
+            parameter_tuning_options["tuning_method"],
+            file = sys.stderr)
+        exit(1)
