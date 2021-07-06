@@ -8,6 +8,7 @@ from pathlib import Path
 import mlflow
 from dotenv import load_dotenv
 from tqdm import tqdm
+from src.evaluation.utils.logging_management import logger
 
 load_dotenv()
 
@@ -122,3 +123,23 @@ def prepare_mlflow_server():
     except Exception as e:
         tqdm.write(f"Not using remote tracking servers. Error {e}")
         tqdm.write(f"MLflow tracking to local mlruns folder")
+
+def mlflow_log_run(
+        params,
+        retriever_reader_eval_results,
+        idx=None,
+        root_log_path="./logs/root.log",
+        ):
+    with mlflow.start_run(run_name=idx) as run:
+        mlflow.log_params(params)
+        mlflow.log_metrics(
+            {k: v for k, v in retriever_reader_eval_results.items() if v is not None}
+        )
+        logger.info(f"Run finished successfully")
+        try:
+            mlflow.log_artifact(root_log_path)
+        except Exception:
+            logger.error(
+                f"Could not upload log to artifact server. "
+                f"Still saved in logs/root_complete.log"
+            )
