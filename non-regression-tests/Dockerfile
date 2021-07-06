@@ -1,4 +1,5 @@
-FROM ubuntu:21.04
+# FROM nvidia/cuda:11.4.0-base-ubuntu20.04 
+FROM pytorch/pytorch:1.9.0-cuda11.1-cudnn8-runtime
 ARG SRC_DIR
 ARG PIAF_ML_SRC=$SRC_DIR/piaf-ml
 RUN apt-get update

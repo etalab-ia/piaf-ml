@@ -1,4 +1,3 @@
-version: "3.3"
 services:
   non-regression-tests:
     build:
@@ -12,6 +11,7 @@ services:
         - SSH_CONFIG_DIR=${SSH_CONFIG_DIR}
         - MLFLOW_SSH_USERNAME=${MLFLOW_SSH_USERNAME}
         - MLFLOW_SSH_HOSTNAME=${MLFLOW_SSH_HOSTNAME}
+    runtime: nvidia
     depends_on:
       - elasticsearch
     secrets:
