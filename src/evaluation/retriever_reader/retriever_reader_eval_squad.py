@@ -22,21 +22,18 @@ from skopt.utils import use_named_args
 import sys
 from tqdm import tqdm
 
-from src.evaluation.utils.utils_eval import save_results,full_eval_retriever_reader,PiafEvalRetriever,PiafEvalReader
-from src.evaluation.utils.custom_pipelines import RetrieverReaderEvaluationPipeline,TitleBM25QAEvaluationPipeline
+from src.evaluation.utils.utils_eval import save_results, \
+    full_eval_retriever_reader, PiafEvalRetriever,PiafEvalReader
+from src.evaluation.utils.custom_pipelines import \
+    RetrieverReaderEvaluationPipeline, TitleBM25QAEvaluationPipeline
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
-from src.evaluation.utils.elasticsearch_management import (delete_indices,
-                                                           launch_ES,
-                                                           prepare_mapping)
-from src.evaluation.utils.mlflow_management import (add_extra_params,
-                                                    create_run_ids,
-                                                    get_list_past_run,
-                                                    prepare_mlflow_server,
-                                                    mlflow_log_run)
-from src.evaluation.utils.TitleEmbeddingRetriever import \
-    TitleEmbeddingRetriever
-from src.evaluation.utils.utils_optimizer import (
-    LoggingCallback, create_dimensions_from_parameters)
+from src.evaluation.utils.elasticsearch_management import delete_indices, \
+   launch_ES, prepare_mapping
+from src.evaluation.utils.mlflow_management import add_extra_params, \
+    create_run_ids, get_list_past_run, prepare_mlflow_server, mlflow_log_run
+from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
+from src.evaluation.utils.utils_optimizer import LoggingCallback, \
+    create_dimensions_from_parameters
 
 BaseMLLogger.disable_logging = True
 load_dotenv()
