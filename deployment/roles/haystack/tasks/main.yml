@@ -26,15 +26,14 @@
     group: "piaf-deployment"
     state: directory
     recurse: yes
-- name: "{{ client }} | copy init.py"
+- name: "{{ client }} | remove legacy custom file (2021-07-09, remove this after all clients have been installed)"
+  file:
+    path: "{{ client_installation_directory }}/haystack/custom.py" # this should be as same as `dest` above
+    state: absent
+- name: "{{ client }} | copy custom_component.py"
   ansible.builtin.copy:
-    src: __init__.py
-    dest: "{{ client_installation_directory }}/haystack/__init__.py"
-    group: piaf-deployment
-- name: "{{ client }} | copy custom.py"
-  ansible.builtin.copy:
-    src: custom.py
-    dest: "{{ client_installation_directory }}/haystack/custom.py"
+    src: custom_component.py
+    dest: "{{ client_installation_directory }}/rest_api/pipeline/custom_component.py"
     group: piaf-deployment
 - name: "{{ client }} | add dependency to requirements.txt"
   ansible.builtin.lineinfile:
@@ -52,10 +51,14 @@
     src: docker-compose.yml
     dest: "{{ client_installation_directory }}/docker-compose.yml"
     group: piaf-deployment
+- name: "{{ client }} | remove legacy pipelines.yaml (2021-07-09, remove this after all clients have been installed)"
+  file:
+    path: "{{ client_installation_directory }}/haystack/pipelines.yaml" # this should be as same as `dest` above
+    state: absent
 - name: "{{ client }} | copy pipelines.yml"
   ansible.builtin.copy:
     src: ../../../clients/{{ client }}/pipelines.yaml
-    dest: "{{ client_installation_directory }}/rest_api/pipelines.yaml"
+    dest: "{{ client_installation_directory }}/rest_api/pipeline/pipelines.yaml"
     group: piaf-deployment
 - name: "{{ client }} | Make sure elasticsearch data folder exists"
   ansible.builtin.file:
