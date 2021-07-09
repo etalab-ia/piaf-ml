@@ -2,12 +2,9 @@
 # we suggest you put your SQuAD formatted dataset into the /data folder
 # make sure your dataset has "root" owner
 
-import time
-
 from pathlib import Path
 
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
-from haystack.retriever.dense import EmbeddingRetriever
 from haystack.preprocessor.preprocessor import PreProcessor
 
 evaluation_data = Path("./data/squad.json")
@@ -18,22 +15,7 @@ title_boosting_factor = 1
 
 ES_host = "elasticsearch"
 
-from typing import List
-import numpy as np
-from haystack import Document
-
-
-class TitleEmbeddingRetriever(EmbeddingRetriever):
-    def embed_passages(self, docs: List[Document]) -> List[np.ndarray]:
-        """
-        Create embeddings of the titles for a list of passages. For this Retriever type: The same as calling .embed()
-        :param docs: List of documents to embed
-        :return: Embeddings, one per input passage
-        """
-        texts = [d.meta["name"] for d in docs]
-
-        return self.embedding_encoder.embed(texts)
-
+from rest_api.pipeline.custom_component import TitleEmbeddingRetriever
 
 import logging
 
