@@ -46,8 +46,6 @@ class TitleQAPipeline(BaseStandardPipeline):
         return results
 
 
-
-
 class TitleBM25QAPipeline(BaseStandardPipeline):
     def __init__(
         self,

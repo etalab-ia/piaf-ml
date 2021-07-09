@@ -1,0 +1,20 @@
+---
+- name: "{{ client }} | Setting client haystack data folder"
+  ansible.builtin.set_fact:
+    client_haystack_data_folder: "{{ installation_directory }}/haystack_data_{{ client }}/"
+- name: insert_data python script
+  ansible.builtin.template:
+    src: insert_data.py
+    dest: "{{ client_haystack_data_folder }}/insert_data.py"
+    mode: 0777
+    group: piaf-deployment
+- name: copy squad.json
+  ansible.builtin.copy:
+    src: "../../../clients/{{ client }}/knowledge_base/squad.json"
+    dest: "{{ client_haystack_data_folder }}/squad.json"
+    mode: 0777
+    group: piaf-deployment
+- name: wipe data and rewrite everything
+  community.docker.docker_container_exec:
+    container: "haystack_{{ client }}_haystack-api_1"
+    command: /bin/bash -l -c "python /home/user/data/insert_data.py"

@@ -1,0 +1,16 @@
+---
+- hosts: sandbox
+  tasks:
+    - name: Make sure installation directory exist
+      ansible.builtin.file:
+        path: "{{ installation_directory }}"
+        state: directory
+        group: piaf-deployment
+    - name: Install haystack
+      include_role:
+        name: 'haystack'
+      loop: "{{ deployments.keys() }}"
+      loop_control:
+        loop_var: client
+  roles:
+    - { role: nginx, tags: ["install"]}

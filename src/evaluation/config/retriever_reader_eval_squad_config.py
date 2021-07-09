@@ -6,8 +6,9 @@ parameters = {
     "threshold_score": [1.00],# must be present, but only used when retriever_type == hot_reader
     "reader_model_version": ["053b085d851196110d7a83d8e0f077d0a18470be"],
     "retriever_model_version": ["1a01b38498875d45f69b2a6721bf6fe87425da39"],
-    "retriever_type": ["hot_reader"], # Can be bm25, sbert, dpr, title, hot_reader, or title_bm25
-    "squad_dataset": ["./clients/dila/knowledge_base/squad.json",],
+    "dpr_model_version": ["v1.0"],
+    "retriever_type": ["title"], # Can be bm25, sbert, dpr, title or title_bm25
+    "squad_dataset": ["./test/samples/squad/tiny.json"],
     "filter_level": [None],
     "preprocessing": [False],
     "boosting" : [1], #default to 1

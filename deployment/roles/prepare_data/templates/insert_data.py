@@ -2,87 +2,26 @@
 # we suggest you put your SQuAD formatted dataset into the /data folder
 # make sure your dataset has "root" owner
 
-import hashlib
-import torch
-import socket
-import time
-from datetime import datetime
-
 from pathlib import Path
-from tqdm import tqdm
-
 
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
-from haystack.retriever.sparse import ElasticsearchRetriever
-from haystack.retriever.dense import EmbeddingRetriever
-from haystack.reader.transformers import TransformersReader
 from haystack.preprocessor.preprocessor import PreProcessor
-from haystack.pipeline import Pipeline, ExtractiveQAPipeline
 
-from farm.utils import initialize_device_settings
-from sklearn.model_selection import ParameterGrid
-
-
-evaluation_data = Path("./data/dataset.json")
-k_retriever = 20
-k_title_retriever = 10
-k_reader_per_candidate = 5
-k_reader_total = 3
+evaluation_data = Path("./data/squad.json")
 preprocessing = True
 split_by = "word"
 split_length = 1000
 title_boosting_factor = 1
 
-ES_host = "haystack_cnil_elasticsearch_1"
+ES_host = "elasticsearch"
 
-from typing import List
-import numpy as np
-from haystack import Document
+from rest_api.pipeline.custom_component import TitleEmbeddingRetriever
 
-
-class TitleEmbeddingRetriever(EmbeddingRetriever):
-    def embed_passages(self, docs: List[Document]) -> List[np.ndarray]:
-        """
-        Create embeddings of the titles for a list of passages. For this Retriever type: The same as calling .embed()
-        :param docs: List of documents to embed
-        :return: Embeddings, one per input passage
-        """
-        texts = [d.meta["name"] for d in docs]
-
-        return self.embed(texts)
-
-
-import subprocess
-import platform
 import logging
 
 from elasticsearch import Elasticsearch
 
 port = "9200"
-
-
-def launch_ES():
-    logging.info("Search for Elasticsearch ...")
-    es = Elasticsearch([f"http://{ES_host}:{port}/"], verify_certs=True)
-    if not es.ping():
-        logging.info("Elasticsearch not found !")
-        logging.info("Starting Elasticsearch ...")
-        if platform.system() == "Windows":
-            status = subprocess.run(
-                f'docker run -d -p {port}:{port} -e "discovery.type=single-node" elasticsearch:7.6.2'
-            )
-        else:
-            status = subprocess.run(
-                [
-                    f'docker run -d -p {port}:{port} -e "discovery.type=single-node" elasticsearch:7.6.2'
-                ],
-                shell=True,
-            )
-        time.sleep(30)
-        if status.returncode:
-            raise Exception("Failed to launch Elasticsearch.")
-    else:
-        logging.info("Elasticsearch found !")
 
 
 def delete_indices(index="document"):
@@ -190,7 +129,7 @@ preprocessor = PreProcessor(
 )
 
 document_store = ElasticsearchDocumentStore(
-    host="haystack_cnil_elasticsearch_1",
+    host="elasticsearch",
     username="",
     password="",
     index=doc_index,

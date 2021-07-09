@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.abspath("./"))
 from src.evaluation.utils.elasticsearch_management import delete_indices, prepare_mapping
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
+from src.evaluation.utils.utils_eval import PiafEvalRetriever,PiafEvalReader
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -116,6 +117,7 @@ def retriever_dpr(document_store, gpu_available):
     return DensePassageRetriever(document_store=document_store,
                                  query_embedding_model="etalab-ia/dpr-question_encoder-fr_qa-camembert",
                                  passage_embedding_model="etalab-ia/dpr-ctx_encoder-fr_qa-camembert",
+                                 model_version="v1.0",
                                  infer_tokenizer_classes=True,
                                  use_gpu=gpu_available)
 
@@ -130,3 +132,14 @@ def retriever_faq(document_store, gpu_available):
         pooling_strategy="reduce_max",
         emb_extraction_layer=-1,
     )
+
+
+
+@pytest.fixture
+def Eval_Retriever():
+    return PiafEvalRetriever()
+
+@pytest.fixture
+def Eval_Reader():
+    return PiafEvalReader()
+    
