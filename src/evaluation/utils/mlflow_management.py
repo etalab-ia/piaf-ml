@@ -129,12 +129,15 @@ def mlflow_log_run(
         retriever_reader_eval_results,
         idx=None,
         root_log_path="./logs/root.log",
+        pass_criteria=None,
         ):
     with mlflow.start_run(run_name=idx) as run:
         mlflow.log_params(params)
         mlflow.log_metrics(
             {k: v for k, v in retriever_reader_eval_results.items() if v is not None}
         )
+        if pass_criteria != None:
+            mlflow.set_tag("pass_criteria", pass_criteria)
         logger.info(f"Run finished successfully")
         try:
             mlflow.log_artifact(root_log_path)
