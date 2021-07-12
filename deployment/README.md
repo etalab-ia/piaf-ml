@@ -8,6 +8,8 @@ Every deployer should:
 * Have SSH access to the machine
 * Belong to the group `piaf-deployment` or be a sudoer
 * Have [ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) installed
+* Have [ansible-community](https://github.com/ansible-collections/community.docker) installed
+
 
 ## Usages
 
