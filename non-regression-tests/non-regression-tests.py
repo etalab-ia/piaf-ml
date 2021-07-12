@@ -10,6 +10,9 @@ from src.evaluation.retriever_reader.retriever_reader_eval_squad import \
 from src.evaluation.config.retriever_reader_eval_squad_config import \
     parameters, parameter_tuning_options
 
+from src.evaluation.utils.logging_management import clean_log
+from src.evaluation.utils.mlflow_management import mlflow_log_run
+
 test_dataset = os.getenv("DATA_DIR") + "/non-regression-tests/eval_dataset.json"
 elasticsearch_hostname = os.getenv("ELASTICSEARCH_HOSTNAME")
 elasticsearch_port = int(os.getenv("ELASTICSEARCH_PORT"))
@@ -37,3 +40,7 @@ tune_pipeline(
     parameter_tuning_options,
     elasticsearch_hostname = elasticsearch_hostname,
     elasticsearch_port = elasticsearch_port)
+
+for (run_id, params, results) in runs:
+    clean_log()
+    mlflow_log_run(params, results, idx=run_id)
