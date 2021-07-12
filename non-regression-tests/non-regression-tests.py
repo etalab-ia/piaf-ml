@@ -5,20 +5,14 @@ import os
 import sys
 import time
 
+import config
 from src.evaluation.retriever_reader.retriever_reader_eval_squad import \
     tune_pipeline
-from src.evaluation.config.retriever_reader_eval_squad_config import \
-    parameters, parameter_tuning_options
-
 from src.evaluation.utils.logging_management import clean_log
 from src.evaluation.utils.mlflow_management import mlflow_log_run
 
-fquad_dataset = os.getenv("DATA_DIR") + "/non-regression-tests/eval_dataset.json"
 elasticsearch_hostname = os.getenv("ELASTICSEARCH_HOSTNAME")
 elasticsearch_port = int(os.getenv("ELASTICSEARCH_PORT"))
-
-parameters["squad_dataset"] = [fquad_dataset]
-parameter_tuning_options["experiment_name"] = "non-regression-tests"
 
 # Wait for elasticsearch
 timeout = 60 #seconds
@@ -35,12 +29,22 @@ while not es.ping():
             + "http://{elasticsearch_hostname}:{elasticsearch_port}. " \
             + "Elasticsearch not found.")
 
-tune_pipeline(
-    parameters,
-    parameter_tuning_options,
-    elasticsearch_hostname = elasticsearch_hostname,
-    elasticsearch_port = elasticsearch_port)
 
-for (run_id, params, results) in runs:
-    clean_log()
-    mlflow_log_run(params, results, idx=run_id)
+
+# For each test in config.test, log all runs and set a tag if the metrics are
+# not satisfying.
+for parameters, parameter_tuning_options, pass_criteria in config.tests:
+    runs = tune_pipeline(
+        parameters,
+        parameter_tuning_options,
+        elasticsearch_hostname = elasticsearch_hostname,
+        elasticsearch_port = elasticsearch_port)
+
+    for (run_id, params, results) in runs:
+        passed = all(pass_criteria[k](results[k]) for k in pass_criteria.keys())
+
+        clean_log()
+        mlflow_log_run(params, results, idx=run_id, pass_criteria = passed)
+
+
+

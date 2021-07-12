@@ -22,6 +22,7 @@ ARG NON_REG_TESTS_SRC=$SRC_DIR/non-regression-tests
 ARG BIN_DIR
 COPY non-regression-tests $BIN_DIR/
 COPY non-regression-tests.py $NON_REG_TESTS_SRC/
+COPY config.py $NON_REG_TESTS_SRC/
 COPY .env $NON_REG_TESTS_SRC/
 COPY crontab $NON_REG_TESTS_SRC/
 

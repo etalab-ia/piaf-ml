@@ -16,9 +16,6 @@ fi
 mkdir -p $(dirname $LOCKFILE)
 echo $$ > $LOCKFILE
 
-PIAF_ML_SRC=$SRC_DIR/piaf-ml
-cd $PIAF_ML_SRC
-
 git fetch origin $TEST_BRANCH
 git reset --hard origin/$TEST_BRANCH
 
@@ -36,7 +33,7 @@ echo $CURRENT_COMMIT > $LAST_COMMIT_FILE
 
 pip install -r requirements.txt
 
-export PYTHONPATH=$PIAF_ML_SRC
+export PYTHONPATH=$SRC_DIR/piaf-ml:$SRC_DIR/non-regression-tests
 python3 $SRC_DIR/non-regression-tests/non-regression-tests.py
 
 rm $LOCKFILE
