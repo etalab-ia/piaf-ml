@@ -13,11 +13,11 @@ from src.evaluation.config.retriever_reader_eval_squad_config import \
 from src.evaluation.utils.logging_management import clean_log
 from src.evaluation.utils.mlflow_management import mlflow_log_run
 
-test_dataset = os.getenv("DATA_DIR") + "/non-regression-tests/eval_dataset.json"
+fquad_dataset = os.getenv("DATA_DIR") + "/non-regression-tests/eval_dataset.json"
 elasticsearch_hostname = os.getenv("ELASTICSEARCH_HOSTNAME")
 elasticsearch_port = int(os.getenv("ELASTICSEARCH_PORT"))
 
-parameters["squad_dataset"] = [test_dataset]
+parameters["squad_dataset"] = [fquad_dataset]
 parameter_tuning_options["experiment_name"] = "non-regression-tests"
 
 # Wait for elasticsearch

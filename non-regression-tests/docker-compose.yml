@@ -19,7 +19,7 @@ services:
         target: .ssh/id_rsa
     volumes:
       - $HOME/.cache/huggingface:/root/.cache/huggingface
-      - ${TEST_DATASET}:${DATA_DIR}/non-regression-tests/eval_dataset.json
+      - ${FQUAD_DATASET}:${DATA_DIR}/non-regression-tests/eval_dataset.json
     env_file: .env
     restart: always
   elasticsearch:
