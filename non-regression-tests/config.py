@@ -16,14 +16,14 @@ parameter_tuning_options = {
 }
 
 parameters_fquad = {
-    "k_retriever": [1, 3, 5],
-    "k_title_retriever" : [1, 3, 5], # must be present, but only used when retriever_type == title_bm25
+    "k_retriever": [5],
+    "k_title_retriever" : [1], # must be present, but only used when retriever_type == title_bm25
     "k_reader_per_candidate": [20],
-    "k_reader_total": [5, 10],
+    "k_reader_total": [10],
     "reader_model_version": ["053b085d851196110d7a83d8e0f077d0a18470be"],
     "retriever_model_version": ["1a01b38498875d45f69b2a6721bf6fe87425da39"],
     "dpr_model_version": ["v1.0"],
-    "retriever_type": ["title","bm25"], # Can be bm25, sbert, dpr, title or title_bm25
+    "retriever_type": ["bm25"], # Can be bm25, sbert, dpr, title or title_bm25
     "squad_dataset": [
         os.getenv("DATA_DIR") + "/non-regression-tests/fquad_dataset.json"
     ],
@@ -38,18 +38,18 @@ parameters_fquad = {
 # metrics names and keys are predicates on the corresponding metric which must
 # return true if the value is satisfying.
 pass_criteria_fquad = {
-    "reader_topk_accuracy_has_answer": lambda metric: metric >= 0.695
+    "reader_topk_accuracy_has_answer": lambda metric: metric >= 0.747
 }
 
 parameters_dila = {
-    "k_retriever": [1, 3, 5],
-    "k_title_retriever" : [1, 3, 5], # must be present, but only used when retriever_type == title_bm25
+    "k_retriever": [1],
+    "k_title_retriever" : [1], # must be present, but only used when retriever_type == title_bm25
     "k_reader_per_candidate": [20],
-    "k_reader_total": [5, 10],
+    "k_reader_total": [10],
     "reader_model_version": ["053b085d851196110d7a83d8e0f077d0a18470be"],
     "retriever_model_version": ["1a01b38498875d45f69b2a6721bf6fe87425da39"],
     "dpr_model_version": ["v1.0"],
-    "retriever_type": ["title","bm25"], # Can be bm25, sbert, dpr, title or title_bm25
+    "retriever_type": ["bm25"], # Can be bm25, sbert, dpr, title or title_bm25
     "squad_dataset": [
         os.getenv("SRC_DIR") + "/piaf-ml/clients/dila/knowledge_base/squad.json"],
     "filter_level": [None],
@@ -63,7 +63,7 @@ parameters_dila = {
 # metrics names and keys are predicates on the corresponding metric which must
 # return true if the value is satisfying.
 pass_criteria_dila = {
-    "reader_topk_accuracy_has_answer": lambda metric: metric >= 0.355
+    "reader_topk_accuracy_has_answer": lambda metric: metric >= 0.427
 }
 
 
