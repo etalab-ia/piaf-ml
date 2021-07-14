@@ -38,7 +38,9 @@ parameters_fquad = {
 # metrics names and keys are predicates on the corresponding metric which must
 # return true if the value is satisfying.
 pass_criteria_fquad = {
-    "reader_topk_accuracy_has_answer": lambda metric: metric >= 0.747
+    "reader_topk_accuracy_has_answer": 
+        # metric ~= 0.747 +/- 1%
+        lambda metric: abs(metric / 0.747 - 1) < 0.01
 }
 
 parameters_dila = {
@@ -63,7 +65,9 @@ parameters_dila = {
 # metrics names and keys are predicates on the corresponding metric which must
 # return true if the value is satisfying.
 pass_criteria_dila = {
-    "reader_topk_accuracy_has_answer": lambda metric: metric >= 0.427
+    "reader_topk_accuracy_has_answer":
+        # metric ~= 0.427 +/- 1%
+        lambda metric: abs(metric / 0.427 - 1) < 0.01
 }
 
 
