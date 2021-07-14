@@ -1,0 +1,59 @@
+{
+    "version": "besoindaide_PIAF_V5.json",
+    "data": [
+        {
+            "title": "Un cookie : qu'est-ce que c'est ?",
+            "theme": " Internet",
+            "sous_theme": " Particuliers ",
+            "dossier": "cookie, traceur, tag, internet, site web, bandeau, consentement, information",
+            "id": 1,
+            "paragraphs": [
+                {
+                    "context": "Un cookie est un petit fichier informatique, un traceur, d\u00e9pos\u00e9 et lu par exemple lors de la consultation d'un site internet, de la lecture d'un courrier \u00e9lectronique, de l'installation ou de l'utilisation d'un logiciel ou d'une application mobile et ce, quel que soit le type de terminal utilis\u00e9 (ordinateur, smartphone, liseuse num\u00e9rique, console de jeux vid\u00e9os connect\u00e9e \u00e0 Internet, etc.).\nLe terme de \"cookie\" recouvre par exemple : les cookies HTTP ;\nles cookies \"flash\" ;\nle r\u00e9sultat du calcul d'empreinte dans le cas du \"fingerprinting\" (calcul d'un identifiant unique de la machine bas\u00e9e sur des \u00e9l\u00e9ments de sa configuration \u00e0 des fins de tra\u00e7age) ;\nles pixels invisibles ou \"web bugs\" ;\ntout autre identifiant g\u00e9n\u00e9r\u00e9 par un logiciel ou un syst\u00e8me d'exploitation, par exemple.\nL'utilisation de ces outils est soumise \u00e0 votre consentement d\u00e8s lors qu'ils ne sont pas strictement n\u00e9cessaires au fonctionnement du site concern\u00e9.",
+                    "qas": [
+                        {
+                            "question": "Un cookie : qu'est-ce que c'est ?",
+                            "answers": [
+                                {
+                                    "text": "Un cookie est un petit fichier informatique, un traceur, d\u00e9pos\u00e9 et lu par exemple lors de la consultation d'un site internet, de la lecture d'un courrier \u00e9lectronique, de l'installation ou de l'utilisation d'un logiciel ou d'une application mobile et ce, quel que soit le type de terminal utilis\u00e9 (ordinateur, smartphone, liseuse num\u00e9rique, console de jeux vid\u00e9os connect\u00e9e \u00e0 Internet, etc.)",
+                                    "answer_start": 0
+                                }
+                            ],
+                            "is_impossible": false
+                        },
+                        {
+                            "question": "Sur Internet, un cookie, c'est quoi ?",
+                            "answers": [
+                                {
+                                    "text": "Un cookie est un petit fichier informatique, un traceur, d\u00e9pos\u00e9 et lu par exemple lors de la consultation d'un site internet, de la lecture d'un courrier \u00e9lectronique, de l'installation ou de l'utilisation d'un logiciel ou d'une application mobile et ce, quel que soit le type de terminal utilis\u00e9 (ordinateur, smartphone, liseuse num\u00e9rique, console de jeux vid\u00e9os connect\u00e9e \u00e0 Internet, etc.)",
+                                "answer_start": 0
+                            }
+                        ],
+                        "is_impossible": false
+                    },
+                    {
+                        "question": "A quoi \u00e7a sert un cookie ?",
+                        "answers": [
+                            {
+                                "text": "Un cookie est un petit fichier informatique, un traceur, d\u00e9pos\u00e9 et lu par exemple lors de la consultation d'un site internet, de la lecture d'un courrier \u00e9lectronique, de l'installation ou de l'utilisation d'un logiciel ou d'une application mobile et ce, quel que soit le type de terminal utilis\u00e9 (ordinateur, smartphone, liseuse num\u00e9rique, console de jeux vid\u00e9os connect\u00e9e \u00e0 Internet, etc.)",
+                                "answer_start": 0
+                            }
+                        ],
+                        "is_impossible": false
+                    },
+                    {
+                        "question": "C'est quoi les cookies ?",
+                        "answers": [
+                            {
+                                "text": "Un cookie est un petit fichier informatique, un traceur, d\u00e9pos\u00e9 et lu par exemple lors de la consultation d'un site internet, de la lecture d'un courrier \u00e9lectronique, de l'installation ou de l'utilisation d'un logiciel ou d'une application mobile et ce, quel que soit le type de terminal utilis\u00e9 (ordinateur, smartphone, liseuse num\u00e9rique, console de jeux vid\u00e9os connect\u00e9e \u00e0 Internet, etc.)",
+                                "answer_start": 0
+                            }
+                        ],
+                        "is_impossible": false
+                    }
+                ]
+            }
+        ]
+    }
+    ]
+}
