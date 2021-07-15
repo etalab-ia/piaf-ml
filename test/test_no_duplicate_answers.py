@@ -6,8 +6,10 @@ from haystack.document_store.base import BaseDocumentStore
 from haystack.pipeline import Pipeline
 
 from src.evaluation.utils.utils_eval import full_eval_retriever_reader
-from src.evaluation.utils.custom_pipelines import MergeOverlappingAnswers, \
-    merge_strings
+from deployment.roles.haystack.files.custom_component import \
+    MergeOverlappingAnswers, merge_strings
+
+
 
 def test_merge_strings():
     assert merge_strings("a black", "black coffee") == "a black coffee"
