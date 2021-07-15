@@ -6,6 +6,9 @@ from haystack.reader.base import BaseReader
 from haystack.retriever.base import BaseRetriever
 from haystack.schema import BaseComponent
 
+from deployment.roles.haystack.files.custom_component import \
+    MergeOverlappingAnswers, JoinDocumentsCustom
+
 
 class TitleQAPipeline(BaseStandardPipeline):
     def __init__(self, retriever: BaseRetriever):
@@ -78,7 +81,7 @@ class TitleBM25QAPipeline(BaseStandardPipeline):
             component=retriever_title, name="Retriever_title", inputs=["Query"]
         )
         self.pipeline.add_node(
-            component=JoinDocuments(ks_retriever=[k_bm25_retriever, k_title_retriever]),
+            component=JoinDocumentsCustom(ks_retriever=[k_bm25_retriever, k_title_retriever]),
             name="JoinResults",
             inputs=["Retriever_bm25", "Retriever_title"],
         )
@@ -123,8 +126,8 @@ class RetrieverReaderEvaluationPipeline(BaseStandardPipeline):
         self.pipeline.add_node(component=retriever, name="Retriever", inputs=["Query"])
         self.pipeline.add_node(component=eval_retriever, name="EvalRetriever", inputs=["Retriever"])
         self.pipeline.add_node(component=reader, name="Reader", inputs=["EvalRetriever"])
+        self.pipeline.add_node(component=MergeOverlappingAnswers(), name="MergeOverlappingAnswers", inputs=["Reader"])
         self.pipeline.add_node(component=eval_reader, name="EvalReader", inputs=["Reader"])
-       
 
 
     def run(self, query, top_k_retriever, top_k_reader, labels):
@@ -180,7 +183,7 @@ class TitleBM25QAEvaluationPipeline(BaseStandardPipeline):
 
         self.pipeline.add_node(component=retriever_bm25, name="Retriever_bm25", inputs=["Query"])
         self.pipeline.add_node(component=retriever_title, name="Retriever_title", inputs=["Query"])
-        self.pipeline.add_node(component=JoinDocuments(ks_retriever=[k_bm25_retriever, k_title_retriever]), name="JoinResults",
+        self.pipeline.add_node(component=JoinDocumentsCustom(ks_retriever=[k_bm25_retriever, k_title_retriever]), name="JoinResults",
                                inputs=["Retriever_bm25", "Retriever_title"])
 
         self.pipeline.add_node(component=eval_retriever, name="EvalRetriever", inputs=["JoinResults"])
@@ -200,45 +203,3 @@ class TitleBM25QAEvaluationPipeline(BaseStandardPipeline):
         )
 
         return output
-
-class JoinDocuments(BaseComponent):
-    """
-    A node to join documents outputted by multiple retriever nodes.
-
-    The node allows multiple join modes:
-
-    * concatenate: combine the documents from multiple nodes. Any duplicate documents are discarded.
-    * merge: merge scores of documents from multiple nodes. Optionally, each input score can be given a different
-      `weight` & a `top_k` limit can be set. This mode can also be used for "reranking" retrieved documents.
-    """
-
-    outgoing_edges = 1
-
-    def __init__(self, ks_retriever: List[int] = None):
-        """
-        :param ks_retriever: A node-wise list(length of list must be equal to the number of input nodes) of k_retriever
-        kept for the concatenation of the retrievers in the nodes. If set to None, the number of documents retrieved
-        will be used
-        """
-        self.ks_retriever = ks_retriever
-
-    def run(self, **kwargs):
-        inputs = kwargs["inputs"]
-
-        document_map = {}
-        if self.ks_retriever:
-            ks_retriever = self.ks_retriever
-        else:
-            ks_retriever = [len(inputs[0]["documents"]) for i in range(len(inputs))]
-        for input_from_node, k_retriever in zip(inputs, ks_retriever):
-            for i, doc in enumerate(input_from_node["documents"]):
-                if i == k_retriever:
-                    break
-                document_map[doc.id] = doc
-        documents = document_map.values()
-        output = {
-            "query": inputs[0]["query"],
-            "documents": documents,
-            "labels": inputs[0].get("labels", None),
-        }
-        return output, "output_1"

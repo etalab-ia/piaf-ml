@@ -77,3 +77,5 @@ def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retrie
     # clean up
     document_store.delete_all_documents(index=doc_index)
     document_store.delete_all_documents(index=label_index)
+
+
