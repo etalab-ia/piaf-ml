@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 from typing import Union
 
-
 def clean_log(log_name: str = "root"):
     open(f"./logs/{log_name}.log", "w").close()
 
@@ -47,3 +46,6 @@ def get_custom_logger(
     logger.addHandler(console_handler)
 
     return logger
+
+logger = get_custom_logger(None, root_logger_path=Path("./logs/"), level=logging.INFO)
+

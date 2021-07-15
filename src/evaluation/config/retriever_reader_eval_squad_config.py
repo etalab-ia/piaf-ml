@@ -13,9 +13,24 @@ parameters = {
     "boosting" : [1], #default to 1
     "split_by": ["word"],  # Can be "word", "sentence", or "passage"
     "split_length": [1000],
-    "experiment_name": ["DILA_fullspfV1"]
 }
 # rules:
 # corpus and retriever type requires reloading ES indexing
 # filtering requires >v10
 #
+
+parameter_tuning_options = {
+    # "experiment_name": "DILA_fullspfV1",
+    "experiment_name": "test",
+
+    # Tuning method alternatives:
+    # - "optimization": use bayesian optimisation
+    # - "grid_search"
+    "tuning_method": "grid_search",
+
+    # Additionnal options for the grid search method
+    "use_cache": False,
+
+    # Additionnal options for the optimization method
+    "optimization_ncalls": 10,
+}

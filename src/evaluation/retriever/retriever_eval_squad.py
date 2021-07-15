@@ -23,8 +23,10 @@ from src.evaluation.utils.utils_eval import eval_retriever, save_results
 
 def single_run(parameters):
     """
-    Runs a grid search config :param parameters: A dict with diverse config options :return: A dict with the results
-    obtained running the experiment with these parameters
+    Runs a grid search config 
+
+    :param parameters: A dict with diverse config options 
+    :return: A dict with the results obtained running the experiment with these parameters
     """
     # col names
     evaluation_data = Path(parameters["squad_dataset"])

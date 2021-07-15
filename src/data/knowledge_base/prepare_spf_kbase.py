@@ -276,10 +276,11 @@ def try_get_situation_text(
     The chapitres text are apparently in the first children level of the Chapitre as a Paragraphe(s). So the idea here
     is to grab all the paragraphs that occur before anything else (a BlocCas p. ex) and consider it as the chapitre text
     (all the text that comes before the Cases) Given that all text (apparently) appears in Paragraphe tags even if they
-    are within Lists, so we remove the Titre and BlocCas to avoid these texts :param list_tags_to_remove: we want to
-    keep all the paragraphs except those inside Titre and BlocCas, so we pop them
+    are within Lists, so we remove the Titre and BlocCas to avoid these texts 
 
-    :param child: :return:
+    :param list_tags_to_remove: we want to keep all the paragraphs except those inside Titre and BlocCas, so we pop them
+    :param child: 
+    :return:
     """
     situation_children = list([t for t in child])
     tags = [t.tag for t in situation_children]
@@ -333,7 +334,10 @@ def try_get_chapitre_text(
     The chapitres text are apparently in the first children level of the Chapitre as a Paragraphe(s). So the idea here
     is to grab all the paragraphs that occur before anything else (a BlocCas p. ex) and consider it as the chapitre text
     (all the text that comes before the Cases) Given that all text (apparently) appears in Paragraphe tags even if they
-    are within Lists, so we remove the Titre and BlocCas to avoid these texts :param list_tags_to_remove: :param child:
+    are within Lists, so we remove the Titre and BlocCas to avoid these texts 
+
+    :param list_tags_to_remove: 
+    :param child:
     :return:
     """
     chapitre_children = list([t for t in child])
@@ -393,7 +397,10 @@ def treat_no_situation_fiche(root: Element):
 
 def clean_elements(root: Element):
     """
-    Keep the interesting bits of the XML (and hence the essential text of the fiche) :param root: :return:
+    Keep the interesting bits of the XML (and hence the essential text of the fiche) 
+
+    :param root: 
+    :return:
     """
     tags = [t for t in list(root)]
     tag_names = [t.tag for t in tags]
