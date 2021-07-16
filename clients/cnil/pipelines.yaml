@@ -13,7 +13,7 @@ components:    # define all the building-blocks for Pipeline
       # excluded_meta_data: [emb]
       similarity: cosine
   - name: ESRetriever
-    type: ElasticsearchRetriever
+    type: LabelElasticsearchRetriever
     params:
       document_store: ElasticsearchDocumentStore    # params can reference other components defined in the YAML
       top_k: 5
