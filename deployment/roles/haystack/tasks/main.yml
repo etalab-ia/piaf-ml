@@ -22,13 +22,13 @@
   when: not haystack.after.startswith(haystack_commit)
 - name: "{{ client }} | change group ownership (https://github.com/ansible/ansible/issues/51601)"
   file:
-    path: "{{ client_installation_directory }}/haystack" # this should be as same as `dest` above
+    path: "{{ client_installation_directory }}"
     group: "piaf-deployment"
     state: directory
     recurse: yes
 - name: "{{ client }} | remove legacy custom file (2021-07-09, remove this after all clients have been installed)"
   file:
-    path: "{{ client_installation_directory }}/haystack/custom.py" # this should be as same as `dest` above
+    path: "{{ client_installation_directory }}/haystack/custom.py"
     state: absent
 - name: "{{ client }} | copy custom_component.py"
   ansible.builtin.copy:
@@ -53,7 +53,7 @@
     group: piaf-deployment
 - name: "{{ client }} | remove legacy pipelines.yaml (2021-07-09, remove this after all clients have been installed)"
   file:
-    path: "{{ client_installation_directory }}/haystack/pipelines.yaml" # this should be as same as `dest` above
+    path: "{{ client_installation_directory }}/haystack/pipelines.yaml"
     state: absent
 - name: "{{ client }} | copy pipelines.yml"
   ansible.builtin.copy:
