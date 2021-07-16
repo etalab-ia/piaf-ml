@@ -26,10 +26,6 @@
     group: "piaf-deployment"
     state: directory
     recurse: yes
-- name: "{{ client }} | remove legacy custom file (2021-07-09, remove this after all clients have been installed)"
-  file:
-    path: "{{ client_installation_directory }}/haystack/custom.py"
-    state: absent
 - name: "{{ client }} | copy custom_component.py"
   ansible.builtin.copy:
     src: custom_component.py
@@ -51,10 +47,6 @@
     src: docker-compose.yml
     dest: "{{ client_installation_directory }}/docker-compose.yml"
     group: piaf-deployment
-- name: "{{ client }} | remove legacy pipelines.yaml (2021-07-09, remove this after all clients have been installed)"
-  file:
-    path: "{{ client_installation_directory }}/haystack/pipelines.yaml"
-    state: absent
 - name: "{{ client }} | copy pipelines.yml"
   ansible.builtin.copy:
     src: ../../../clients/{{ client }}/pipelines.yaml
