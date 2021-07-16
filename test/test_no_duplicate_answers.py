@@ -12,11 +12,17 @@ from deployment.roles.haystack.files.custom_component import \
 
 
 def test_merge_strings():
-    assert merge_strings("a black", "black coffee") == "a black coffee"
-    assert merge_strings("black coffee", "a black") == "a black coffee"
-    assert merge_strings("a black coffee", "black") == "a black coffee"
-    assert merge_strings("black", "a black coffee") == "a black coffee"
-    assert merge_strings("a black coffee", "") == ""
+    assert merge_strings("a black", "black coffee", 0.1) == "a black coffee"
+    assert merge_strings("a black coffee", "black", 0.1) == "a black coffee"
+    assert merge_strings("a black coffee", "black", 1) == "a black coffee"
+    assert merge_strings("a black coffee", "a black coffee", 1) == "a black coffee"
+    assert merge_strings("a black coffee", "black coffee,", 1) == ""
+    assert merge_strings("a black coffee", " with milk", 0.1) == ""
+    assert merge_strings("a black coffee", " with milk", 0) == "a black coffee with milk"
+    assert merge_strings("a black coffee", "", 0) == ""
+    assert merge_strings("a black coffee", "", 0.1) == ""
+    assert merge_strings("a coffee is my first thing in the morning", "morning or evening", 0.5) == ""
+    assert merge_strings("a coffee is my first thing in the morning", "in the morning", 0.5) == "a coffee is my first thing in the morning"
 
 
 @pytest.mark.elasticsearch
@@ -27,7 +33,7 @@ def test_no_duplicate_answers(document_store: BaseDocumentStore, retriever_bm25,
     p = Pipeline()
     p.add_node(component=retriever_bm25, name="Retriever", inputs=["Query"])
     p.add_node(component=reader, name="Reader", inputs=['Retriever'])
-    p.add_node(component=MergeOverlappingAnswers(), name="MergeOverlappingAnswers", inputs=["Reader"])
+    p.add_node(component=MergeOverlappingAnswers(0.75, 0.25), name="MergeOverlappingAnswers", inputs=["Reader"])
 
     # add eval data (SQUAD format)
     document_store.delete_all_documents(index=doc_index)
