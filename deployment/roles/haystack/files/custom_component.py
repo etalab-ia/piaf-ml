@@ -59,7 +59,7 @@ class JoinDocumentsCustom(BaseComponent):
 
 
 
-class MergeOverlappingAnswers():
+class MergeOverlappingAnswers(BaseComponent):
     """
     A node that merges two answers when they overlap to avoid having multiple
     answers that are almost identical, like "fichier informatique" and "un petit
@@ -112,6 +112,28 @@ class MergeOverlappingAnswers():
 
 
 
+def has_minimum_overlapp(str1,str2):
+    """
+    Returns True if we have a minimum of overlapp, about 25% of common words. For example:
+    has_minimum_overlapp("a black coffee", "with milk") == False
+    has_minimum_overlapp("a black coffee", "coffee") == True
+    has_minimum_overlapp("a coffee is my first thing in the morning", "morning or evening") == False
+    has_minimum_overlapp("a coffee is my first thing in the morning", "in the morning") == True
+    """
+    doc1 = str1.split()
+    doc2 = str2.split()
+
+    common = len(set(doc1).intersection( set(doc2) ))
+    unique = len(set(doc1).symmetric_difference( set(doc2) ))
+    sum = unique+common
+    # print(unique,common,sum, ' % :', common*100/sum )
+    if unique+common< 4 and common > 0:
+        return True
+    elif (common*100/sum) > 25:
+        return True
+    else:
+        return False
+
 
 def merge_strings(str1, str2):
     """
@@ -122,13 +144,15 @@ def merge_strings(str1, str2):
     merge_strings("a black", "black coffee") == "a black coffee"
     merge_strings("a black coffee", "black") == "a black coffee"
     merge_strings("a black coffee", "") == ""
+    merge_strings("a black coffee", "with milk") == ""
     """
 
     if str1 == "" or str2 == "": return ""
+    if not has_minimum_overlapp(str1,str2): return ""
 
-    # Brute force algorithm for a start. Probably inefficient for large 
+    # Brute force algorithm for a start. Probably inefficient for large
     # sequences.
-    # Outline: Start by comparing the end of str1 with the beginning of str2. 
+    # Outline: Start by comparing the end of str1 with the beginning of str2.
     # Shift each sequence towards the other one character at a time. Keep the
     # positions of the longest matching string in both sequences.
 
