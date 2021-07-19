@@ -18,6 +18,8 @@ from src.evaluation.utils.elasticsearch_management import (delete_indices,
                                                            launch_ES,
                                                            prepare_mapping)
 from src.evaluation.utils.google_retriever import GoogleRetriever
+from src.evaluation.utils.epitca_retriever import EpitcaRetriever
+from src.evaluation.utils import epitca_retriever
 from src.evaluation.utils.utils_eval import eval_retriever, save_results
 
 
@@ -39,6 +41,7 @@ def single_run(parameters):
     split_respect_sentence_boundary = parameters["split_respect_sentence_boundary"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     google_retriever_website = parameters["google_retriever_website"]
+    epitca_perf_file = parameters["epitca_perf_file"]
     # Prepare framework
 
     p = Pipeline()
@@ -130,6 +133,24 @@ def single_run(parameters):
         )
         retriever = GoogleRetriever(document_store=document_store, website=google_retriever_website)
         p.add_node(component=retriever, name="GoogleRetriever", inputs=["Query"])
+
+    elif retriever_type == "epitca":
+        document_store = ElasticsearchDocumentStore(
+            host="localhost",
+            username="",
+            password="",
+            index=doc_index,
+            search_fields=["name", "text"],
+            create_index=False,
+            embedding_field="emb",
+            scheme="",
+            embedding_dim=768,
+            excluded_meta_data=["emb"],
+            similarity="cosine",
+            custom_mapping=SQUAD_MAPPING,
+        )
+        retriever = EpitcaRetriever(document_store=document_store)
+        p.add_node(component=retriever, name="EpitcaRetriever", inputs=["Query"])
 
     else:
         raise Exception(
