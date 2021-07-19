@@ -59,7 +59,7 @@ class JoinDocumentsCustom(BaseComponent):
 
 
 
-class MergeOverlappingAnswers():
+class MergeOverlappingAnswers(BaseComponent):
     """
     A node that merges two answers when they overlap to avoid having multiple
     answers that are almost identical, like "fichier informatique" and "un petit
@@ -72,6 +72,11 @@ class MergeOverlappingAnswers():
 
     outgoing_edges=1
 
+    def __init__(self, minimum_overlap_contexts = 0.75,
+            minimum_overlap_answers = 0.25):
+        self.minimum_overlap_contexts = minimum_overlap_contexts
+        self.minimum_overlap_answers = minimum_overlap_answers
+
     def run(self, **kwargs):
         answers = kwargs["answers"]
         merged_answers = []
@@ -83,9 +88,15 @@ class MergeOverlappingAnswers():
             i = 0
             while not is_merged and i < len(merged_answers):
                 mans = merged_answers[i]
-                new_merged_ctxt = merge_strings(mans["context"], ans["context"])
+                new_merged_ctxt = merge_strings(
+                        mans["context"],
+                        ans["context"],
+                        self.minimum_overlap_contexts)
                 if new_merged_ctxt != "":
-                    new_merged_ans = merge_strings(mans["answer"], ans["answer"])
+                    new_merged_ans = merge_strings(
+                            mans["answer"],
+                            ans["answer"],
+                            self.minimum_overlap_answers)
                     if new_merged_ans != "":
                         offset_start = new_merged_ctxt.find(new_merged_ans)
                         merged_answers[i] = {
@@ -112,29 +123,39 @@ class MergeOverlappingAnswers():
 
 
 
-
-def merge_strings(str1, str2):
+def merge_strings(str1, str2, minimum_overlap):
     """
-    Returns (m, s) where m is a string that is the combination of str1 and str2
-    if they overlap and s is the overlap size. If they don't overlap, m an
-    empty string. For example:
+    Returns a string that is the combination of str1 and str2 if they overlap,
+    otherwise returns an empty string. The two strings are considered to overlap
+    if they are non-empty and one of the following conditions apply:
+    - one is a substring of the other and it's size >= `minimum_overlap * min(len(str1), len(str2))`,
+    - the end of one is equal to the beginning of the other and the size of the
+      common substring is >= `minimum_overlap * min(len(str1), len(str2))`
 
-    merge_strings("a black", "black coffee") == "a black coffee"
-    merge_strings("a black coffee", "black") == "a black coffee"
-    merge_strings("a black coffee", "") == ""
+    For example:
+
+    merge_strings("a black", "black coffee", 0.1) == "a black coffee"
+    merge_strings("a black coffee", "black", 0.1) == "a black coffee"
+    merge_strings("a black coffee", " with milk", 0.1) == ""
+    merge_strings("a black coffee", " with milk", 0) == "a black coffee with milk"
+    merge_strings("a black coffee", "", 0) == ""
+    merge_strings("a coffee is my first thing in the morning", "morning or evening", 0.25) == ""
+    merge_strings("a coffee is my first thing in the morning", "in the morning", 0.25) == "a coffee is my first thing in the morning"
     """
 
     if str1 == "" or str2 == "": return ""
 
-    # Brute force algorithm for a start. Probably inefficient for large 
+    # Brute force algorithm for a start. Probably inefficient for large
     # sequences.
-    # Outline: Start by comparing the end of str1 with the beginning of str2. 
+    # Outline: Start by comparing the end of str1 with the beginning of str2.
     # Shift each sequence towards the other one character at a time. Keep the
     # positions of the longest matching string in both sequences.
 
     # Best match
     best_i = len(str1)
     best_s = 0
+
+    minimum_overlap_chars = int(minimum_overlap * min(len(str1), len(str2)))
 
     # i is the number of characters by which to shift the beginning of str2 to
     # the right of the beginning of str1.
@@ -151,12 +172,16 @@ def merge_strings(str1, str2):
             start1 = 0
             start2 = -i
 
-        if s > best_s \
+        if s >= minimum_overlap_chars \
+                and s > best_s \
                 and str1[start1 : start1 + s] == str2[start2 : start2 + s]:
             best_i = i
             best_s = s
 
-    if best_i >= 0:
-        return str1 + str2[best_s:]
+    if best_s >= minimum_overlap_chars:
+        if best_i >= 0:
+            return str1 + str2[best_s:]
+        else:
+            return str2 + str1[best_s:]
     else:
-        return str2 + str1[best_s:]
+        return ""
