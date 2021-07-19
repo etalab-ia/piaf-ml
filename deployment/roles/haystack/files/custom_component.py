@@ -99,29 +99,24 @@ class JoinAnswers(BaseComponent):
 
     outgoing_edges = 1
 
-    def __init__(self, threshold_score: float = 0.8):
+    def __init__(self, threshold_score: float = 0.8, top_k: float = 5):
         """
         :param threshold_score: The threshold that will be used for keeping or not the answer from the readers
         """
         self.threshold_score = threshold_score
+        self.top_k = top_k
         self.max_reader_answer = 1 # Only one answer given from reader
 
     def run(self, **kwargs):
         inputs = kwargs["inputs"]
-        answers_inputs = []
-        for input in inputs:
-            if 'pipeline_type' in input.keys(): #detects the 'Query' input
-                top_k_reader = inputs[0]["top_k_reader"]
-            else:
-                answers_inputs.append(input) # only keep the inputs from the readers
 
         results: Dict = {"query": inputs[0]["query"], "answers": []}
 
         count_answers = 0
         count_reader = 0
-        for input_from_node in answers_inputs:
+        for input_from_node in inputs:
             for answer in input_from_node['answers']:
-                if count_answers == top_k_reader:
+                if count_answers == self.top_k:
                     break
                 elif answer["score"] is None: #The answer came from Transformers Reader
                     if answer["probability"] > self.threshold_score and count_reader < self.max_reader_answer:
