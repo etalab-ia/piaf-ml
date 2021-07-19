@@ -35,6 +35,7 @@ components:    # define all the building-blocks for Pipeline
     type: JoinAnswers
     params:
       threshold_score: 0.70
+      top_k: 5
   - name: Join
     type: JoinDocumentsCustom
     params:
@@ -81,7 +82,7 @@ pipelines:
       - name: Answerify
         inputs: [Join]
       - name: JoinResults
-        inputs: [Query, Reader, Answerify]
+        inputs: [Reader, Answerify]
 
   - name: indexing
     type: Indexing
