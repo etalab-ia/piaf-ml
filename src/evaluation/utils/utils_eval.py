@@ -36,38 +36,42 @@ def eval_retriever(
     label_origin: str = "gold_label",
     top_k: int = 10,
     return_preds: bool = False,
+    question_label_dict_list = None,
+    get_doc_id = lambda doc: doc.id,
 ) -> dict:
-    # Extract all questions for evaluation
-    filters = {"origin": [label_origin]}
-
-    labels = document_store.get_all_labels_aggregated(
-        index=label_index, filters=filters
-    )
-
     """
-    true_answers_list = [label.multiple_answers for label in labels_agg] true_docs_ids_list = [list(set([str(x) for x in
-    label.multiple_document_ids])) for label in labels_agg] #this is to deduplicate doc_ids questions = [label.question
-    for label in labels_agg] found_answers = [pipeline.run(query=q, top_k_retriever=top_k_retriever) for q in questions]
+    :param question_label_dict_list: A list [{"query": ..., "gold_ids": [id1, ...]}, 
+    ...] where the query fields are questions to ask for evaluation and the gold_ids are
+    lists of document ids expected as answers. If None, the questions and
+    associated answers are fetched from the document_store gold_label index.
     """
 
-    # Collect questions and corresponding answers/document_ids in a dict
-    question_label_dict_list = []
-    for label in labels:
-        if not label.question:
-            continue
-        deduplicated_doc_ids = list(set([str(x) for x in label.multiple_document_ids]))
-        question_label_dict = {
-            "query": label.question,
-            "gold_ids": deduplicated_doc_ids,
-        }
-        question_label_dict_list.append(question_label_dict)
+    if question_label_dict_list == None:
+
+        # Extract all questions for evaluation
+        filters = {"origin": [label_origin]}
+
+        labels = document_store.get_all_labels_aggregated(
+            index=label_index, filters=filters
+        )
+        # Collect questions and corresponding answers/document_ids in a dict
+        question_label_dict_list = []
+        for label in labels:
+            if not label.question:
+                continue
+            deduplicated_doc_ids = list(set([str(x) for x in label.multiple_document_ids]))
+            question_label_dict = {
+                "query": label.question,
+                "gold_ids": deduplicated_doc_ids,
+            }
+            question_label_dict_list.append(question_label_dict)
 
     retrieved_docs_list = [
         pipeline.run(query=question["query"], top_k_retriever=top_k, index=doc_index)
         for question in question_label_dict_list
     ]
 
-    metrics = get_retriever_metrics(retrieved_docs_list, question_label_dict_list)
+    metrics = get_retriever_metrics(retrieved_docs_list, question_label_dict_list, get_doc_id)
 
     logger.info(
         (
@@ -79,7 +83,8 @@ def eval_retriever(
     return metrics
 
 
-def get_retriever_metrics(retrieved_docs_list, question_label_dict_list):
+def get_retriever_metrics(retrieved_docs_list, question_label_dict_list, 
+        get_doc_id = lambda doc: doc.id):
     correct_retrievals = 0
     summed_avg_precision = 0.0
     summed_reciprocal_rank = []
@@ -94,7 +99,7 @@ def get_retriever_metrics(retrieved_docs_list, question_label_dict_list):
         relevant_docs_found = 0
         current_avg_precision = 0.0
         for doc_idx, doc in enumerate(retrieved_docs["documents"]):
-            if str(doc.id) in gold_ids:
+            if str(get_doc_id(doc)) in gold_ids:
                 relevant_docs_found += 1
                 if not found_relevant_doc:
                     correct_retrievals += 1
