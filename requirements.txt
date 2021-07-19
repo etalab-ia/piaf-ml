@@ -1,4 +1,5 @@
 argopt
+backoff
 construct
 cython
 farm-haystack==0.8.0

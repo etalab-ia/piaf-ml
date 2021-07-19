@@ -2,6 +2,7 @@ import hashlib
 import socket
 from datetime import datetime
 from pathlib import Path
+from pprint import pprint
 
 from farm.utils import initialize_device_settings
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
@@ -18,6 +19,8 @@ from src.evaluation.utils.elasticsearch_management import (delete_indices,
                                                            launch_ES,
                                                            prepare_mapping)
 from src.evaluation.utils.google_retriever import GoogleRetriever
+from src.evaluation.utils.epitca_retriever import EpitcaRetriever
+from src.evaluation.utils import epitca_retriever
 from src.evaluation.utils.utils_eval import eval_retriever, save_results
 
 
@@ -39,6 +42,7 @@ def single_run(parameters):
     split_respect_sentence_boundary = parameters["split_respect_sentence_boundary"]
     experiment_id = hashlib.md5(str(parameters).encode("utf-8")).hexdigest()[:4]
     google_retriever_website = parameters["google_retriever_website"]
+    epitca_perf_file = parameters["epitca_perf_file"]
     # Prepare framework
 
     p = Pipeline()
@@ -131,6 +135,24 @@ def single_run(parameters):
         retriever = GoogleRetriever(document_store=document_store, website=google_retriever_website)
         p.add_node(component=retriever, name="GoogleRetriever", inputs=["Query"])
 
+    elif retriever_type == "epitca":
+        document_store = ElasticsearchDocumentStore(
+            host="localhost",
+            username="",
+            password="",
+            index=doc_index,
+            search_fields=["name", "text"],
+            create_index=False,
+            embedding_field="emb",
+            scheme="",
+            embedding_dim=768,
+            excluded_meta_data=["emb"],
+            similarity="cosine",
+            custom_mapping=SQUAD_MAPPING,
+        )
+        retriever = EpitcaRetriever(document_store=document_store)
+        p.add_node(component=retriever, name="EpitcaRetriever", inputs=["Query"])
+
     else:
         raise Exception(
             f"You chose {retriever_type}. Choose one from bm25, sbert, google or dpr"
@@ -147,13 +169,25 @@ def single_run(parameters):
     if retriever_type in ["sbert", "dpr"]:
         document_store.update_embeddings(retriever, index=doc_index)
 
+    if epitca_perf_file:
+        expected_answers = epitca_retriever.load_perf_file_expected_answer(epitca_perf_file)
+        custom_evaluation_questions = [{"query": q, "gold_ids": [a]} for q,a in
+            expected_answers.items()]
+        get_doc_id = lambda doc: doc.meta["id"]
+    else:
+        custom_evaluation_questions = None
+        get_doc_id = lambda doc: doc.id
+
     retriever_eval_results = eval_retriever(
         document_store=document_store,
         pipeline=p,
         top_k=k,
         label_index=label_index,
         doc_index=doc_index,
+        question_label_dict_list=custom_evaluation_questions,
+        get_doc_id = get_doc_id,
     )
+
     # Retriever Recall is the proportion of questions for which the correct document containing the answer is
     # among the correct documents
     print("Retriever Recall:", retriever_eval_results["recall"])
@@ -168,6 +202,8 @@ def single_run(parameters):
             "experiment_id": experiment_id,
         }
     )
+
+    pprint(retriever_eval_results)
 
     return retriever_eval_results
 
