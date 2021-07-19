@@ -2,6 +2,7 @@ import hashlib
 import socket
 from datetime import datetime
 from pathlib import Path
+from pprint import pprint
 
 from farm.utils import initialize_device_settings
 from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
@@ -201,6 +202,8 @@ def single_run(parameters):
             "experiment_id": experiment_id,
         }
     )
+
+    pprint(retriever_eval_results)
 
     return retriever_eval_results
 
