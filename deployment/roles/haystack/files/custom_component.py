@@ -1,21 +1,22 @@
 from typing import List, Optional
+import logging
 
 from haystack.retriever import ElasticsearchRetriever
 from haystack.schema import BaseComponent
 from haystack.retriever.dense import EmbeddingRetriever
 import numpy as np
 from haystack import Document
-
+logger = logging.getLogger(__name__)
 
 class LabelElasticsearchRetriever(ElasticsearchRetriever):
 
     def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[Document]:
         #  TODO Query labels
         documents = self.document_store.query(None, {"question": [query]}, 1, self.custom_query, "label_elasticsearch")
-        print("plop")
-        print(documents)
+        logger.warning("plop")
+        logger.warning(documents)
         if len(documents) > 0:
-            print("retrieving documents from label")
+            logger.warning("retrieving documents from label")
             return self.document_store.query(None, {"_id": [documents[0]["document_id"]]}, 1, self.custom_query, index)
         else:
             documents = super().retrieve(query, filters, top_k, index)
