@@ -1,7 +1,7 @@
 argopt
 construct
 cython
-farm_haystack==0.8.0
+farm-haystack==0.8.0
 google
 ipywidgets
 jupyter-console

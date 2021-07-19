@@ -133,8 +133,6 @@ def retriever_faq(document_store, gpu_available):
         emb_extraction_layer=-1,
     )
 
-
-
 @pytest.fixture
 def Eval_Retriever():
     return PiafEvalRetriever()

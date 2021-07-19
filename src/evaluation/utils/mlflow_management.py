@@ -8,6 +8,7 @@ from pathlib import Path
 import mlflow
 from dotenv import load_dotenv
 from tqdm import tqdm
+from src.evaluation.utils.logging_management import logger
 
 load_dotenv()
 
@@ -49,8 +50,10 @@ def hash_piaf_code():
 
 def get_list_past_run(client, experiment_name):
     """
-    This function returns the list of the past experiments :param client: the mlflow client :param experiment_name: the
-    name of the experiment :return: the list of the past experiments
+    This function returns the list of the past experiments 
+    :param client: the mlflow client 
+    :param experiment_name: the name of the experiment 
+    :return: the list of the past experiments
     """
     try:
         experiment_id = client.get_experiment_by_name(experiment_name).experiment_id
@@ -72,8 +75,8 @@ def create_run_ids(parameters_grid):
     for the git commit of the code, the hash for the knowledge_base being used for testing, the hash for the params of
     the run.
 
-    :param parameters_grid: the parameter grid created from the configuration file :return: the run_ids: a list of run
-    ids
+    :param parameters_grid: the parameter grid created from the configuration file 
+    :return: the run_ids: a list of run ids
     """
     git_commit = subprocess.check_output(
         "git rev-parse --short HEAD", encoding="utf-8", shell=True
@@ -120,3 +123,26 @@ def prepare_mlflow_server():
     except Exception as e:
         tqdm.write(f"Not using remote tracking servers. Error {e}")
         tqdm.write(f"MLflow tracking to local mlruns folder")
+
+def mlflow_log_run(
+        params,
+        retriever_reader_eval_results,
+        idx=None,
+        root_log_path="./logs/root.log",
+        pass_criteria=None,
+        ):
+    with mlflow.start_run(run_name=idx) as run:
+        mlflow.log_params(params)
+        mlflow.log_metrics(
+            {k: v for k, v in retriever_reader_eval_results.items() if v is not None}
+        )
+        if pass_criteria != None:
+            mlflow.set_tag("pass_criteria", pass_criteria)
+        logger.info(f"Run finished successfully")
+        try:
+            mlflow.log_artifact(root_log_path)
+        except Exception:
+            logger.error(
+                f"Could not upload log to artifact server. "
+                f"Still saved in logs/root_complete.log"
+            )

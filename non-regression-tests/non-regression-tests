@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Strict shell: crash if anything goes wrong
+set -euo pipefail
+
+# If already running, exit.
+# If lockfile is present and it contains the PID of a running process, exit
+LOCKFILE=$LOCK_DIR/non-regression-tests/lock
+if [[ -e $LOCKFILE ]] && kill -0 $(cat $LOCKFILE)
+then
+    echo "Another instance of $0 already running with pid $(cat $LOCKFILE). Exiting."
+    exit 1
+fi
+
+# Write current PID to lockfile
+mkdir -p $(dirname $LOCKFILE)
+echo $$ > $LOCKFILE
+
+git fetch origin $TEST_BRANCH
+git reset --hard origin/$TEST_BRANCH
+
+# If there is no new commit since last run, don't run.
+CURRENT_COMMIT=$(git log -n1 --format=format:"%H")
+LAST_COMMIT_FILE=$STATE_DIR/non-regression-tests/last-commit-hash
+if [[ -e $LAST_COMMIT_FILE ]] && [[ $(cat $LAST_COMMIT_FILE) = $CURRENT_COMMIT ]]
+then
+    echo "No new commit since last run. Exiting."
+    exit 0
+fi
+
+mkdir -p $(dirname $LAST_COMMIT_FILE)
+echo $CURRENT_COMMIT > $LAST_COMMIT_FILE
+
+pip install -r requirements.txt
+
+export PYTHONPATH=$SRC_DIR/piaf-ml:$SRC_DIR/non-regression-tests
+python3 $SRC_DIR/non-regression-tests/non-regression-tests.py
+
+rm $LOCKFILE

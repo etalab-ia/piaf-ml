@@ -1,0 +1,1 @@
+0 4 * * * set -a; PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin; . /usr/local/src/non-regression-tests/.env; set +a; /usr/local/bin/non-regression-tests > /var/log/non-regression-tests/$(date -Iseconds) 2>&1

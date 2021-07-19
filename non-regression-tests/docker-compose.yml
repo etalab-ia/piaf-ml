@@ -1,0 +1,33 @@
+services:
+  non-regression-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - SRC_DIR=${SRC_DIR}
+        - BIN_DIR=${BIN_DIR}
+        - LOG_DIR=${LOG_DIR}
+        - TEST_BRANCH=${TEST_BRANCH}
+        - SSH_CONFIG_DIR=${SSH_CONFIG_DIR}
+        - MLFLOW_SSH_USERNAME=${MLFLOW_SSH_USERNAME}
+        - MLFLOW_SSH_HOSTNAME=${MLFLOW_SSH_HOSTNAME}
+    runtime: nvidia
+    depends_on:
+      - elasticsearch
+    secrets:
+      - source: ssh-private-key
+        target: .ssh/id_rsa
+    volumes:
+      - $HOME/.cache/huggingface:/root/.cache/huggingface
+      - ${FQUAD_DATASET}:${DATA_DIR}/non-regression-tests/fquad_dataset.json
+    env_file: .env
+    restart: always
+  elasticsearch:
+    image: "elasticsearch:7.6.2"
+    environment:
+      - discovery.type=single-node
+    restart: always
+
+secrets:
+  ssh-private-key:
+    file: ${MLFLOW_SSH_PRIVATE_KEY}

@@ -46,8 +46,10 @@ def load_25k_test_set(test_corpus_path: str):
     """
     Loads the 25k dataset. The 25k dataset is a csv that must contain the url columns (url, url2, url3, url4) and a
     question column. The former contains the list of proposed fiches' URLs and the latter contains the question sent by
-    an user. :param corpus_path: Path of the file containing the 25k corpus :return: Dict with the questions as key and
-    a meta dict as values, the meta dict containing urls where the answer is and the arborescence of where the answer
+    an user. 
+
+    :param corpus_path: Path of the file containing the 25k corpus 
+    :return: Dict with the questions as key and a meta dict as values, the meta dict containing urls where the answer is and the arborescence of where the answer
     lies
     """
     url_cols = ["url", "url_2", "url_3", "url_4"]
@@ -71,8 +73,10 @@ def compute_retriever_precision(true_fiches, retrieved_results, weight_position=
     and counts how many of them exist in the *true* fiches names
 
 
-    :param retrieved_fiches: :param true_fiches: :param weight_position: Bool indicates if the precision must be
-    calculated with a weighted precision :return:
+    :param retrieved_fiches: 
+    :param true_fiches: 
+    :param weight_position: Bool indicates if the precision must be calculated with a weighted precision 
+    :return:
     """
     retrieved_docs = []
     summed_precision = 0
@@ -108,9 +112,12 @@ def compute_retriever_precision(true_fiches, retrieved_results, weight_position=
 def single_run(parameters):
     """
     Queries ES max_k - min_k times, saving at each step the results in a list. At the end plots the line showing the
-    results obtained. For now we can only vary k. :param min_k: Minimum retriever-k to test :param max_k: Maximum
-    retriever-k to test :param weighted_precision: Whether to take into account the position of the retrieved result in
-    the accuracy computation :return:
+    results obtained. For now we can only vary k. 
+
+    :param min_k: Minimum retriever-k to test 
+    :param max_k: Maximum retriever-k to test 
+    :param weighted_precision: Whether to take into account the position of the retrieved result in the accuracy computation 
+    :return:
     """
     # get parameters
     test_corpus_path = Path(parameters["test_dataset"])
@@ -259,8 +266,9 @@ def prepare_ES_mappings(preprocessing: bool, analyzer_config: Dict[str, Dict]):
     """
     The ES preprocessor analyser is set by default. If we do not want it, we have to remove it from our mappings
 
-    :param analyzer_config: Configuration to use for the ES preprocessor analyzer :param preprocessing: Whether to use
-    preprocessing or not :return: None
+    :param analyzer_config: Configuration to use for the ES preprocessor analyzer 
+    :param preprocessing: Whether to use preprocessing or not 
+    :return: None
     """
     list_mappings = [SBERT_MAPPING, DPR_MAPPING, SPARSE_MAPPING]
     for mapping in list_mappings:
@@ -274,10 +282,13 @@ def load_retriever(
     use_cache=False,
 ):
     """
-    Loads ES if needed and indexes the knowledge_base corpus :param use_cache: Whether to use or not stored embeddings
-    cache (if available) :param preprocessing: Boolean that indicates whether we perform preprocessing or not :param
-    knowledge_base_path: PAth of the folder containing the knowledge_base corpus :param retriever_type: The type of
-    retriever to be used :return: A Retriever object ready to be queried
+    Loads ES if needed and indexes the knowledge_base corpus 
+
+    :param use_cache: Whether to use or not stored embeddings cache (if available) 
+    :param preprocessing: Boolean that indicates whether we perform preprocessing or not 
+    :param knowledge_base_path: PAth of the folder containing the knowledge_base corpus 
+    :param retriever_type: The type of retriever to be used 
+    :return: A Retriever object ready to be queried
     """
     knowledge_base_path = Path(knowledge_base_path)
     if not knowledge_base_path.exists():
@@ -434,11 +445,14 @@ def compute_score(
     """
     Given a Retriever to query and its parameters and a test dataset (couple query->true related doc), computes the
     number of matches found by the Retriever. A match is succesful if the retrieved document is among the true related
-    doc of the test set. :param retriever: A Retriever object :param retriever_top_k: The number of docs to retrieve
-    :param test_dataset: A collection of "query":[relevant_doc_1, relevant_doc_2, ...] :param weight_position: Whether
-    to take into account the position of the retrieved result in the accuracy computation :param filter_level: The name
-    of the filter requested, usually the level from the arborescence : 'theme', 'dossier' .. :return: Returns
-    mean_precision, avg_time, and detailed_results
+    doc of the test set. 
+
+    :param retriever: A Retriever object 
+    :param retriever_top_k: The number of docs to retrieve
+    :param test_dataset: A collection of "query":[relevant_doc_1, relevant_doc_2, ...] 
+    :param weight_position: Whether to take into account the position of the retrieved result in the accuracy computation 
+    :param filter_level: The name of the filter requested, usually the level from the arborescence : 'theme', 'dossier' .. 
+    :return: Returns mean_precision, avg_time, and detailed_results
     """
     summed_precision = 0
     found_fiche = 0
