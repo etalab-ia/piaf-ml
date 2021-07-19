@@ -29,8 +29,6 @@ components:    # define all the building-blocks for Pipeline
       pooling_strategy: reduce_max
   - name: Answerify
     type: AnswerifyDocuments
-    params:
-      ks_retriever: False
   - name: JoinResults
     type: JoinAnswers
     params:
