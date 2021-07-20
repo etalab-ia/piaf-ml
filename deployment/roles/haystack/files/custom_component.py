@@ -95,13 +95,13 @@ class JoinAnswers(BaseComponent):
 
     outgoing_edges = 1
 
-    def __init__(self, threshold_score: float = 0.8, top_k: float = 5):
+    def __init__(self, threshold_score: float = 0.8, top_k: float = 5, max_reader_answer: int = 1):
         """
         :param threshold_score: The threshold that will be used for keeping or not the answer from the readers
         """
         self.threshold_score = threshold_score
         self.top_k = top_k
-        self.max_reader_answer = 1 # Only one answer given from reader
+        self.max_reader_answer = max_reader_answer
 
     def run(self, **kwargs):
         inputs = kwargs["inputs"]

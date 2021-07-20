@@ -16,12 +16,12 @@ components:    # define all the building-blocks for Pipeline
     type: ElasticsearchRetriever
     params:
       document_store: ElasticsearchDocumentStore    # params can reference other components defined in the YAML
-      top_k: 1
+      top_k: 5
   - name: TitleEmbRetriever
     type: TitleEmbeddingRetriever
     params:
       document_store: ElasticsearchDocumentStore    # params can reference other components defined in the YAML
-      top_k: 1
+      top_k: 5
       embedding_model: distiluse-base-multilingual-cased
       model_format: sentence_transformers
       use_gpu: False
@@ -33,11 +33,16 @@ components:    # define all the building-blocks for Pipeline
     type: JoinAnswers
     params:
       threshold_score: 0.70
-      top_k: 5
-  - name: Join
+      top_k: 4
+      max_reader_answer: 1
+  - name: Join_reader
     type: JoinDocumentsCustom
     params:
-      ks_retriever: False
+      ks_retriever: [1, 1]
+  - name: Join_retriever
+    type: JoinDocumentsCustom
+    params:
+      ks_retriever: [2, 2]
   - name: Reader       # custom-name for the component; helpful for visualization & debugging
     type: TransformersReader    # Haystack Class name for the component
     params:
@@ -73,12 +78,14 @@ pipelines:
         inputs: [Query]
       - name: ESRetriever
         inputs: [Query]
-      - name: Join
+      - name: Join_reader
         inputs: [TitleEmbRetriever,ESRetriever]
       - name: Reader
-        inputs: [Join]
+        inputs: [Join_reader]
+      - name: Join_retriever
+        inputs: [TitleEmbRetriever,ESRetriever]
       - name: Answerify
-        inputs: [Join]
+        inputs: [Join_retriever]
       - name: JoinResults
         inputs: [Reader, Answerify]
 
