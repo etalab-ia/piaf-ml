@@ -12,12 +12,11 @@ class LabelElasticsearchRetriever(ElasticsearchRetriever):
 
     def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[Document]:
         #  TODO Query labels
-        documents = self.document_store.query(None, {"question": [query]}, 1, self.custom_query, "label_elasticsearch")
-        logger.warning("plop")
-        logger.warning(documents)
+        documents = self.document_store.query(query, None, 1, None, "label_elasticsearch")
+        first_doc = documents[0].to_dict()
         if len(documents) > 0:
             logger.warning("retrieving documents from label")
-            return self.document_store.query(None, {"_id": [documents[0]["document_id"]]}, 1, self.custom_query, index)
+            return self.document_store.get_documents_by_id([first_doc["meta"]["document_id"]], "document_elasticsearch")
         else:
             documents = super().retrieve(query, filters, top_k, index)
         return documents
