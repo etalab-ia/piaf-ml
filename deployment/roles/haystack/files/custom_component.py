@@ -65,6 +65,7 @@ class AnswerifyDocuments(BaseComponent):
         if documents:
 
             for doc in documents:
+                doc.meta["answerified"] = True
                 cur_answer = {
                     "query": doc.meta["name"],
                     "answer": doc.text,
