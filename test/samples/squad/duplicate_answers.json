@@ -2,6 +2,81 @@
     "version": "besoindaide_PIAF_V5.json",
     "data": [
         {
+            "theme": "Autres",
+            "sous_theme": "Professionnels",
+            "dossier": "",
+            "id": "501",
+            "paragraphs": [
+                {
+                    "context": "Les responsables d'un fichier et les sous-traitants doivent\u00a0prendre toutes les mesures n\u00e9cessaires pour assurer la s\u00e9curit\u00e9 et la confidentialit\u00e9 des donn\u00e9es personnelles qu'ils traitent\u00a0:Des mesures de s\u00e9curit\u00e9 physiques : s\u00e9curit\u00e9 des acc\u00e8s aux locaux ;Des mesures de s\u00e9curit\u00e9 informatiques : antivirus, s\u00e9curisation des mots de passe, etc.Ils doivent\u00a0\u00e9galement veiller \u00e0 ce que seuls les destinataires autoris\u00e9s puissent acc\u00e9der aux donn\u00e9es.En savoir plus :Guide sur la s\u00e9curit\u00e9 des donn\u00e9es personnelles.",
+                    "qas": [
+                        {
+                            "question": "Les mesures de s\u00e9curit\u00e9, c'est quoi ?",
+                            "answers": [
+                                {
+                                    "text": "Les responsables d'un fichier et les sous-traitants doivent\u00a0prendre toutes les mesures n\u00e9cessaires pour assurer la s\u00e9curit\u00e9 et la confidentialit\u00e9 des donn\u00e9es personnelles qu'ils traitent\u00a0:Des mesures de s\u00e9curit\u00e9 physiques : s\u00e9curit\u00e9 des acc\u00e8s aux locaux ;Des mesures de s\u00e9curit\u00e9 informatiques : antivirus, s\u00e9curisation des mots de passe, etc.Ils doivent\u00a0\u00e9galement veiller \u00e0 ce que seuls les destinataires autoris\u00e9s puissent acc\u00e9der aux donn\u00e9es",
+                                    "answer_start": 0
+                                }
+                            ],
+                            "is_impossible": false
+                        }
+                    ]
+                }
+            ],
+            "title": "Les mesures de s\u00e9curit\u00e9, c'est quoi ?",
+            "link": "https://www.cnil.fr/cnil-direct/question/les-mesures-de-securite-cest-quoi"
+        },
+        {
+            "theme": "Internet",
+            "sous_theme": "Particuliers",
+            "dossier": "",
+            "id": "375",
+            "paragraphs": [
+                {
+                    "context": "L'hame\u00e7onnage ou phishingest une forme d'escroquerie sur internet.Le fraudeur se fait passer pour un organisme que vous connaissez (banque, service des imp\u00f4ts, CAF, etc.), en utilisant le logo et le nom de cet organisme. Il vous envoie un mail vous demandant g\u00e9n\u00e9ralement de\u00a0\"mettre \u00e0 jour\" ou de \"confirmer vos informations suite \u00e0 un incident technique\", notamment vos coordonn\u00e9es bancaires (num\u00e9ro de compte, codes personnels, etc.).Attention !Ne r\u00e9pondez jamais \u00e0 ces messages, ne cliquez pas sur les liens, n'ouvrez pas les pi\u00e8ces jointes !Que faire ?Signalez les escroqueries aupr\u00e8s du sitewww.internet-signalement.gouv.frSupprimez les messages puis videz la corbeille.S'il s'agit de votre messagerie professionnelle, transf\u00e9rez courriels au service informatique et au responsable de la s\u00e9curit\u00e9 des syst\u00e8mes d'information de votre employeur pour v\u00e9rification. Attendez leur r\u00e9ponse avant de supprimer le courrier \u00e9lectronique.Allez sur la plateformecybermalveillance.gouv.fr: que vous soyez professionnel ou particulier, vous y trouverez des conseils et serez guid\u00e9s pour tenter d'identifier la nature de l'incident dont vous \u00eates victime.Contactez, si vous le souhaitez, Info Escroqueries au 0\u00a0805\u00a0805\u00a0817\u00a0 (prix d'un appel local depuis un poste fixe ; ajouter 0.06 euros/minute depuis un t\u00e9l\u00e9phone mobile) - Du lundi au vendredi de 9h \u00e0 18hEn savoir plus :ici",
+                    "qas": [
+                        {
+                            "question": "Le phishing, c'est quoi ?",
+                            "answers": [
+                                {
+                                    "text": "L'hame\u00e7onnage ou phishingest une forme d'escroquerie sur internet.Le fraudeur se fait passer pour un organisme que vous connaissez (banque, service des imp\u00f4ts, CAF, etc",
+                                    "answer_start": 0
+                                }
+                            ],
+                            "is_impossible": false
+                        }
+                    ]
+                }
+            ],
+            "title": "Le phishing, c'est quoi ?",
+            "link": "https://www.cnil.fr/cnil-direct/question/le-phishing-cest-quoi"
+        },
+        {
+            "theme": "Internet",
+            "sous_theme": "Particuliers",
+            "dossier": "",
+            "id": "397",
+            "paragraphs": [
+                {
+                    "context": "G\u00e9n\u00e9ralement, on d\u00e9finit le cloud computing comme le fait d'utiliser des ressources informatiques \u00e0 distance(via internet), par exemple pour sauvegarder des documents, des fichiers, etc. sur des serveurs mis \u00e0 disposition par un prestataire.Le cloud se caract\u00e9rise par la simplicit\u00e9 d'un service \u00e0 la demande,\u00a0le paiement \u00e0 l'usage, un acc\u00e8s l\u00e9ger depuis tout type de terminal et enfin, par lavirtualisationet la mise en commun de ressources qui peuvent \u00eatre r\u00e9parties sur le monde entier.",
+                    "qas": [
+                        {
+                            "question": "Le cloud computing, c'est quoi ?",
+                            "answers": [
+                                {
+                                    "text": "G\u00e9n\u00e9ralement, on d\u00e9finit le cloud computing comme le fait d'utiliser des ressources informatiques \u00e0 distance(via internet), par exemple pour sauvegarder des documents, des fichiers, etc. sur des serveurs mis \u00e0 disposition par un prestataire",
+                                    "answer_start": 0
+                                }
+                            ],
+                            "is_impossible": false
+                        }
+                    ]
+                }
+            ],
+            "title": "Le cloud computing, c'est quoi ?",
+            "link": "https://www.cnil.fr/cnil-direct/question/le-cloud-computing-cest-quoi"
+        },
+        {
             "title": "Un cookie : qu'est-ce que c'est ?",
             "theme": " Internet",
             "sous_theme": " Particuliers ",
@@ -26,34 +101,34 @@
                             "answers": [
                                 {
                                     "text": "Un cookie est un petit fichier informatique, un traceur, d\u00e9pos\u00e9 et lu par exemple lors de la consultation d'un site internet, de la lecture d'un courrier \u00e9lectronique, de l'installation ou de l'utilisation d'un logiciel ou d'une application mobile et ce, quel que soit le type de terminal utilis\u00e9 (ordinateur, smartphone, liseuse num\u00e9rique, console de jeux vid\u00e9os connect\u00e9e \u00e0 Internet, etc.)",
-                                "answer_start": 0
-                            }
-                        ],
-                        "is_impossible": false
-                    },
-                    {
-                        "question": "A quoi \u00e7a sert un cookie ?",
-                        "answers": [
-                            {
-                                "text": "Un cookie est un petit fichier informatique, un traceur, d\u00e9pos\u00e9 et lu par exemple lors de la consultation d'un site internet, de la lecture d'un courrier \u00e9lectronique, de l'installation ou de l'utilisation d'un logiciel ou d'une application mobile et ce, quel que soit le type de terminal utilis\u00e9 (ordinateur, smartphone, liseuse num\u00e9rique, console de jeux vid\u00e9os connect\u00e9e \u00e0 Internet, etc.)",
-                                "answer_start": 0
-                            }
-                        ],
-                        "is_impossible": false
-                    },
-                    {
-                        "question": "C'est quoi les cookies ?",
-                        "answers": [
-                            {
-                                "text": "Un cookie est un petit fichier informatique, un traceur, d\u00e9pos\u00e9 et lu par exemple lors de la consultation d'un site internet, de la lecture d'un courrier \u00e9lectronique, de l'installation ou de l'utilisation d'un logiciel ou d'une application mobile et ce, quel que soit le type de terminal utilis\u00e9 (ordinateur, smartphone, liseuse num\u00e9rique, console de jeux vid\u00e9os connect\u00e9e \u00e0 Internet, etc.)",
-                                "answer_start": 0
-                            }
-                        ],
-                        "is_impossible": false
-                    }
-                ]
-            }
-        ]
-    }
+                                    "answer_start": 0
+                                }
+                            ],
+                            "is_impossible": false
+                        },
+                        {
+                            "question": "A quoi \u00e7a sert un cookie ?",
+                            "answers": [
+                                {
+                                    "text": "Un cookie est un petit fichier informatique, un traceur, d\u00e9pos\u00e9 et lu par exemple lors de la consultation d'un site internet, de la lecture d'un courrier \u00e9lectronique, de l'installation ou de l'utilisation d'un logiciel ou d'une application mobile et ce, quel que soit le type de terminal utilis\u00e9 (ordinateur, smartphone, liseuse num\u00e9rique, console de jeux vid\u00e9os connect\u00e9e \u00e0 Internet, etc.)",
+                                    "answer_start": 0
+                                }
+                            ],
+                            "is_impossible": false
+                        },
+                        {
+                            "question": "C'est quoi les cookies ?",
+                            "answers": [
+                                {
+                                    "text": "Un cookie est un petit fichier informatique, un traceur, d\u00e9pos\u00e9 et lu par exemple lors de la consultation d'un site internet, de la lecture d'un courrier \u00e9lectronique, de l'installation ou de l'utilisation d'un logiciel ou d'une application mobile et ce, quel que soit le type de terminal utilis\u00e9 (ordinateur, smartphone, liseuse num\u00e9rique, console de jeux vid\u00e9os connect\u00e9e \u00e0 Internet, etc.)",
+                                    "answer_start": 0
+                                }
+                            ],
+                            "is_impossible": false
+                        }
+                    ]
+                }
+            ]
+        }
     ]
 }

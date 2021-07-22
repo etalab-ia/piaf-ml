@@ -16,6 +16,7 @@ fi
 mkdir -p $(dirname $LOCKFILE)
 echo $$ > $LOCKFILE
 
+cd $SRC_DIR/piaf-ml
 git fetch origin $TEST_BRANCH
 git reset --hard origin/$TEST_BRANCH
 

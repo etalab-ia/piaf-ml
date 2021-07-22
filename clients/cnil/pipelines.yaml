@@ -58,6 +58,8 @@ components:    # define all the building-blocks for Pipeline
     type: PreProcessor
   - name: FileTypeClassifier
     type: FileTypeClassifier
+  - name: MergeOverlappingAnswers
+    type: MergeOverlappingAnswers
   - name: RankAnswersWithWeigth
     type: RankAnswersWithWeigth
 
@@ -81,8 +83,10 @@ pipelines:
         inputs: [TitleEmbRetriever,ESRetriever]
       - name: Reader
         inputs: [Join]
-      - name: RankAnswersWithWeigth
+      - name: MergeOverlappingAnswers
         inputs: [Reader]
+      - name: RankAnswersWithWeigth
+        inputs: [MergeOverlappingAnswers]
 
   - name: indexing
     type: Indexing
