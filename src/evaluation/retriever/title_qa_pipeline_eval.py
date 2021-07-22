@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.config.title_qa_pipeline_config import parameters
-from src.evaluation.utils.custom_pipelines import TitleQAPipeline
+from src.evaluation.utils.pipelines.custom_pipelines import TitleQAPipeline
 from src.evaluation.utils.elasticsearch_management import (delete_indices,
                                                            launch_ES,
                                                            prepare_mapping)

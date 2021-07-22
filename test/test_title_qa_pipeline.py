@@ -4,7 +4,7 @@ from pathlib import Path
 from haystack.document_store.base import BaseDocumentStore
 
 from src.evaluation.utils.utils_eval import eval_titleQA_pipeline
-from src.evaluation.utils.custom_pipelines import TitleQAPipeline
+from src.evaluation.utils.pipelines.custom_pipelines import TitleQAPipeline
 
 
 @pytest.mark.elasticsearch
