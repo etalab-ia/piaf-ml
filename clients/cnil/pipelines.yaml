@@ -58,6 +58,8 @@ components:    # define all the building-blocks for Pipeline
     type: PreProcessor
   - name: FileTypeClassifier
     type: FileTypeClassifier
+  - name: RankAnswersWithWeigth
+    type: RankAnswersWithWeigth
 
 pipelines:
   - name: query    # a sample extractive-qa Pipeline
@@ -79,6 +81,8 @@ pipelines:
         inputs: [TitleEmbRetriever,ESRetriever]
       - name: Reader
         inputs: [Join]
+      - name: RankAnswersWithWeigth
+        inputs: [Reader]
 
   - name: indexing
     type: Indexing
