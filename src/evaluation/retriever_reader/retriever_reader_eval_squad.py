@@ -25,7 +25,7 @@ from tqdm import tqdm
 from src.evaluation.utils.utils_eval import save_results, \
     full_eval_retriever_reader, PiafEvalRetriever,PiafEvalReader
 from src.evaluation.utils.custom_pipelines import \
-    RetrieverReaderEvaluationPipeline, TitleBM25QAEvaluationPipeline
+    RetrieverReaderEvaluationPipeline, TitleBM25QAEvaluationPipeline, HottestReaderPipeline
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.elasticsearch_management import delete_indices, \
    launch_ES, prepare_mapping
@@ -65,6 +65,7 @@ def single_run(
     k_title_retriever = kwargs["k_title_retriever"]
     k_reader_per_candidate = kwargs["k_reader_per_candidate"]
     k_reader_total = kwargs["k_reader_total"]
+    threshold_score = kwargs["threshold_score"]
     preprocessing = kwargs["preprocessing"]
     reader_model_version = kwargs["reader_model_version"]
     retriever_model_version = kwargs["retriever_model_version"]
@@ -129,9 +130,9 @@ def single_run(
         )
         retriever = ElasticsearchRetriever(document_store=document_store)
         p  = RetrieverReaderEvaluationPipeline(
-                                               reader = reader, 
-                                               retriever = retriever, 
-                                               eval_retriever = eval_retriever, 
+                                               reader = reader,
+                                               retriever = retriever,
+                                               eval_retriever = eval_retriever,
                                                eval_reader = eval_reader
                                                )
 
@@ -160,9 +161,9 @@ def single_run(
             emb_extraction_layer=-1,
         )
         p  = RetrieverReaderEvaluationPipeline(
-                                               reader = reader, 
-                                               retriever = retriever, 
-                                               eval_retriever = eval_retriever, 
+                                               reader = reader,
+                                               retriever = retriever,
+                                               eval_retriever = eval_retriever,
                                                eval_reader = eval_reader
                                                )
 
@@ -190,9 +191,9 @@ def single_run(
             use_gpu=GPU_AVAILABLE,
         )
         p  = RetrieverReaderEvaluationPipeline(
-                                               reader = reader, 
-                                               retriever = retriever, 
-                                               eval_retriever = eval_retriever, 
+                                               reader = reader,
+                                               retriever = retriever,
+                                               eval_retriever = eval_retriever,
                                                eval_reader = eval_reader
                                                )
 
@@ -222,7 +223,7 @@ def single_run(
         )
         retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
         p = TitleBM25QAEvaluationPipeline(reader=reader,
-                                          retriever_title=retriever, 
+                                          retriever_title=retriever,
                                           retriever_bm25=retriever_bm25,
                                           k_title_retriever=k_title_retriever,
                                           k_bm25_retriever=k_retriever,
@@ -257,11 +258,48 @@ def single_run(
             emb_extraction_layer=-1,
         )
         p  = RetrieverReaderEvaluationPipeline(
-                                               reader = reader, 
-                                               retriever = retriever, 
-                                               eval_retriever = eval_retriever, 
+                                               reader = reader,
+                                               retriever = retriever,
+                                               eval_retriever = eval_retriever,
                                                eval_reader = eval_reader
                                                )
+
+    elif retriever_type == "hot_reader":
+        document_store = ElasticsearchDocumentStore(
+            host="localhost",
+            username="",
+            password="",
+            index=doc_index,
+            search_fields=["name", "text"],
+            create_index=False,
+            embedding_field="emb",
+            embedding_dim=768,
+            excluded_meta_data=["emb"],
+            similarity="cosine",
+            custom_mapping=SQUAD_MAPPING,
+        )
+        retriever = TitleEmbeddingRetriever(
+            document_store=document_store,
+            embedding_model="distilbert-base-multilingual-cased",
+            model_version=retriever_model_version,
+            use_gpu=GPU_AVAILABLE,
+            model_format="transformers",
+            pooling_strategy="reduce_max",
+            emb_extraction_layer=-1,
+        )
+        retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
+        p = HottestReaderPipeline(
+            reader=reader,
+            retriever_title=retriever,
+            retriever_bm25=retriever_bm25,
+            k_title_retriever=k_title_retriever,
+            k_bm25_retriever=k_retriever,
+            threshold_score=threshold_score,
+        )
+
+        # used to make sure the p.run method returns enough candidates
+        k_retriever = max(k_retriever, k_title_retriever)
+
 
     else:
         logging.error(
@@ -277,15 +315,15 @@ def single_run(
         preprocessor=preprocessor,
     )
 
-    if retriever_type in ["sbert", "dpr", "title_bm25", "title"]:
+    if retriever_type in ["sbert", "dpr", "title_bm25", "title", "hot_reader"]:
         document_store.update_embeddings(retriever, index=doc_index)
 
     retriever_reader_eval_results = {}
     try:
         start = time.time()
-        full_eval_retriever_reader(document_store=document_store, 
+        full_eval_retriever_reader(document_store=document_store,
                                     pipeline=p,
-                                    k_retriever=k_retriever, 
+                                    k_retriever=k_retriever,
                                     k_reader_total=k_reader_total,
                                     label_index=label_index)
 
@@ -319,21 +357,21 @@ def optimize(parameters, n_calls, result_file_path, gpu_id = -1,
             elasticsearch_hostname = "localhost",
             elasticsearch_port = 9200):
     """ Returns a list of n_calls tuples [(x1, v1), ...] where the lists xi are
-    the parameter values for each evaluation and the dictionaries vi are the run 
-    results. The parameter values for the successive runs are determined by the 
+    the parameter values for each evaluation and the dictionaries vi are the run
+    results. The parameter values for the successive runs are determined by the
     bayesian optimization method gp_minimize.
     """
- 
+
     dimensions = create_dimensions_from_parameters(parameters)
 
-    # TODO: optimize should return a generator rather than a list to be 
+    # TODO: optimize should return a generator rather than a list to be
     # consistent with the functions grid_search and tune_pipeline.
     results = []
 
     @use_named_args(dimensions=dimensions)
     def single_run_optimization(**kwargs):
-        result = single_run(gpu_id = gpu_id, 
-            elasticsearch_hostname = elasticsearch_hostname, 
+        result = single_run(gpu_id = gpu_id,
+            elasticsearch_hostname = elasticsearch_hostname,
             elasticsearch_port = elasticsearch_port, **kwargs)
 
         results.append((None, kwargs, result))
@@ -476,4 +514,4 @@ if __name__ == "__main__":
     for (run_id, params, results) in runs:
         clean_log()
         mlflow_log_run(params, results, idx=run_id)
- 
+
