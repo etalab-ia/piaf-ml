@@ -23,7 +23,7 @@ class LabelElasticsearchRetriever(ElasticsearchRetriever):
             doc = Document.from_dict(doc, field_map={})
             return [doc]
         else:
-            documents = super().retrieve(query, filters, top_k, index)
+            documents = super().retrieve(query, filters, top_k, "document_elasticsearch")
             for doc in documents:
                 doc = doc.to_dict()
                 doc["meta"]["weight"] = 1
