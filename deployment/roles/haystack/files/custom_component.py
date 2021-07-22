@@ -16,9 +16,19 @@ class LabelElasticsearchRetriever(ElasticsearchRetriever):
         first_doc = documents[0].to_dict()
         if len(documents) > 0:
             logger.warning("retrieving documents from label")
-            return self.document_store.get_documents_by_id([first_doc["meta"]["document_id"]], "document_elasticsearch")
+            documents = self.document_store.get_documents_by_id([first_doc["meta"]["document_id"]], "document_elasticsearch")
+            doc = documents[0].to_dict()
+            doc["meta"]["weight"] = 99
+            logger.warning(doc)
+            doc = Document.from_dict(doc, field_map={})
+            return [doc]
         else:
             documents = super().retrieve(query, filters, top_k, index)
+            for doc in documents:
+                doc = doc.to_dict()
+                doc["meta"]["weight"] = 1
+                doc = Document.from_dict(doc, field_map={})
+                
         return documents
 
 
@@ -31,7 +41,12 @@ class TitleEmbeddingRetriever(EmbeddingRetriever):
         """
         texts = [d.meta["name"] for d in docs]
 
-        return self.embedding_encoder.embed(texts)
+        documents = self.embedding_encoder.embed(texts)
+        for doc in documents:
+                doc = doc.to_dict()
+                doc["meta"]["weight"] = 10
+                doc = Document.from_dict(doc, field_map={})
+        return documents
 
 
 class JoinDocumentsCustom(BaseComponent):
@@ -128,7 +143,19 @@ class MergeOverlappingAnswers():
         return output, "output_1"
 
 
+class RankAnswersWithWeigth(BaseComponent):
+    """
+    A node that ranks the answers from the reader considering the weight they have
+    """
+    outgoing_edges=1
 
+    def run(self, **kwargs):
+        answers = kwargs["answers"]
+        answers_dict_format = [a if isinstance(a, dict) else a.to_dict() for a in answers]
+        sort_by_weigth(answers_dict_format)
+        output = kwargs.copy()
+        output["answers"] = answers_dict_format
+        return output, "output_1"
 
 def merge_strings(str1, str2):
     """
@@ -177,3 +204,33 @@ def merge_strings(str1, str2):
         return str1 + str2[best_s:]
     else:
         return str2 + str1[best_s:]
+
+
+
+
+def get_weight(doc):
+    logger.warning(type(doc))
+    return doc["meta"].get('weight') or 0
+
+def sort_by_weigth(documents: List[dict]) -> List[dict]:
+    """
+    This function takes a list of "to_dict" documents as input and sort them
+    based on a property "weight" located in the "meta" property of the doc.
+    Ex: 
+    documents = [
+        {'Name': 'Alan Turing', 'meta': { 'weight': 10000}},
+        {'Name': 'Sharon Lin', 'meta': { 'weight': 8000}},
+        {'Name': 'John Hopkins', 'meta': {},
+        {'Name': 'Mikhail Tal', 'meta': { 'weight': 15000}}
+    ]
+    returns after applying sort_by_weigth(documents)
+    documents = [
+        {'Name': 'Mikhail Tal', 'meta': { 'weight': 15000}},
+        {'Name': 'Alan Turing', 'meta': { 'weight': 10000}},
+        {'Name': 'Sharon Lin', 'meta': { 'weight': 8000}},
+        {'Name': 'John Hopkins', 'meta':{} }
+    ]
+    """
+    documents.sort(key=get_weight,  reverse=True)    
+
+
