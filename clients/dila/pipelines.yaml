@@ -63,6 +63,22 @@ components:    # define all the building-blocks for Pipeline
               french_stop:
                 stopwords: _french_
                 type: stop
+  - name: LabelElasticsearchDocumentStore
+    type: ElasticsearchDocumentStore
+    params:
+      host: elasticsearch
+      index: label_elasticsearch
+      embedding_dim: 512
+      search_fields: [ question ]
+      create_index: False
+      embedding_field: emb
+      similarity: cosine
+  - name: LabelESRetriever
+    type: LabelElasticsearchRetriever
+    params:
+      document_store: LabelElasticsearchDocumentStore    # params can reference other components defined in the YAML
+      top_k: 5
+      weight_when_document_found: 99
   - name: ESRetriever
     type: ElasticsearchRetriever
     params:
@@ -81,7 +97,7 @@ components:    # define all the building-blocks for Pipeline
   - name: Join
     type: JoinDocumentsCustom
     params:
-      ks_retriever: [1, 1]
+      ks_retriever: [1, 1, 1]
   - name: Reader       # custom-name for the component; helpful for visualization & debugging
     type: TransformersReader    # Haystack Class name for the component
     params:
@@ -103,9 +119,13 @@ pipelines:
         inputs: [Query]
       - name: ESRetriever
         inputs: [Query]
+      - name: LabelESRetriever
+        inputs: [Query]
       - name: Join
-        inputs: [TitleEmbRetriever,ESRetriever]
+        inputs: [TitleEmbRetriever,ESRetriever,LabelESRetriever]
       - name: Reader
         inputs: [Join]
       - name: MergeOverlappingAnswers
         inputs: [Reader]
+      - name: RankAnswersWithWeigth
+        inputs: [MergeOverlappingAnswers]
