@@ -97,7 +97,7 @@ components:    # define all the building-blocks for Pipeline
   - name: Join
     type: JoinDocumentsCustom
     params:
-      ks_retriever: [1, 1]
+      ks_retriever: [1, 1, 1]
   - name: Reader       # custom-name for the component; helpful for visualization & debugging
     type: TransformersReader    # Haystack Class name for the component
     params:
@@ -124,7 +124,7 @@ pipelines:
       - name: LabelESRetriever
         inputs: [Query]
       - name: Join
-        inputs: [TitleEmbRetriever,LabelESRetriever,ESRetriever]
+        inputs: [TitleEmbRetriever,ESRetriever,LabelESRetriever]
       - name: Reader
         inputs: [Join]
       - name: MergeOverlappingAnswers

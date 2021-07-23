@@ -1,5 +1,4 @@
 from typing import Dict, List, Optional
-import logging
 
 from haystack.document_store import ElasticsearchDocumentStore
 from haystack.document_store.base import BaseDocumentStore
@@ -8,8 +7,6 @@ from haystack.schema import BaseComponent
 from haystack.retriever.dense import EmbeddingRetriever
 import numpy as np
 from haystack import Document
-
-logger = logging.getLogger(__name__)
 
 
 class LabelElasticsearchRetriever(ElasticsearchRetriever):
