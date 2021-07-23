@@ -10,8 +10,59 @@ components:    # define all the building-blocks for Pipeline
       search_fields: text
       create_index: False
       embedding_field: emb
-      # excluded_meta_data: [emb]
+      excluded_meta_data: [emb]
       similarity: cosine
+      custom_mapping:
+        mappings:
+          dynamic_templates:
+          - strings:
+              mapping:
+                type: keyword
+              match_mapping_type: string
+              path_match: '*'
+          properties:
+            emb:
+              dims: 512
+              type: dense_vector
+            name:
+              boost: 1
+              type: text
+            text:
+              type: text
+        settings:
+          analysis:
+            analyzer:
+              default:
+                filter:
+                - french_elision
+                - lowercase
+                - french_stop
+                - french_stemmer
+                tokenizer: standard
+            filter:
+              french_elision:
+                articles:
+                - l
+                - m
+                - t
+                - qu
+                - n
+                - s
+                - j
+                - d
+                - c
+                - jusqu
+                - quoiqu
+                - lorsqu
+                - puisqu
+                articles_case: true
+                type: elision
+              french_stemmer:
+                language: light_french
+                type: stemmer
+              french_stop:
+                stopwords: _french_
+                type: stop
   - name: ESRetriever
     type: ElasticsearchRetriever
     params:
@@ -53,25 +104,9 @@ components:    # define all the building-blocks for Pipeline
       return_no_answers: False
       use_gpu: -1
       top_k: 5
-  - name: TextFileConverter
-    type: TextConverter
-  - name: PDFFileConverter
-    type: PDFToTextConverter
-  - name: Preprocessor
-    type: PreProcessor
-  - name: FileTypeClassifier
-    type: FileTypeClassifier
 
 pipelines:
-  - name: query    # a sample extractive-qa Pipeline
-    type: Query
-    nodes:
-      - name: ESRetriever
-        inputs: [Query]
-      - name: Reader
-        inputs: [ESRetriever]
-
-  - name: query2    # a sample extractive-qa Pipeline
+  - name: query
     type: Query
     nodes:
       - name: TitleEmbRetriever
@@ -88,17 +123,3 @@ pipelines:
         inputs: [Join_retriever]
       - name: JoinResults
         inputs: [Reader, Answerify]
-
-  - name: indexing
-    type: Indexing
-    nodes:
-      - name: FileTypeClassifier
-        inputs: [File]
-      - name: TextFileConverter
-        inputs: [FileTypeClassifier.output_1]
-      - name: PDFFileConverter
-        inputs: [FileTypeClassifier.output_2]
-      - name: Preprocessor
-        inputs: [PDFFileConverter, TextFileConverter]
-      - name: ElasticsearchDocumentStore
-        inputs: [Preprocessor]
