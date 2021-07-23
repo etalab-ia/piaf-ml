@@ -7,18 +7,69 @@ components:    # define all the building-blocks for Pipeline
       host: elasticsearch
       index: document_elasticsearch
       embedding_dim: 512
-      search_fields: text
+      search_fields: [text, name]
       create_index: False
       embedding_field: emb
-      # excluded_meta_data: [emb]
+      excluded_meta_data: [emb]
       similarity: cosine
+      custom_mapping:
+        mappings:
+          dynamic_templates:
+          - strings:
+              mapping:
+                type: keyword
+              match_mapping_type: string
+              path_match: '*'
+          properties:
+            emb:
+              dims: 512
+              type: dense_vector
+            name:
+              boost: 1
+              type: text
+            text:
+              type: text
+        settings:
+          analysis:
+            analyzer:
+              default:
+                filter:
+                - french_elision
+                - lowercase
+                - french_stop
+                - french_stemmer
+                tokenizer: standard
+            filter:
+              french_elision:
+                articles:
+                - l
+                - m
+                - t
+                - qu
+                - n
+                - s
+                - j
+                - d
+                - c
+                - jusqu
+                - quoiqu
+                - lorsqu
+                - puisqu
+                articles_case: true
+                type: elision
+              french_stemmer:
+                language: light_french
+                type: stemmer
+              french_stop:
+                stopwords: _french_
+                type: stop
   - name: LabelElasticsearchDocumentStore
     type: ElasticsearchDocumentStore
     params:
       host: elasticsearch
       index: label_elasticsearch
       embedding_dim: 512
-      search_fields: [question]
+      search_fields: [ question ]
       create_index: False
       embedding_field: emb
       similarity: cosine
@@ -46,7 +97,7 @@ components:    # define all the building-blocks for Pipeline
   - name: Join
     type: JoinDocumentsCustom
     params:
-      ks_retriever: False
+      ks_retriever: [1, 1]
   - name: Reader       # custom-name for the component; helpful for visualization & debugging
     type: TransformersReader    # Haystack Class name for the component
     params:
@@ -57,29 +108,13 @@ components:    # define all the building-blocks for Pipeline
       return_no_answers: False
       use_gpu: -1
       top_k: 5
-  - name: TextFileConverter
-    type: TextConverter
-  - name: PDFFileConverter
-    type: PDFToTextConverter
-  - name: Preprocessor
-    type: PreProcessor
-  - name: FileTypeClassifier
-    type: FileTypeClassifier
   - name: MergeOverlappingAnswers
     type: MergeOverlappingAnswers
   - name: RankAnswersWithWeigth
     type: RankAnswersWithWeigth
 
 pipelines:
-  - name: query    # a sample extractive-qa Pipeline
-    type: Query
-    nodes:
-      - name: ESRetriever
-        inputs: [Query]
-      - name: Reader
-        inputs: [ESRetriever]
-
-  - name: query2    # a sample extractive-qa Pipeline
+  - name: query
     type: Query
     nodes:
       - name: TitleEmbRetriever
@@ -96,17 +131,3 @@ pipelines:
         inputs: [Reader]
       - name: RankAnswersWithWeigth
         inputs: [MergeOverlappingAnswers]
-
-  - name: indexing
-    type: Indexing
-    nodes:
-      - name: FileTypeClassifier
-        inputs: [File]
-      - name: TextFileConverter
-        inputs: [FileTypeClassifier.output_1]
-      - name: PDFFileConverter
-        inputs: [FileTypeClassifier.output_2]
-      - name: Preprocessor
-        inputs: [PDFFileConverter, TextFileConverter]
-      - name: ElasticsearchDocumentStore
-        inputs: [Preprocessor]

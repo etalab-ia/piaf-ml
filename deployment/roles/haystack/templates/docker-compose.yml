@@ -10,7 +10,7 @@ services:
       - "{{ client_haystack_data_folder }}:/home/user/data"
     environment:
       - DB_HOST=elasticsearch
-      - QUERY_PIPELINE_NAME=query2
+      - QUERY_PIPELINE_NAME=query
       - ROOT_PATH=/{{ client }}
     restart: always
     depends_on:
