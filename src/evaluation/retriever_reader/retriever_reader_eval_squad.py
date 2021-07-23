@@ -509,7 +509,7 @@ if __name__ == "__main__":
         parameters,
         parameter_tuning_options,
         elasticsearch_hostname = os.getenv("ELASTICSEARCH_HOSTNAME") or "localhost",
-        elasticsearch_port = int(os.getenv("ELASTICSEARCH_PORT")) or 9200)
+        elasticsearch_port = int(os.getenv("ELASTICSEARCH_PORT") or 9200))
 
     for (run_id, params, results) in runs:
         clean_log()
