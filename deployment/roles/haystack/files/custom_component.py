@@ -18,7 +18,6 @@ class LabelElasticsearchRetriever(ElasticsearchRetriever):
      If not, we lquery the document_elasticsearch as before
      """
 
-
     def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[Document]:
         documents = self.document_store.query(query, None, 1, None, "label_elasticsearch")
         first_doc = documents[0].to_dict()
@@ -28,14 +27,7 @@ class LabelElasticsearchRetriever(ElasticsearchRetriever):
             doc["meta"]["weight"] = 99
             doc = Document.from_dict(doc, field_map={})
             return [doc]
-        else:
-            documents = super().retrieve(query, filters, top_k, "document_elasticsearch")
-            for doc in documents:
-                doc = doc.to_dict()
-                doc["meta"]["weight"] = 1
-                doc = Document.from_dict(doc, field_map={})
-
-        return documents
+        return []
 
 
 class TitleEmbeddingRetriever(EmbeddingRetriever):

@@ -23,7 +23,12 @@ components:    # define all the building-blocks for Pipeline
       embedding_field: emb
       similarity: cosine
   - name: ESRetriever
-    type: LabelElasticsearchRetriever
+    type: ElasticsearchRetriever
+    params:
+      document_store: ElasticsearchDocumentStore    # params can reference other components defined in the YAML
+      top_k: 5
+  - name: LabelESRetriever
+    type: ElasticsearchRetriever
     params:
       document_store: LabelElasticsearchDocumentStore    # params can reference other components defined in the YAML
       top_k: 5
@@ -79,8 +84,10 @@ pipelines:
         inputs: [Query]
       - name: ESRetriever
         inputs: [Query]
+      - name: LabelESRetriever
+        inputs: [Query]
       - name: Join
-        inputs: [TitleEmbRetriever,ESRetriever]
+        inputs: [TitleEmbRetriever,LabelESRetriever,ESRetriever]
       - name: Reader
         inputs: [Join]
       - name: MergeOverlappingAnswers
