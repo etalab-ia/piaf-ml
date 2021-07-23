@@ -25,11 +25,10 @@ class LabelElasticsearchRetriever(ElasticsearchRetriever):
         super().__init__(document_store, top_k, custom_query)
         self.weight_when_document_found = weight_when_document_found
 
-    def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[
-        Document]:
+    def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[Document]:
         documents = self.document_store.query(query, None, 1, None, "label_elasticsearch")
-        first_doc = documents[0].to_dict()
         if len(documents) > 0:
+            first_doc = documents[0].to_dict()
             documents = self.document_store.get_documents_by_id([first_doc["meta"]["document_id"]],
                                                                 "document_elasticsearch")
             doc = documents[0].to_dict()
