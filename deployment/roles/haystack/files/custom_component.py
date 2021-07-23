@@ -1,6 +1,8 @@
 from typing import Dict, List, Optional
 import logging
 
+from haystack.document_store import ElasticsearchDocumentStore
+from haystack.document_store.base import BaseDocumentStore
 from haystack.retriever import ElasticsearchRetriever
 from haystack.schema import BaseComponent
 from haystack.retriever.dense import EmbeddingRetriever
@@ -18,19 +20,42 @@ class LabelElasticsearchRetriever(ElasticsearchRetriever):
      If not, we lquery the document_elasticsearch as before
      """
 
-    def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[Document]:
+    def __init__(self, document_store: ElasticsearchDocumentStore, top_k: int = 10, custom_query: str = None,
+                 weight_when_document_found: int = 99):
+        super().__init__(document_store, top_k, custom_query)
+        self.weight_when_document_found = weight_when_document_found
+
+    def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[
+        Document]:
         documents = self.document_store.query(query, None, 1, None, "label_elasticsearch")
         first_doc = documents[0].to_dict()
         if len(documents) > 0:
-            documents = self.document_store.get_documents_by_id([first_doc["meta"]["document_id"]], "document_elasticsearch")
+            documents = self.document_store.get_documents_by_id([first_doc["meta"]["document_id"]],
+                                                                "document_elasticsearch")
             doc = documents[0].to_dict()
-            doc["meta"]["weight"] = 99
+            doc["meta"]["weight"] = self.weight_when_document_found
             doc = Document.from_dict(doc, field_map={})
             return [doc]
         return []
 
 
 class TitleEmbeddingRetriever(EmbeddingRetriever):
+    def __init__(
+            self,
+            document_store: BaseDocumentStore,
+            embedding_model: str,
+            model_version: Optional[str] = None,
+            use_gpu: bool = True,
+            model_format: str = "farm",
+            pooling_strategy: str = "reduce_mean",
+            emb_extraction_layer: int = -1,
+            top_k: int = 10,
+            weight_when_document_found: int = 10
+    ):
+        super().__init__(document_store, embedding_model, model_version, use_gpu, model_format, pooling_strategy,
+                         emb_extraction_layer, top_k)
+        self.weight_when_document_found = weight_when_document_found
+
     def embed_passages(self, docs: List[Document]) -> List[np.ndarray]:
         """
         Create embeddings of the titles for a list of passages. For this Retriever type: The same as calling .embed()
@@ -42,7 +67,7 @@ class TitleEmbeddingRetriever(EmbeddingRetriever):
         documents = self.embedding_encoder.embed(texts)
         for doc in documents:
             doc = doc.to_dict()
-            doc["meta"]["weight"] = 10
+            doc["meta"]["weight"] = self.weight_when_document_found
             doc = Document.from_dict(doc, field_map={})
         return documents
 

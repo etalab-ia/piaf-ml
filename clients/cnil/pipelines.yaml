@@ -32,6 +32,7 @@ components:    # define all the building-blocks for Pipeline
     params:
       document_store: LabelElasticsearchDocumentStore    # params can reference other components defined in the YAML
       top_k: 5
+      weight_when_document_found: 99
   - name: TitleEmbRetriever
     type: TitleEmbeddingRetriever
     params:
@@ -41,6 +42,7 @@ components:    # define all the building-blocks for Pipeline
       use_gpu: False
       emb_extraction_layer: -1
       pooling_strategy: reduce_max
+      weight_when_document_found: 10
   - name: Join
     type: JoinDocumentsCustom
     params:
