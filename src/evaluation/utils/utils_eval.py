@@ -5,10 +5,10 @@ from typing import Dict, List, Union
 
 import pandas as pd
 from haystack.document_store.base import BaseDocumentStore
-from haystack.eval import eval_counts_reader,calculate_reader_metrics,_count_no_answer,_calculate_f1,_count_overlap,_count_exact_match,EvalRetriever,EvalReader
+from haystack.eval import eval_counts_reader, calculate_reader_metrics, _count_no_answer, _calculate_f1, _count_overlap, \
+    _count_exact_match, EvalRetriever, EvalReader
 from haystack.pipeline import Pipeline
 from tqdm import tqdm
-
 
 logger = logging.getLogger()
 
@@ -29,15 +29,15 @@ def save_results(result_file_path: Path, results_list: Union[Dict, List[Dict]]):
 
 
 def eval_retriever(
-    document_store: BaseDocumentStore,
-    pipeline: Pipeline,
-    label_index: str = "label",
-    doc_index: str = "eval_document",
-    label_origin: str = "gold_label",
-    top_k: int = 10,
-    return_preds: bool = False,
-    question_label_dict_list = None,
-    get_doc_id = lambda doc: doc.id,
+        document_store: BaseDocumentStore,
+        pipeline: Pipeline,
+        label_index: str = "label",
+        doc_index: str = "eval_document",
+        label_origin: str = "gold_label",
+        top_k: int = 10,
+        return_preds: bool = False,
+        question_label_dict_list=None,
+        get_doc_id=lambda doc: doc.id,
 ) -> dict:
     """
     :param question_label_dict_list: A list [{"query": ..., "gold_ids": [id1, ...]}, 
@@ -83,14 +83,14 @@ def eval_retriever(
     return metrics
 
 
-def get_retriever_metrics(retrieved_docs_list, question_label_dict_list, 
-        get_doc_id = lambda doc: doc.id):
+def get_retriever_metrics(retrieved_docs_list, question_label_dict_list,
+                          get_doc_id=lambda doc: doc.id):
     correct_retrievals = 0
     summed_avg_precision = 0.0
     summed_reciprocal_rank = []
 
     for question, retrieved_docs in tqdm(
-        zip(question_label_dict_list, retrieved_docs_list)
+            zip(question_label_dict_list, retrieved_docs_list)
     ):
         gold_ids = question["gold_ids"]
         number_relevant_docs = len(gold_ids)
@@ -130,12 +130,12 @@ def get_retriever_metrics(retrieved_docs_list, question_label_dict_list,
 
 
 def eval_retriever_reader(
-    document_store: BaseDocumentStore,
-    pipeline: Pipeline,
-    k_retriever: int,
-    k_reader_total: int,
-    label_index: str = "label",
-    label_origin: str = "gold_label",
+        document_store: BaseDocumentStore,
+        pipeline: Pipeline,
+        k_retriever: int,
+        k_reader_total: int,
+        label_index: str = "label",
+        label_origin: str = "gold_label",
 ):
     """
     Performs evaluation on evaluation documents in the DocumentStore. Returns a dict containing the following metrics:
@@ -205,22 +205,21 @@ class PiafEvalRetriever(EvalRetriever):
     This is a pipeline node that should be placed after a Retriever in order to assess its performance. Performance
     metrics are stored in this class and updated as each sample passes through it.
     To extract the metrics in a dict form use EvalRetriever.get_metrics().
-    """  
-    def __init__(self,debug: bool=False, open_domain: bool=False):
-        super().__init__(debug,open_domain)
-        
+    """
+
+    def __init__(self, debug: bool = False, open_domain: bool = False):
+        super().__init__(debug, open_domain)
+
         self.summed_avg_precision = 0.0
         self.summed_reciprocal_rank = 0.0
-        self.map = 0.0, #mean_average_precision
-        self.mrr = 0.0 #mean_reciprocal_rank
-
-
+        self.map = 0.0,  # mean_average_precision
+        self.mrr = 0.0  # mean_reciprocal_rank
 
     def run(self, documents, labels: dict, **kwargs):
         """Run this node on one sample and its labels"""
         self.query_count += 1
         retriever_labels = labels["retriever"]
-       
+
         if self.open_domain:
 
             if retriever_labels.no_answer:
@@ -231,8 +230,8 @@ class PiafEvalRetriever(EvalRetriever):
                 if not self.no_answer_warning:
                     self.no_answer_warning = True
                     logger.warning("There seem to be empty string labels in the dataset suggesting that there "
-                                "are samples with is_impossible=True. "
-                                "Retrieval of these samples is always treated as correct.")
+                                   "are samples with is_impossible=True. "
+                                   "Retrieval of these samples is always treated as correct.")
             # If there are answer span annotations in the labels
             else:
                 self.has_answer_count += 1
@@ -240,86 +239,83 @@ class PiafEvalRetriever(EvalRetriever):
                 self.has_answer_correct += int(correct_retrieval)
                 self.has_answer_recall = self.has_answer_correct / self.has_answer_count
 
-        else :
-            #call correct_retrievals_count if any document found we consider the retreiver operation correct
+        else:
+            # call correct_retrievals_count if any document found we consider the retreiver operation correct
             correct_retrieval = self.is_correctly_retrieved(retriever_labels, documents)
 
-
-        #update correct_retrieval_count 
+        # update correct_retrieval_count
         self.correct_retrieval_count += correct_retrieval
-        #update metrics
+        # update metrics
         self.recall = self.correct_retrieval_count / self.query_count
-        self.map = self.summed_avg_precision / self.query_count 
-        self.mrr = self.summed_reciprocal_rank / self.query_count 
-            
-            #if debug mode 
-        if self.debug:
-            self.log.append({"documents": documents, "labels": labels, "correct_retrieval": correct_retrieval, **kwargs})
+        self.map = self.summed_avg_precision / self.query_count
+        self.mrr = self.summed_reciprocal_rank / self.query_count
 
-        #returns the required elements for the next node in the pipeline
+        # if debug mode
+        if self.debug:
+            self.log.append(
+                {"documents": documents, "labels": labels, "correct_retrieval": correct_retrieval, **kwargs})
+
+        # returns the required elements for the next node in the pipeline
         return {"documents": documents, "labels": labels, "correct_retrieval": correct_retrieval, **kwargs}, "output_1"
 
     def is_correctly_retrieved(self, retriever_labels, predictions):
         """
         This function takes retriever_labels Multilabel object as well as the preedicted documents to update metric counts
         
-        """  
+        """
         relevant_docs_found = 0
         found_relevant_doc = False
         current_avg_precision = 0.0
 
-        #extract the label document_ids (true relevant documents) and remove duplicated documents
+        # extract the label document_ids (true relevant documents) and remove duplicated documents
         label_ids = list(set(retriever_labels.multiple_document_ids))
 
         if self.open_domain:
             for doc_idx, doc in enumerate(predictions):
                 label_found = False
                 for label in retriever_labels.multiple_answers:
-                    #open domain : checks if answer in predicted document 
+                    # open domain : checks if answer in predicted document
                     if label.lower() in doc.text.lower() and not label_found:
                         label_found = True
                         relevant_docs_found += 1
                         if not found_relevant_doc:
-                        #update summed_reciprocal_rank only for the first relevant predicted document 
+                            # update summed_reciprocal_rank only for the first relevant predicted document
                             self.summed_reciprocal_rank += 1 / (doc_idx + 1)
-                        #update avg_precision each time a new relevant doc is found
+                        # update avg_precision each time a new relevant doc is found
                         current_avg_precision += relevant_docs_found / (doc_idx + 1)
                         found_relevant_doc = True
-                    
+
             if found_relevant_doc:
                 all_relevant_docs = len(label_ids)
                 self.summed_avg_precision += current_avg_precision / all_relevant_docs
             return found_relevant_doc
 
         else:
-            #check if the predicted document are relevant 
+            # check if the predicted document are relevant
             for doc_idx, doc in enumerate(predictions):
-                #close domain checks if predicted document's ID in docuemt label ID 
+                # close domain checks if predicted document's ID in docuemt label ID
                 if doc.id in label_ids:
-                    #if predicted is relevant update count
+                    # if predicted is relevant update count
                     relevant_docs_found += 1
                     if not found_relevant_doc:
-                        #update summed_reciprocal_rank only for the first relevant predicted document 
+                        # update summed_reciprocal_rank only for the first relevant predicted document
                         self.summed_reciprocal_rank += 1 / (doc_idx + 1)
-                    #update avg_precision each time a new relevant doc is found
+                    # update avg_precision each time a new relevant doc is found
                     current_avg_precision += relevant_docs_found / (doc_idx + 1)
                     found_relevant_doc = True
-            #if found relevant doc update summed_avg_precision
+            # if found relevant doc update summed_avg_precision
             if found_relevant_doc:
                 all_relevant_docs = len(label_ids)
                 self.summed_avg_precision += current_avg_precision / all_relevant_docs
-            #returns true if relevant doc is found
+            # returns true if relevant doc is found
             return found_relevant_doc
-
-
 
     def get_metrics(self):
         return {
-                "recall": self.recall, 
-                "map": self.map, 
-                "mrr": self.mrr 
-                }
-
+            "recall": self.recall,
+            "map": self.map,
+            "mrr": self.mrr
+        }
 
 
 class PiafEvalReader(EvalReader):
@@ -327,28 +323,29 @@ class PiafEvalReader(EvalReader):
     This is a pipeline node that should be placed after a Reader in order to assess the performance of the Reader
     To extract the metrics in a dict form use EvalReader.get_metrics().
     """
+
     def __init__(self):
 
-        super().__init__(debug = True,open_domain = False)
-        
+        super().__init__(debug=True, open_domain=False)
+
         self.metric_counts = {
-        "correct_no_answers_top1" : 0,
-        "correct_no_answers_topk" : 0,
-        "correct_readings_topk" : 0,
-        "exact_matches_topk" : 0,
-        "summed_f1_topk" : 0,
-        "correct_readings_top1" : 0,
-        "correct_readings_top1_has_answer" : 0,
-        "correct_readings_topk_has_answer" : 0,
-        "summed_f1_top1" : 0,
-        "summed_f1_top1_has_answer" : 0,
-        "exact_matches_top1" : 0,
-        "exact_matches_top1_has_answer" : 0,
-        "exact_matches_topk_has_answer" : 0,
-        "summed_f1_topk_has_answer" : 0,
-        "number_of_no_answer" : 0
+            "correct_no_answers_top1": 0,
+            "correct_no_answers_topk": 0,
+            "correct_readings_topk": 0,
+            "exact_matches_topk": 0,
+            "summed_f1_topk": 0,
+            "correct_readings_top1": 0,
+            "correct_readings_top1_has_answer": 0,
+            "correct_readings_topk_has_answer": 0,
+            "summed_f1_top1": 0,
+            "summed_f1_top1_has_answer": 0,
+            "exact_matches_top1": 0,
+            "exact_matches_top1_has_answer": 0,
+            "exact_matches_topk_has_answer": 0,
+            "summed_f1_topk_has_answer": 0,
+            "number_of_no_answer": 0
         }
-        
+
     def run(self, labels, answers, **kwargs):
         """Run this node on one sample and its labels"""
 
@@ -356,18 +353,18 @@ class PiafEvalReader(EvalReader):
 
         multi_labels = labels["reader"]
         predictions = answers
-        
+
         if multi_labels.no_answer:
 
-            self.metric_counts['number_of_no_answer']+= 1
+            self.metric_counts['number_of_no_answer'] += 1
             self.metric_counts = _count_no_answer(predictions, self.metric_counts)
             if predictions:
                 if self.debug:
-                        self.log.append({"predictions": predictions,
-                                        "gold_labels": multi_labels,
-                                        "top_1_no_answer": int(predictions[0] == ""),
-                                        })
-        
+                    self.log.append({"predictions": predictions,
+                                     "gold_labels": multi_labels,
+                                     "top_1_no_answer": int(predictions[0] == ""),
+                                     })
+
         else:
             found_answer = False
             found_em = False
@@ -375,26 +372,31 @@ class PiafEvalReader(EvalReader):
 
             for answer_idx, answer in enumerate(predictions):
 
-
                 if answer["document_id"] in multi_labels.multiple_document_ids:
                     gold_spans = [{"offset_start": multi_labels.multiple_offset_start_in_docs[i],
-                                "offset_end": multi_labels.multiple_offset_start_in_docs[i] + len(multi_labels.multiple_answers[i]),
-                                "doc_id": multi_labels.multiple_document_ids[i]} for i in range(len(multi_labels.multiple_answers))] 
+                                   "offset_end": multi_labels.multiple_offset_start_in_docs[i] + len(
+                                       multi_labels.multiple_answers[i]),
+                                   "doc_id": multi_labels.multiple_document_ids[i]} for i in
+                                  range(len(multi_labels.multiple_answers))]
 
                     predicted_span = {"offset_start": answer["offset_start"],
-                                    "offset_end": answer["offset_end"],
-                                    "doc_id": answer["document_id"]}
+                                      "offset_end": answer["offset_end"],
+                                      "doc_id": answer["document_id"]}
 
                     best_f1_in_gold_spans = 0
                     for gold_span in gold_spans:
                         if gold_span["doc_id"] == predicted_span["doc_id"]:
                             # check if overlap between gold answer and predicted answer
                             if not found_answer:
-                                self.metric_counts, found_answer = _count_overlap(gold_span, predicted_span, self.metric_counts, answer_idx)  # type: ignore
+                                self.metric_counts, found_answer = _count_overlap(gold_span, predicted_span,
+                                                                                  self.metric_counts,
+                                                                                  answer_idx)  # type: ignore
 
                             # check for exact match
                             if not found_em:
-                                self.metric_counts, found_em = _count_exact_match(gold_span, predicted_span, self.metric_counts, answer_idx)  # type: ignore
+                                self.metric_counts, found_em = _count_exact_match(gold_span, predicted_span,
+                                                                                  self.metric_counts,
+                                                                                  answer_idx)  # type: ignore
 
                             # calculate f1
                             current_f1 = _calculate_f1(gold_span, predicted_span)  # type: ignore
@@ -410,24 +412,22 @@ class PiafEvalReader(EvalReader):
                 if found_em:
                     break
 
-
             self.metric_counts["summed_f1_topk"] += best_f1
             self.metric_counts["summed_f1_topk_has_answer"] += best_f1
 
             if self.debug:
-                    self.log.append({"predictions": predictions,
-                                     "gold_labels": multi_labels,
-                                     "top_k_f1": self.metric_counts["summed_f1_topk"] / self.query_count,
-                                     "top_k_em": self.metric_counts["exact_matches_topk"] / self.query_count
-                                     })
-      
+                self.log.append({"predictions": predictions,
+                                 "gold_labels": multi_labels,
+                                 "top_k_f1": self.metric_counts["summed_f1_topk"] / self.query_count,
+                                 "top_k_em": self.metric_counts["exact_matches_topk"] / self.query_count
+                                 })
+
         return {**kwargs}, "output_1"
 
     def get_metrics(self):
-        metrics = calculate_reader_metrics(self.metric_counts,self.query_count)
+        metrics = calculate_reader_metrics(self.metric_counts, self.query_count)
         metrics.update(self.metric_counts)
-        return(metrics)
-
+        return (metrics)
 
 
 def full_eval_retriever_reader(
@@ -452,71 +452,29 @@ def full_eval_retriever_reader(
     filters = {"origin": [label_origin]}
     labels = document_store.get_all_labels_aggregated(index=label_index, filters=filters)
     labels = [label for label in labels if label.question]
-    results=[]
 
-
-    test = document_store.get_all_documents_generator(index=label_index, filters=filters)
-    print(test)
-
-    question_label_dict_list = []
-    
     q_to_l_dict = {
-    l.question: {
-        "retriever": l,
-        "reader": l
-    } for l in labels
+        l.question: {
+            "retriever": l,
+            "reader": l
+        } for l in labels
     }
 
-
     for q, l in q_to_l_dict.items():
-        res = pipeline.run(
+        pipeline.run(
             query=q,
-            top_k_retriever = k_retriever,
+            top_k_retriever=k_retriever,
             labels=l,
-            top_k_reader = k_reader_total,
+            top_k_reader=k_reader_total,
         )
-        results.append(res)
-
-    
-
-        
-"""
-    # Aggregate all answer labels per question aggregated_per_doc = defaultdict(list) for label in labels: if not
-    label.document_id: logger.error(f"Label does not contain a document_id") continue
-    aggregated_per_doc[label.document_id].append(label)
-
-    # Create squad style dicts d: Dict[str, Any] = {} all_doc_ids = [x.id for x in
-    document_store.get_all_documents(doc_index)] for doc_id in all_doc_ids: doc =
-    document_store.get_document_by_id(doc_id, index=doc_index) if not doc: logger.error(f"Document with the ID
-    '{doc_id}' is not present in the document store.") continue d[str(doc_id)] = { "context": doc.text } # get all
-    questions / answers aggregated_per_question: Dict[str, Any] = defaultdict(list) if doc_id in aggregated_per_doc: for
-    label in aggregated_per_doc[doc_id]: # add to existing answers if label.question in aggregated_per_question.keys():
-    if label.offset_start_in_doc == 0 and label.answer == "": continue else: # Hack to fix problem where duplicate
-    questions are merged by doc_store processing creating a QA example with 8 annotations > 6 annotation max if
-    len(aggregated_per_question[label.question]["answers"]) >= 6: continue
-    aggregated_per_question[label.question]["answers"].append({ "text": label.answer, "answer_start":
-    label.offset_start_in_doc}) aggregated_per_question[label.question]["is_impossible"] = False # create new one else:
-    # We don't need to create an answer dict if is_impossible / no_answer if label.offset_start_in_doc == 0 and
-    label.answer == "": aggregated_per_question[label.question] = { "id": str(hash(str(doc_id) + label.question)),
-    "question": label.question, "answers": [], "is_impossible": True } else: aggregated_per_question[label.question] = {
-    "id": str(hash(str(doc_id)+label.question)), "question": label.question, "answers": [{ "text": label.answer,
-    "answer_start": label.offset_start_in_doc}], "is_impossible": False }
-
-        # Get rid of the question key again (after we aggregated we don't need it anymore) d[str(doc_id)]["qas"] = [v
-        for v in aggregated_per_question.values()]
-
-    results = { "EM": eval_results[0]["EM"], "f1": eval_results[0]["f1"], "top_n_accuracy":
-    eval_results[0]["top_n_accuracy"], "top_n": self.inferencer.model.prediction_heads[0].n_best, "reader_time":
-    reader_time, "seconds_per_query": reader_time / n_queries } return results
-    """
 
 
 def eval_titleQA_pipeline(
-    document_store: BaseDocumentStore,
-    pipeline: Pipeline,
-    k_retriever: int,
-    label_index: str = "label",
-    label_origin: str = "gold_label",
+        document_store: BaseDocumentStore,
+        pipeline: Pipeline,
+        k_retriever: int,
+        label_index: str = "label",
+        label_origin: str = "gold_label",
 ):
     """
     Performs evaluation on evaluation documents in the DocumentStore. Returns a dict containing the following metrics:
