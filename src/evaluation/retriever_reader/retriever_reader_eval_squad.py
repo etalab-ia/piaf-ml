@@ -23,12 +23,12 @@ import sys
 from tqdm import tqdm
 
 from src.evaluation.utils.utils_eval import save_results, \
-    full_eval_retriever_reader, PiafEvalRetriever,PiafEvalReader
+    full_eval_retriever_reader, PiafEvalRetriever, PiafEvalReader
 from src.evaluation.utils.custom_pipelines import \
     RetrieverReaderEvaluationPipeline, TitleBM25QAEvaluationPipeline, HottestReaderPipeline
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.elasticsearch_management import delete_indices, \
-   launch_ES, prepare_mapping
+    launch_ES, prepare_mapping
 from src.evaluation.utils.mlflow_management import add_extra_params, \
     create_run_ids, get_list_past_run, prepare_mlflow_server, mlflow_log_run
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
@@ -48,11 +48,11 @@ else:
 
 
 def single_run(
-    idx=None,
-    gpu_id = -1,
-    elasticsearch_hostname = "localhost",
-    elasticsearch_port = 9200,
-    **kwargs):
+        idx=None,
+        gpu_id=-1,
+        elasticsearch_hostname="localhost",
+        elasticsearch_port=9200,
+        **kwargs):
     """
     Perform one run of the pipeline under testing with the parameters given in the config file. The results are
     saved in the mlflow instance.
@@ -129,12 +129,12 @@ def single_run(
             custom_mapping=SQUAD_MAPPING,
         )
         retriever = ElasticsearchRetriever(document_store=document_store)
-        p  = RetrieverReaderEvaluationPipeline(
-                                               reader = reader,
-                                               retriever = retriever,
-                                               eval_retriever = eval_retriever,
-                                               eval_reader = eval_reader
-                                               )
+        p = RetrieverReaderEvaluationPipeline(
+            reader=reader,
+            retriever=retriever,
+            eval_retriever=eval_retriever,
+            eval_reader=eval_reader
+        )
 
     elif retriever_type == "sbert":
         document_store = ElasticsearchDocumentStore(
@@ -160,12 +160,12 @@ def single_run(
             pooling_strategy="reduce_max",
             emb_extraction_layer=-1,
         )
-        p  = RetrieverReaderEvaluationPipeline(
-                                               reader = reader,
-                                               retriever = retriever,
-                                               eval_retriever = eval_retriever,
-                                               eval_reader = eval_reader
-                                               )
+        p = RetrieverReaderEvaluationPipeline(
+            reader=reader,
+            retriever=retriever,
+            eval_retriever=eval_retriever,
+            eval_reader=eval_reader
+        )
 
     elif retriever_type == "dpr":
         document_store = ElasticsearchDocumentStore(
@@ -190,12 +190,12 @@ def single_run(
             infer_tokenizer_classes=True,
             use_gpu=GPU_AVAILABLE,
         )
-        p  = RetrieverReaderEvaluationPipeline(
-                                               reader = reader,
-                                               retriever = retriever,
-                                               eval_retriever = eval_retriever,
-                                               eval_reader = eval_reader
-                                               )
+        p = RetrieverReaderEvaluationPipeline(
+            reader=reader,
+            retriever=retriever,
+            eval_retriever=eval_retriever,
+            eval_reader=eval_reader
+        )
 
     elif retriever_type == "title_bm25":
         document_store = ElasticsearchDocumentStore(
@@ -227,8 +227,8 @@ def single_run(
                                           retriever_bm25=retriever_bm25,
                                           k_title_retriever=k_title_retriever,
                                           k_bm25_retriever=k_retriever,
-                                          eval_retriever = eval_retriever,
-                                          eval_reader = eval_reader)
+                                          eval_retriever=eval_retriever,
+                                          eval_reader=eval_reader)
 
         # used to make sure the p.run method returns enough candidates
         k_retriever = max(k_retriever, k_title_retriever)
@@ -257,12 +257,12 @@ def single_run(
             pooling_strategy="reduce_max",
             emb_extraction_layer=-1,
         )
-        p  = RetrieverReaderEvaluationPipeline(
-                                               reader = reader,
-                                               retriever = retriever,
-                                               eval_retriever = eval_retriever,
-                                               eval_reader = eval_reader
-                                               )
+        p = RetrieverReaderEvaluationPipeline(
+            reader=reader,
+            retriever=retriever,
+            eval_retriever=eval_retriever,
+            eval_reader=eval_reader
+        )
 
     elif retriever_type == "hot_reader":
         document_store = ElasticsearchDocumentStore(
@@ -322,16 +322,15 @@ def single_run(
     try:
         start = time.time()
         full_eval_retriever_reader(document_store=document_store,
-                                    pipeline=p,
-                                    k_retriever=k_retriever,
-                                    k_reader_total=k_reader_total,
-                                    label_index=label_index)
+                                   pipeline=p,
+                                   k_retriever=k_retriever,
+                                   k_reader_total=k_reader_total,
+                                   label_index=label_index)
 
         retriever_reader_eval_results.update(eval_retriever.get_metrics())
         retriever_reader_eval_results.update(eval_reader.get_metrics())
 
         end = time.time()
-
 
         logging.info(f"Retriever Recall: {retriever_reader_eval_results['recall']}")
         logging.info(f"Retriever Mean Avg Precision: {retriever_reader_eval_results['map']}")
@@ -351,11 +350,9 @@ def single_run(
     return retriever_reader_eval_results
 
 
-
-
-def optimize(parameters, n_calls, result_file_path, gpu_id = -1,
-            elasticsearch_hostname = "localhost",
-            elasticsearch_port = 9200):
+def optimize(parameters, n_calls, result_file_path, gpu_id=-1,
+             elasticsearch_hostname="localhost",
+             elasticsearch_port=9200):
     """ Returns a list of n_calls tuples [(x1, v1), ...] where the lists xi are
     the parameter values for each evaluation and the dictionaries vi are the run
     results. The parameter values for the successive runs are determined by the
@@ -370,9 +367,9 @@ def optimize(parameters, n_calls, result_file_path, gpu_id = -1,
 
     @use_named_args(dimensions=dimensions)
     def single_run_optimization(**kwargs):
-        result = single_run(gpu_id = gpu_id,
-            elasticsearch_hostname = elasticsearch_hostname,
-            elasticsearch_port = elasticsearch_port, **kwargs)
+        result = single_run(gpu_id=gpu_id,
+                            elasticsearch_hostname=elasticsearch_hostname,
+                            elasticsearch_port=elasticsearch_port, **kwargs)
 
         results.append((None, kwargs, result))
 
@@ -390,11 +387,9 @@ def optimize(parameters, n_calls, result_file_path, gpu_id = -1,
     return results
 
 
-
-
-def grid_search(parameters, mlflow_client, experiment_name, use_cache = False,
-    result_file_path = Path("./output/results_reader.csv"), gpu_id = -1,
-    elasticsearch_hostname = "localhost", elasticsearch_port = 9200):
+def grid_search(parameters, mlflow_client, experiment_name, use_cache=False,
+                result_file_path=Path("./output/results_reader.csv"), gpu_id=-1,
+                elasticsearch_hostname="localhost", elasticsearch_port=9200):
     """ Returns a generator of tuples [(id1, x1, v1), ...] where id1 is the run
     id, the lists xi are the parameter values for each evaluation and the
     dictionaries vi are the run results. The parameter values for each
@@ -405,14 +400,14 @@ def grid_search(parameters, mlflow_client, experiment_name, use_cache = False,
     list_past_run_names = get_list_past_run(mlflow_client, experiment_name)
 
     for idx, param in tqdm(
-        zip(list_run_ids, parameters_grid),
-        total=len(list_run_ids),
-        desc="GridSearch",
-        unit="config",
+            zip(list_run_ids, parameters_grid),
+            total=len(list_run_ids),
+            desc="GridSearch",
+            unit="config",
     ):
         add_extra_params(param)
         if (
-            idx in list_past_run_names.keys() and use_cache
+                idx in list_past_run_names.keys() and use_cache
         ):  # run not done
             logging.info(
                 f"Config {param} already done and found in mlflow. Not doing it again."
@@ -424,13 +419,13 @@ def grid_search(parameters, mlflow_client, experiment_name, use_cache = False,
 
         else:  # run notalready done or USE_CACHE set to False or not set
             logging.info(f"Doing run with config : {param}")
-            run_results = single_run(idx = idx, gpu_id = gpu_id,
-                elasticsearch_hostname = elasticsearch_hostname,
-                elasticsearch_port = elasticsearch_port, **param)
+            run_results = single_run(idx=idx, gpu_id=gpu_id,
+                                     elasticsearch_hostname=elasticsearch_hostname,
+                                     elasticsearch_port=elasticsearch_port, **param)
 
             # For debugging purpose, we keep a copy of the results in a csv form
             save_results(result_file_path=result_file_path,
-                    results_list={**run_results, **param})
+                         results_list={**run_results, **param})
 
             # update list of past experiments
             list_past_run_names = get_list_past_run(mlflow_client, experiment_name)
@@ -438,13 +433,11 @@ def grid_search(parameters, mlflow_client, experiment_name, use_cache = False,
             yield (idx, param, run_results)
 
 
-
-
 def tune_pipeline(
-    parameters,
-    parameter_tuning_options,
-    elasticsearch_hostname,
-    elasticsearch_port):
+        parameters,
+        parameter_tuning_options,
+        elasticsearch_hostname,
+        elasticsearch_port):
     """
     Run the parameter tuning method for the whole pipeline based on the
     parameters.
@@ -471,47 +464,43 @@ def tune_pipeline(
 
     if parameter_tuning_options["tuning_method"] == "optimization":
         runs = optimize(
-            parameters = parameters,
-            n_calls = parameter_tuning_options["optimization_ncalls"],
-            result_file_path = Path("./output/optimize_result.z"),
-            gpu_id = gpu_id,
-            elasticsearch_hostname = elasticsearch_hostname,
-            elasticsearch_port = elasticsearch_port)
+            parameters=parameters,
+            n_calls=parameter_tuning_options["optimization_ncalls"],
+            result_file_path=Path("./output/optimize_result.z"),
+            gpu_id=gpu_id,
+            elasticsearch_hostname=elasticsearch_hostname,
+            elasticsearch_port=elasticsearch_port)
 
     elif parameter_tuning_options["tuning_method"] == "grid_search":
         runs = grid_search(
-            parameters = parameters,
-            mlflow_client = client,
-            experiment_name = parameter_tuning_options["experiment_name"],
-            use_cache = parameter_tuning_options["use_cache"],
-            gpu_id = gpu_id,
-            result_file_path = Path("./output/results_reader.csv"),
-            elasticsearch_hostname = elasticsearch_hostname,
-            elasticsearch_port = elasticsearch_port)
+            parameters=parameters,
+            mlflow_client=client,
+            experiment_name=parameter_tuning_options["experiment_name"],
+            use_cache=parameter_tuning_options["use_cache"],
+            gpu_id=gpu_id,
+            result_file_path=Path("./output/results_reader.csv"),
+            elasticsearch_hostname=elasticsearch_hostname,
+            elasticsearch_port=elasticsearch_port)
 
     else:
         print("Unknown parameter tuning method: ",
-            parameter_tuning_options["tuning_method"],
-            file = sys.stderr)
+              parameter_tuning_options["tuning_method"],
+              file=sys.stderr)
         exit(1)
 
     return runs
 
 
-
-
-
 if __name__ == "__main__":
     from src.evaluation.config.retriever_reader_eval_squad_config import \
-            parameters, parameter_tuning_options
+        parameters, parameter_tuning_options
 
     runs = tune_pipeline(
         parameters,
         parameter_tuning_options,
-        elasticsearch_hostname = os.getenv("ELASTICSEARCH_HOSTNAME") or "localhost",
-        elasticsearch_port = int(os.getenv("ELASTICSEARCH_PORT")) or 9200)
+        elasticsearch_hostname=os.getenv("ELASTICSEARCH_HOSTNAME") or "localhost",
+        elasticsearch_port=int((os.getenv("ELASTICSEARCH_PORT")) or 9200))
 
     for (run_id, params, results) in runs:
         clean_log()
         mlflow_log_run(params, results, idx=run_id)
-

@@ -452,7 +452,6 @@ def full_eval_retriever_reader(
     filters = {"origin": [label_origin]}
     labels = document_store.get_all_labels_aggregated(index=label_index, filters=filters)
     labels = [label for label in labels if label.question]
-
     q_to_l_dict = {
         l.question: {
             "retriever": l,

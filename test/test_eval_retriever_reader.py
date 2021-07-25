@@ -6,19 +6,19 @@ from haystack.pipeline import Pipeline
 
 from src.evaluation.utils.utils_eval import full_eval_retriever_reader
 
-
 @pytest.mark.elasticsearch
-@pytest.mark.parametrize("k_reader_total", [10, 1])
+# @pytest.mark.parametrize("document_store", [(elasticsearch_fixture, 2)], indirect=True)
+@pytest.mark.parametrize("k_reader_total", [10])
 def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retriever_bm25, reader, k_reader_total,
-                                       Eval_Retriever, Eval_Reader):
+                                       retriever_piafeval, reader_piafeval):
     doc_index = "document"
     label_index = "label"
 
     p = Pipeline()
     p.add_node(component=retriever_bm25, name="Retriever", inputs=["Query"])
-    p.add_node(component=Eval_Retriever, name='EvalRetriever', inputs=['Retriever'])
+    p.add_node(component=retriever_piafeval, name='EvalRetriever', inputs=['Retriever'])
     p.add_node(component=reader, name='Reader', inputs=['EvalRetriever'])
-    p.add_node(component=Eval_Reader, name='EvalReader', inputs=['Reader'])
+    p.add_node(component=reader_piafeval, name='EvalReader', inputs=['Reader'])
 
     # add eval data (SQUAD format)
     document_store.delete_all_documents(index=doc_index)
@@ -38,8 +38,8 @@ def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retrie
                                k_retriever=k_retriever, k_reader_total=k_reader_total,
                                label_index=label_index)
 
-    retriever_eval_results = Eval_Retriever.get_metrics()
-    retriever_eval_results.update(Eval_Reader.get_metrics())
+    retriever_eval_results = retriever_piafeval.get_metrics()
+    retriever_eval_results.update(reader_piafeval.get_metrics())
 
     """For 16 queries: 
         13 Queries : documents retrieved at position 1
