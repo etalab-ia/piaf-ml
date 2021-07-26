@@ -7,7 +7,6 @@ from haystack.pipeline import Pipeline
 from src.evaluation.utils.utils_eval import full_eval_retriever_reader
 
 @pytest.mark.elasticsearch
-# @pytest.mark.parametrize("document_store", [(elasticsearch_fixture, 2)], indirect=True)
 @pytest.mark.parametrize("k_reader_total", [10])
 def test_eval_elastic_retriever_reader(document_store: BaseDocumentStore, retriever_bm25, reader, k_reader_total,
                                        retriever_piafeval, reader_piafeval):
