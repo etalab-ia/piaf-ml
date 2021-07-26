@@ -332,6 +332,7 @@ def single_run(
 
         end = time.time()
 
+
         logging.info(f"Retriever Recall: {retriever_reader_eval_results['recall']}")
         logging.info(f"Retriever Mean Avg Precision: {retriever_reader_eval_results['map']}")
         logging.info(f"Retriever Mean Reciprocal Rank: {retriever_reader_eval_results['mrr']}")
@@ -433,6 +434,8 @@ def grid_search(parameters, mlflow_client, experiment_name, use_cache=False,
             yield (idx, param, run_results)
 
 
+
+
 def tune_pipeline(
         parameters,
         parameter_tuning_options,
@@ -491,6 +494,9 @@ def tune_pipeline(
     return runs
 
 
+
+
+
 if __name__ == "__main__":
     from src.evaluation.config.retriever_reader_eval_squad_config import \
         parameters, parameter_tuning_options
@@ -504,3 +510,4 @@ if __name__ == "__main__":
     for (run_id, params, results) in runs:
         clean_log()
         mlflow_log_run(params, results, idx=run_id)
+

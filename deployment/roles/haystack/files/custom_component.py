@@ -1,11 +1,57 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
+
+from haystack.document_store import ElasticsearchDocumentStore
+from haystack.document_store.base import BaseDocumentStore
+from haystack.retriever import ElasticsearchRetriever
 from haystack.schema import BaseComponent
 from haystack.retriever.dense import EmbeddingRetriever
 import numpy as np
 from haystack import Document
 
 
+class LabelElasticsearchRetriever(ElasticsearchRetriever):
+    """
+     A node to search if a question is a perfect match.
+     We query the label_elasticsearch index, looking for a question matching the user question.
+     If found, we retrieve the first document associated
+     If not, we lquery the document_elasticsearch as before
+     """
+
+    def __init__(self, document_store: ElasticsearchDocumentStore, top_k: int = 10, custom_query: str = None,
+                 weight_when_document_found: int = 99):
+        super().__init__(document_store, top_k, custom_query)
+        self.weight_when_document_found = weight_when_document_found
+
+    def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[Document]:
+        documents = self.document_store.query(query, None, 1, None, "label_elasticsearch")
+        if len(documents) > 0:
+            first_doc = documents[0].to_dict()
+            documents = self.document_store.get_documents_by_id([first_doc["meta"]["document_id"]],
+                                                                "document_elasticsearch")
+            doc = documents[0].to_dict()
+            doc["meta"]["weight"] = self.weight_when_document_found
+            doc = Document.from_dict(doc, field_map={})
+            return [doc]
+        return []
+
+
 class TitleEmbeddingRetriever(EmbeddingRetriever):
+    def __init__(
+            self,
+            document_store: BaseDocumentStore,
+            embedding_model: str,
+            model_version: Optional[str] = None,
+            use_gpu: bool = True,
+            model_format: str = "farm",
+            pooling_strategy: str = "reduce_mean",
+            emb_extraction_layer: int = -1,
+            top_k: int = 10,
+            weight_when_document_found: int = 10
+    ):
+        super().__init__(document_store, embedding_model, model_version, use_gpu, model_format, pooling_strategy,
+                         emb_extraction_layer, top_k)
+        self.weight_when_document_found = weight_when_document_found
+
     def embed_passages(self, docs: List[Document]) -> List[np.ndarray]:
         """
         Create embeddings of the titles for a list of passages. For this Retriever type: The same as calling .embed()
@@ -14,7 +60,12 @@ class TitleEmbeddingRetriever(EmbeddingRetriever):
         """
         texts = [d.meta["name"] for d in docs]
 
-        return self.embedding_encoder.embed(texts)
+        documents = self.embedding_encoder.embed(texts)
+        for doc in documents:
+            doc = doc.to_dict()
+            doc["meta"]["weight"] = self.weight_when_document_found
+            doc = Document.from_dict(doc, field_map={})
+        return documents
 
 
 class JoinDocumentsCustom(BaseComponent):
@@ -51,6 +102,7 @@ class JoinDocumentsCustom(BaseComponent):
             "labels": inputs[0].get("labels", None),
         }
         return output, "output_1"
+
 
 class AnswerifyDocuments(BaseComponent):
     """
@@ -115,7 +167,7 @@ class JoinAnswers(BaseComponent):
             for answer in input_from_node['answers']:
                 if count_answers == self.top_k:
                     break
-                elif answer["score"] is None: #The answer came from Transformers Reader
+                elif answer["score"] is None:  # The answer came from Transformers Reader
                     if answer["probability"] > self.threshold_score and count_reader < self.max_reader_answer:
                         if answer["answer"] is not None:
                             results["answers"].append(answer)
@@ -130,7 +182,6 @@ class JoinAnswers(BaseComponent):
         return results, "output_1"
 
 
-
 class MergeOverlappingAnswers(BaseComponent):
     """
     A node that merges two answers when they overlap to avoid having multiple
@@ -142,10 +193,9 @@ class MergeOverlappingAnswers(BaseComponent):
     contexts themselves merge.
     """
 
-    outgoing_edges=1
+    outgoing_edges = 1
 
-    def __init__(self, minimum_overlap_contexts = 0.75,
-            minimum_overlap_answers = 0.25):
+    def __init__(self, minimum_overlap_contexts=0.75, minimum_overlap_answers=0.25):
         self.minimum_overlap_contexts = minimum_overlap_contexts
         self.minimum_overlap_answers = minimum_overlap_answers
 
@@ -161,26 +211,26 @@ class MergeOverlappingAnswers(BaseComponent):
             while not is_merged and i < len(merged_answers):
                 mans = merged_answers[i]
                 new_merged_ctxt = merge_strings(
-                        mans["context"],
-                        ans["context"],
-                        self.minimum_overlap_contexts)
+                    mans["context"],
+                    ans["context"],
+                    self.minimum_overlap_contexts)
                 if new_merged_ctxt != "":
                     new_merged_ans = merge_strings(
-                            mans["answer"],
-                            ans["answer"],
-                            self.minimum_overlap_answers)
+                        mans["answer"],
+                        ans["answer"],
+                        self.minimum_overlap_answers)
                     if new_merged_ans != "":
                         offset_start = new_merged_ctxt.find(new_merged_ans)
                         merged_answers[i] = {
-                              'answer': new_merged_ans,
-                              'context': new_merged_ctxt,
-                              'document_id': mans["document_id"],
-                              'meta': mans["meta"],
-                              'offset_end': offset_start + len(new_merged_ans),
-                              'offset_start': offset_start,
-                              'probability': max(mans["probability"],
-                                  ans["probability"]),
-                              'score': None}
+                            'answer': new_merged_ans,
+                            'context': new_merged_ctxt,
+                            'document_id': mans["document_id"],
+                            'meta': mans["meta"],
+                            'offset_end': offset_start + len(new_merged_ans),
+                            'offset_start': offset_start,
+                            'probability': max(mans["probability"],
+                                               ans["probability"]),
+                            'score': None}
                         is_merged = True
                 i += 1
 
@@ -193,6 +243,20 @@ class MergeOverlappingAnswers(BaseComponent):
 
         return output, "output_1"
 
+
+class RankAnswersWithWeigth(BaseComponent):
+    """
+    A node that ranks the answers from the reader considering the weight they have
+    """
+    outgoing_edges = 1
+
+    def run(self, **kwargs):
+        answers = kwargs["answers"]
+        answers_dict_format = [a if isinstance(a, dict) else a.to_dict() for a in answers]
+        sort_by_weigth(answers_dict_format)
+        output = kwargs.copy()
+        output["answers"] = answers_dict_format
+        return output, "output_1"
 
 
 def merge_strings(str1, str2, minimum_overlap):
@@ -239,14 +303,14 @@ def merge_strings(str1, str2, minimum_overlap):
             # Positions of compared substrings in str1 and str2
             start1 = i
             start2 = 0
-        else: # i < 0
+        else:  # i < 0
             s = min(len(str2) + i, len(str1))
             start1 = 0
             start2 = -i
 
         if s >= minimum_overlap_chars \
                 and s > best_s \
-                and str1[start1 : start1 + s] == str2[start2 : start2 + s]:
+                and str1[start1: start1 + s] == str2[start2: start2 + s]:
             best_i = i
             best_s = s
 
@@ -257,3 +321,29 @@ def merge_strings(str1, str2, minimum_overlap):
             return str2 + str1[best_s:]
     else:
         return ""
+
+
+def get_weight(doc):
+    return doc["meta"].get('weight') or 0
+
+
+def sort_by_weigth(documents: List[dict]) -> None:
+    """
+    This function takes a list of "to_dict" documents as input and sort them
+    based on a property "weight" located in the "meta" property of the doc.
+    Ex: 
+    documents = [
+        {'Name': 'Alan Turing', 'meta': { 'weight': 10000}},
+        {'Name': 'Sharon Lin', 'meta': { 'weight': 8000}},
+        {'Name': 'John Hopkins', 'meta': {},
+        {'Name': 'Mikhail Tal', 'meta': { 'weight': 15000}}
+    ]
+    returns after applying sort_by_weigth(documents)
+    documents = [
+        {'Name': 'Mikhail Tal', 'meta': { 'weight': 15000}},
+        {'Name': 'Alan Turing', 'meta': { 'weight': 10000}},
+        {'Name': 'Sharon Lin', 'meta': { 'weight': 8000}},
+        {'Name': 'John Hopkins', 'meta':{} }
+    ]
+    """
+    documents.sort(key=get_weight, reverse=True)
