@@ -343,9 +343,10 @@ def load_retriever(
 
             retriever = EmbeddingRetriever(
                 document_store=document_store,
-                embedding_model="distiluse-base-multilingual-cased",
+                embedding_model="sentence-transformers/distiluse-base-multilingual-cased-v2",
+                model_version="fcd5c2bb3e3aa74cd765d793fb576705e4ea797e",
                 use_gpu=GPU_AVAILABLE,
-                model_format="sentence_transformers",
+                model_format="transformers",
                 pooling_strategy="reduce_max",
             )
             dicts = []

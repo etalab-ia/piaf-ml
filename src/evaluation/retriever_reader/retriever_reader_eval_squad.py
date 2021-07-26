@@ -153,7 +153,7 @@ def single_run(
         )
         retriever = EmbeddingRetriever(
             document_store=document_store,
-            embedding_model="distilbert-base-multilingual-cased",
+            embedding_model="sentence-transformers/distiluse-base-multilingual-cased-v2",
             model_version=retriever_model_version,
             use_gpu=GPU_AVAILABLE,
             model_format="transformers",
@@ -214,7 +214,7 @@ def single_run(
         )
         retriever = TitleEmbeddingRetriever(
             document_store=document_store,
-            embedding_model="distilbert-base-multilingual-cased",
+            embedding_model="sentence-transformers/distiluse-base-multilingual-cased-v2",
             model_version=retriever_model_version,
             use_gpu=GPU_AVAILABLE,
             model_format="transformers",
@@ -250,7 +250,7 @@ def single_run(
         )
         retriever = TitleEmbeddingRetriever(
             document_store=document_store,
-            embedding_model="distilbert-base-multilingual-cased",
+            embedding_model="sentence-transformers/distiluse-base-multilingual-cased-v2",
             model_version=retriever_model_version,
             use_gpu=GPU_AVAILABLE,
             model_format="transformers",
@@ -280,8 +280,8 @@ def single_run(
         )
         retriever = TitleEmbeddingRetriever(
             document_store=document_store,
-            embedding_model="distilbert-base-multilingual-cased",
-            model_version=retriever_model_version,
+            embedding_model="sentence-transformers/distiluse-base-multilingual-cased-v2",
+            model_version="fcd5c2bb3e3aa74cd765d793fb576705e4ea797e",
             use_gpu=GPU_AVAILABLE,
             model_format="transformers",
             pooling_strategy="reduce_max",
