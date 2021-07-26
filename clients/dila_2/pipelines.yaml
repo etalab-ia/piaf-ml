@@ -63,6 +63,22 @@ components:    # define all the building-blocks for Pipeline
               french_stop:
                 stopwords: _french_
                 type: stop
+  - name: LabelElasticsearchDocumentStore
+    type: ElasticsearchDocumentStore
+    params:
+      host: elasticsearch
+      index: label_elasticsearch
+      embedding_dim: 512
+      search_fields: [ question ]
+      create_index: False
+      embedding_field: emb
+      similarity: cosine
+  - name: LabelESRetriever
+    type: LabelElasticsearchRetriever
+    params:
+      document_store: LabelElasticsearchDocumentStore    # params can reference other components defined in the YAML
+      top_k: 5
+      weight_when_document_found: 99
   - name: ESRetriever
     type: ElasticsearchRetriever
     params:
@@ -89,11 +105,11 @@ components:    # define all the building-blocks for Pipeline
   - name: Join_reader
     type: JoinDocumentsCustom
     params:
-      ks_retriever: [1, 1]
+      ks_retriever: [1, 1, 1]
   - name: Join_retriever
     type: JoinDocumentsCustom
     params:
-      ks_retriever: [2, 2]
+      ks_retriever: [2, 2 ,2]
   - name: Reader       # custom-name for the component; helpful for visualization & debugging
     type: TransformersReader    # Haystack Class name for the component
     params:
@@ -104,6 +120,8 @@ components:    # define all the building-blocks for Pipeline
       return_no_answers: False
       use_gpu: -1
       top_k: 5
+  - name: RankAnswersWithWeigth
+    type: RankAnswersWithWeigth
 
 pipelines:
   - name: query
@@ -113,12 +131,14 @@ pipelines:
         inputs: [Query]
       - name: ESRetriever
         inputs: [Query]
+      - name: LabelESRetriever
+        inputs: [Query]
       - name: Join_reader
-        inputs: [TitleEmbRetriever,ESRetriever]
+        inputs: [TitleEmbRetriever,ESRetriever,LabelESRetriever]
       - name: Reader
         inputs: [Join_reader]
       - name: Join_retriever
-        inputs: [TitleEmbRetriever,ESRetriever]
+        inputs: [TitleEmbRetriever,ESRetriever,LabelESRetriever]
       - name: Answerify
         inputs: [Join_retriever]
       - name: JoinResults
