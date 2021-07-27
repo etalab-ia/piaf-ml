@@ -127,7 +127,6 @@ def test_prepare_fquad_eval(document_store):
                          [
                              ("bm25", 15 / 16, 14 / 16),
                              ("sbert", 1., (3 * 1 / 2 + 13) / 16),
-                             # ("sbert", 1, (5 * 1 / 2 + 11) / 16)]),
                              ("dpr", 1., (1 * 1 / 2 + 15) / 16)
                          ])
 def test_eval_elastic_retriever(document_store: BaseDocumentStore, retriever_bm25, retriever_emb, retriever_dpr,
