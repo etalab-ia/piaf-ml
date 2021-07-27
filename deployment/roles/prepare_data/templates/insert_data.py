@@ -31,7 +31,7 @@ def delete_indices(index="document"):
 
 
 def prepare_mapping(
-    mapping, preprocessing, title_boosting_factor=1, embedding_dimension=512
+    mapping, preprocessing, title_boosting_factor=1, embedding_dimension=768
 ):
     mapping["mappings"]["properties"]["name"]["boost"] = title_boosting_factor
     mapping["mappings"]["properties"]["emb"]["dims"] = embedding_dimension
@@ -91,7 +91,7 @@ SQUAD_MAPPING = {
         "properties": {
             "name": {"type": "text"},
             "text": {"type": "text"},
-            "emb": {"type": "dense_vector", "dims": 512},
+            "emb": {"type": "dense_vector", "dims": 768},
         },
         "dynamic_templates": [
             {
