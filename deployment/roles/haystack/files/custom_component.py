@@ -52,6 +52,14 @@ class TitleEmbeddingRetriever(EmbeddingRetriever):
                          emb_extraction_layer, top_k)
         self.weight_when_document_found = weight_when_document_found
 
+    def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[Document]:
+        documents = super().retrieve(query, filters, top_k, index)
+
+        for doc in documents:
+            doc.meta["weight"] = self.weight_when_document_found
+
+        return documents
+
     def embed_passages(self, docs: List[Document]) -> List[np.ndarray]:
         """
         Create embeddings of the titles for a list of passages. For this Retriever type: The same as calling .embed()
@@ -60,12 +68,7 @@ class TitleEmbeddingRetriever(EmbeddingRetriever):
         """
         texts = [d.meta["name"] for d in docs]
 
-        documents = self.embedding_encoder.embed(texts)
-        for doc in documents:
-            doc = doc.to_dict()
-            doc["meta"]["weight"] = self.weight_when_document_found
-            doc = Document.from_dict(doc, field_map={})
-        return documents
+        return self.embedding_encoder.embed(texts)
 
 
 class JoinDocumentsCustom(BaseComponent):
