@@ -122,6 +122,10 @@ components:    # define all the building-blocks for Pipeline
       top_k: 5
   - name: RankAnswersWithWeigth
     type: RankAnswersWithWeigth
+  - name: MergeOverlappingAnswers
+    type: MergeOverlappingAnswers
+  - name: StripLeadingSpace
+    type: StripLeadingSpace
 
 pipelines:
   - name: query
@@ -143,3 +147,7 @@ pipelines:
         inputs: [Join_retriever]
       - name: JoinResults
         inputs: [Reader, Answerify]
+      - name: MergeOverlappingAnswers
+        inputs: [Reader]
+      - name: StripLeadingSpace
+        inputs: [MergeOverlappingAnswers]

@@ -281,6 +281,32 @@ class RankAnswersWithWeigth(BaseComponent):
         return output, "output_1"
 
 
+class StripLeadingSpace(BaseComponent):
+    """
+    This component is used to eliminate the leading space character produced
+    by a TransformersReader since transformers version 4.3.
+    """
+    outgoing_edges = 1
+
+    def run(self, **kwargs):
+        answers = kwargs["answers"]
+        edited = [answer_strip_leading_space(a) for a in answers]
+        output = kwargs.copy()
+        output["answers"] = edited
+        return output, "output_1"
+
+
+def answer_strip_leading_space(answer):
+    result = answer.copy()
+    if result["answer"] and result["answer"].startswith(" "):
+        result["answer"] = result["answer"][1:]
+        result["offset_start"] += 1
+
+    if result["context"] and result["context"].startswith(" "):
+        result["context"] = result["context"][1:]
+
+    return result
+
 def merge_strings(str1, str2, minimum_overlap):
     """
     Returns a tuple `(m, i)` where `m` is a string that is the combination of str1
