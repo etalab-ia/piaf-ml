@@ -115,7 +115,7 @@ prepare_mapping(
     mapping=SQUAD_MAPPING,
     preprocessing=preprocessing,
     title_boosting_factor=title_boosting_factor,
-    embedding_dimension=512,
+    embedding_dimension=768,
 )
 
 preprocessor = PreProcessor(
@@ -136,7 +136,7 @@ document_store = ElasticsearchDocumentStore(
     search_fields=["name", "text"],
     create_index=False,
     embedding_field="emb",
-    embedding_dim=512,
+    embedding_dim=768,
     excluded_meta_data=["emb"],
     similarity="cosine",
     custom_mapping=SQUAD_MAPPING,

@@ -336,7 +336,7 @@ def load_retriever(
                 index="document",
                 search_fields=["question_sparse"],
                 embedding_field="embedding",
-                embedding_dim=512,
+                embedding_dim=768,
                 excluded_meta_data=["embedding"],
                 custom_mapping=SBERT_MAPPING,
             )
