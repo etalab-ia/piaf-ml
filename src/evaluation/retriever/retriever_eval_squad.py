@@ -172,8 +172,8 @@ def single_run(parameters):
 
     if epitca_perf_file:
         expected_answers = epitca_retriever.load_perf_file_expected_answer(epitca_perf_file)
-        custom_evaluation_questions = [{"query": q, "gold_ids": [a]} for q,a in
-            expected_answers.items()]
+        custom_evaluation_questions = [{"query": q, "gold_ids": [a]} for q, a in
+                                       expected_answers.items()]
         get_doc_id = lambda doc: doc.meta["id"]
     else:
         custom_evaluation_questions = None
@@ -186,7 +186,7 @@ def single_run(parameters):
         label_index=label_index,
         doc_index=doc_index,
         question_label_dict_list=custom_evaluation_questions,
-        get_doc_id = get_doc_id,
+        get_doc_id=get_doc_id,
     )
 
     # Retriever Recall is the proportion of questions for which the correct document containing the answer is
