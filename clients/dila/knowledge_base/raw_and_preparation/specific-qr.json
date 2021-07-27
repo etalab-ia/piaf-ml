@@ -1,0 +1,41 @@
+{
+    "version": "CRPA-Chatbot-v0.xlsx",
+    "data": [
+        {
+            "title": "Quels sont les démarches à faire afin de s’inscrire au service civique ?",
+            "paragraphs": [{"context": "Pour rechercher une mission d'engagement de service civique ou vous pré-inscrire, vous devez utiliser le téléservice dédié","qas": [] }],
+            "link": "https://www.service-public.fr/particuliers/vosdroits/F13278",
+            "theme": "FAQ"
+        },
+        {
+            "title": "Après le mariage, qui reçoit le livret de famille ?",
+            "paragraphs": [{"context": "Un livret de famille est remis aux époux à l'occasion de leur mariage.","qas": [] }],
+            "link": "https://www.service-public.fr/particuliers/vosdroits/F1345",
+            "theme": "FAQ"
+        },
+        {
+            "title": "Doit-on payer des impôts en France si on réside à l’étranger ?",
+            "paragraphs": [{"context": "l'imposition dépend de votre domicile fiscal. Ainsi, si votre domicile fiscal se situe hors de France, vous êtes imposable sur vos revenus de source française, sauf exception","qas": [] }],
+            "link": "https://www.service-public.fr/particuliers/vosdroits/F31442",
+            "theme": "FAQ"
+        },
+        {
+            "title": "Comment consulter les points restants sur mon permis ?",
+            "paragraphs": [{"context": "vous pouvez utiliser le téléservice Télépoints.","qas": [] }],
+            "link": "https://www.service-public.fr/particuliers/vosdroits/F17970",
+            "theme": "FAQ"
+        },
+        {
+            "title": "A quel âge peut-on se marier ?",
+            "paragraphs": [{"context": "Il faut être majeur pour se marier","qas": [] }],
+            "link": "https://www.service-public.fr/particuliers/vosdroits/F930",
+            "theme": "FAQ"
+        },
+        {
+            "title": "Qui s’assure des liens des mariés avec la commune ?",
+            "paragraphs": [{"context": "L'officier de l'état civil  s'assure dans tous les cas qu'au moins l'une des personnes a  des liens durables avec la commune","qas": [] }],
+            "link": "https://www.service-public.fr/particuliers/vosdroits/F930",
+            "theme": "FAQ"
+        }
+    ]
+}
