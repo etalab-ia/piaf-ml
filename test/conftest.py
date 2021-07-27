@@ -12,12 +12,11 @@ from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
 from haystack.retriever.sparse import ElasticsearchRetriever
 from haystack.preprocessor.preprocessor import PreProcessor
 
-
 sys.path.insert(0, os.path.abspath("./"))
 from src.evaluation.utils.elasticsearch_management import delete_indices, prepare_mapping
 from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
-from src.evaluation.utils.utils_eval import PiafEvalRetriever,PiafEvalReader
+from src.evaluation.utils.utils_eval import PiafEvalRetriever, PiafEvalReader
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -85,7 +84,6 @@ def document_store(elasticsearch_fixture):
     delete_indices(index=document_index)
     delete_indices(index="label")
 
-
 @pytest.fixture
 def reader(gpu_id):
     k_reader = 3
@@ -133,11 +131,12 @@ def retriever_faq(document_store, gpu_available):
         emb_extraction_layer=-1,
     )
 
-@pytest.fixture
-def Eval_Retriever():
-    return PiafEvalRetriever()
 
 @pytest.fixture
-def Eval_Reader():
+def retriever_piafeval():
+    return PiafEvalRetriever()
+
+
+@pytest.fixture
+def reader_piafeval():
     return PiafEvalReader()
-    
