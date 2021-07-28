@@ -423,7 +423,7 @@ class PiafEvalReader(EvalAnswers):
                                  "top_k_em": self.metric_counts["exact_matches_topk"] / self.query_count
                                  })
 
-        return {**kwargs}, "output_1"
+        return {"labels": labels, "answers": answers, **kwargs}, "output_1"
 
     def get_metrics(self):
         metrics = calculate_reader_metrics(self.metric_counts, self.query_count)
@@ -460,14 +460,18 @@ def full_eval_retriever_reader(
         } for l in labels
     }
 
+
+    answers = []
     for q, l in q_to_l_dict.items():
-        pipeline.run(
+        ans = pipeline.run(
             query=q,
             top_k_retriever=k_retriever,
             labels=l,
             top_k_reader=k_reader_total,
         )
+        answers.append(ans)
 
+    return answers
 
 def eval_titleQA_pipeline(
         document_store: BaseDocumentStore,
