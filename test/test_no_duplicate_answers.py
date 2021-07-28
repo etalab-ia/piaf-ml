@@ -14,17 +14,18 @@ from deployment.roles.haystack.files.custom_component import \
 
 
 def test_merge_strings():
-    assert merge_strings("a black", "black coffee", 0.1) == "a black coffee"
-    assert merge_strings("a black coffee", "black", 0.1) == "a black coffee"
-    assert merge_strings("a black coffee", "black", 1) == "a black coffee"
-    assert merge_strings("a black coffee", "a black coffee", 1) == "a black coffee"
-    assert merge_strings("a black coffee", "black coffee,", 1) == ""
-    assert merge_strings("a black coffee", " with milk", 0.1) == ""
-    assert merge_strings("a black coffee", " with milk", 0) == "a black coffee with milk"
-    assert merge_strings("a black coffee", "", 0) == ""
-    assert merge_strings("a black coffee", "", 0.1) == ""
-    assert merge_strings("a coffee is my first thing in the morning", "morning or evening", 0.5) == ""
-    assert merge_strings("a coffee is my first thing in the morning", "in the morning", 0.5) == "a coffee is my first thing in the morning"
+    assert merge_strings("a black", "black coffee", 0.1) == ("a black coffee", 2)
+    assert merge_strings("black coffee", "a black", 0.1) == ("a black coffee", -2)
+    assert merge_strings("a black coffee", "black", 0.1) == ("a black coffee", 2)
+    assert merge_strings("a black coffee", "black", 1) == ("a black coffee", 2)
+    assert merge_strings("a black coffee", "a black coffee", 1) == ("a black coffee", 0)
+    assert merge_strings("a black coffee", "black coffee,", 1) == ("", 0)
+    assert merge_strings("a black coffee", " with milk", 0.1) == ("", 0)
+    assert merge_strings("a black coffee", " with milk", 0) == ("a black coffee with milk", 14)
+    assert merge_strings("a black coffee", "", 0) == ("", 0)
+    assert merge_strings("a black coffee", "", 0.1) == ("", 0)
+    assert merge_strings("a coffee is my first thing in the morning", "morning or evening", 0.5) == ("", 0)
+    assert merge_strings("a coffee is my first thing in the morning", "in the morning", 0.5) == ("a coffee is my first thing in the morning", 27)
 
 
 @pytest.mark.elasticsearch
@@ -63,6 +64,9 @@ def test_no_duplicate_answers(document_store: BaseDocumentStore):
     # There must be only one answer that contains the text "petit fichier informatique"
     answers = [ans for ans in res["answers"] if ans["answer"] and ans["answer"].find("petit fichier informatique") != -1]
     assert len(answers) == 1
+
+    assert answers[0]["offset_start"] == 14
+    assert answers[0]["offset_end"] == 56
 
     # There should be other answers unrelated to "petit fichier informatique" that didn't get merged with the others.
     assert len(res["answers"]) > 1
