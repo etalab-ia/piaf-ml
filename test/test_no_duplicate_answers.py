@@ -65,7 +65,7 @@ def test_no_duplicate_answers(document_store: BaseDocumentStore):
     answers = [ans for ans in res["answers"] if ans["answer"] and ans["answer"].find("petit fichier informatique") != -1]
     assert len(answers) == 1
 
-    assert answers[0]["offset_start"] == 14
+    assert answers[0]["offset_start"] == 13
     assert answers[0]["offset_end"] == 56
 
     # There should be other answers unrelated to "petit fichier informatique" that didn't get merged with the others.
