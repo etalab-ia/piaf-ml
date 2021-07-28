@@ -148,6 +148,6 @@ pipelines:
       - name: JoinResults
         inputs: [Reader, Answerify]
       - name: MergeOverlappingAnswers
-        inputs: [Reader]
+        inputs: [JoinResults]
       - name: StripLeadingSpace
         inputs: [MergeOverlappingAnswers]
