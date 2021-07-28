@@ -207,34 +207,53 @@ class MergeOverlappingAnswers(BaseComponent):
         merged_answers = []
 
         for ans in answers:
+
             if ans["context"] == None or ans["answer"] == None: continue
+
             # Merge ans with the first possible answer in merged_answers
             is_merged = False
             i = 0
             while not is_merged and i < len(merged_answers):
                 mans = merged_answers[i]
-                new_merged_ctxt = merge_strings(
+
+                # Try to merge the two contexts
+                (new_merged_ctxt, _) = merge_strings(
                     mans["context"],
                     ans["context"],
                     self.minimum_overlap_contexts)
+
+                # If context merge was successful
                 if new_merged_ctxt != "":
-                    new_merged_ans = merge_strings(
+
+                    # Try to merge the answers
+                    (new_merged_ans, ans_offset) = merge_strings(
                         mans["answer"],
                         ans["answer"],
                         self.minimum_overlap_answers)
+
+                    # If answer merge was successful
                     if new_merged_ans != "":
-                        offset_start = new_merged_ctxt.find(new_merged_ans)
+
+                        if ans_offset >= 0:
+                            offset_start = mans["offset_start"]
+                        else:
+                            offset_start = mans["offset_start"] + ans_offset
+
+                        offset_end = offset_start + len(new_merged_ans)
+
                         merged_answers[i] = {
                             'answer': new_merged_ans,
                             'context': new_merged_ctxt,
                             'document_id': mans["document_id"],
                             'meta': mans["meta"],
-                            'offset_end': offset_start + len(new_merged_ans),
+                            'offset_end': offset_end,
                             'offset_start': offset_start,
                             'probability': max(mans["probability"],
                                                ans["probability"]),
                             'score': None}
+
                         is_merged = True
+
                 i += 1
 
             # If ans wasn't merged with anything, add it as is to merged_answers
@@ -264,25 +283,30 @@ class RankAnswersWithWeigth(BaseComponent):
 
 def merge_strings(str1, str2, minimum_overlap):
     """
-    Returns a string that is the combination of str1 and str2 if they overlap,
-    otherwise returns an empty string. The two strings are considered to overlap
-    if they are non-empty and one of the following conditions apply:
-    - one is a substring of the other and it's size >= `minimum_overlap * min(len(str1), len(str2))`,
+    Returns a tuple `(m, i)` where `m` is a string that is the combination of str1
+    and str2 if they overlap, otherwise returns an empty string. The two
+    strings are considered to overlap if they are non-empty and one of the
+    following conditions apply:
+    - one is a substring of the other and it's size >= `minimum_overlap *
+      min(len(str1), len(str2))`,
     - the end of one is equal to the beginning of the other and the size of the
       common substring is >= `minimum_overlap * min(len(str1), len(str2))`
 
+    The integer `i` is the offset of str2 relative to str1.
+
     For example:
 
-    merge_strings("a black", "black coffee", 0.1) == "a black coffee"
-    merge_strings("a black coffee", "black", 0.1) == "a black coffee"
-    merge_strings("a black coffee", " with milk", 0.1) == ""
-    merge_strings("a black coffee", " with milk", 0) == "a black coffee with milk"
-    merge_strings("a black coffee", "", 0) == ""
-    merge_strings("a coffee is my first thing in the morning", "morning or evening", 0.25) == ""
-    merge_strings("a coffee is my first thing in the morning", "in the morning", 0.25) == "a coffee is my first thing in the morning"
+    merge_strings("a black", "black coffee", 0.1) == ("a black coffee", 2)
+    merge_strings("black coffee", "a black", 0.1) == ("a black coffee", -2)
+    merge_strings("a black coffee", "black", 0.1) == ("a black coffee", 2)
+    merge_strings("a black coffee", " with milk", 0.1) == ("", 0)
+    merge_strings("a black coffee", " with milk", 0) == ("a black coffee with milk", 14)
+    merge_strings("a black coffee", "", 0) == ("", 0)
+    merge_strings("a coffee is my first thing in the morning", "morning or evening", 0.25) == ("", 0)
+    merge_strings("a coffee is my first thing in the morning", "in the morning", 0.25) == ("a coffee is my first thing in the morning", 27)
     """
 
-    if str1 == "" or str2 == "": return ""
+    if str1 == "" or str2 == "": return ("", 0)
 
     # Brute force algorithm for a start. Probably inefficient for large
     # sequences.
@@ -319,11 +343,11 @@ def merge_strings(str1, str2, minimum_overlap):
 
     if best_s >= minimum_overlap_chars:
         if best_i >= 0:
-            return str1 + str2[best_s:]
+            return (str1 + str2[best_s:], best_i)
         else:
-            return str2 + str1[best_s:]
+            return (str2 + str1[best_s:], best_i)
     else:
-        return ""
+        return ("", 0)
 
 
 def get_weight(doc):
