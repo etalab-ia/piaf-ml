@@ -125,27 +125,34 @@ def prepare_mlflow_server():
         tqdm.write(f"MLflow tracking to local mlruns folder")
 
 def mlflow_log_run(
+        experiment_name,
         params,
-        retriever_reader_eval_results,
+        results,
         idx=None,
         root_log_path="./logs/root.log",
         pass_criteria=None,
         yaml_dir_prefix="./output/pipelines"
         ):
+
+    mlflow.set_experiment(experiment_name)
+
     with mlflow.start_run(run_name=idx) as run:
         mlflow.log_params(params)
         mlflow.log_metrics(
-            {k: v for k, v in retriever_reader_eval_results.items() if v is not None}
+            {k: v for k, v in results.items() if v is not None}
         )
+
         yaml_path = pipelines.pipeline_dirpath(params, yaml_dir_prefix) \
                 / "pipelines.yaml"
         try:
-            mlflow.log_artifact(yaml_path)
+            logger.info(f"Sending {yaml_path} to mlflow artifact server.")
+            mlflow.log_artifact(yaml_path, artifact_path = "pipelines.yaml")
         except Exception:
             logger.error(f"Could not upload {yaml_path} to mlflow server.")
+
         if pass_criteria != None:
             mlflow.set_tag("pass_criteria", pass_criteria)
-        logger.info(f"Run finished successfully")
+
         try:
             mlflow.log_artifact(root_log_path)
         except Exception:

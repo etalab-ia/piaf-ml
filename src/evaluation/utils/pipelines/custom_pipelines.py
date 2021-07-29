@@ -19,6 +19,8 @@ import src.evaluation.utils.pipelines.components.document_stores as document_sto
 import src.evaluation.utils.pipelines.components.evals as evals
 import src.evaluation.utils.pipelines.components.readers as readers
 import src.evaluation.utils.pipelines.components.retrievers as retrievers
+import src.evaluation.utils.pipelines.components.utilities as utilities
+
 
 # TODO: Obsolete?
 class TitleQAPipeline(BaseStandardPipeline):
@@ -155,11 +157,11 @@ def retriever_reader(reader, retriever, eval_retriever, eval_reader):
                 inputs=["Retriever"])
 
     pipeline.add_node(
-            component=MergeOverlappingAnswers(),
+            component=utilities.merge_overlapping_answers(),
             name="MergeOverlappingAnswers",
             inputs=["Reader"])
     pipeline.add_node(
-            component=StripLeadingSpace(),
+            component=utilities.strip_leading_space(),
             name='StripLeadingSpace',
             inputs=['MergeOverlappingAnswers'])
 
@@ -176,14 +178,15 @@ def retriever_reader(reader, retriever, eval_retriever, eval_reader):
 def retriever_bm25(
         elasticsearch_hostname,
         elasticsearch_port,
-        title_boosting_factor):
+        title_boosting_factor,
+        k):
 
     document_store = document_stores.elasticsearch(
             elasticsearch_hostname, elasticsearch_port,
             similarity = "cosine", embedding_dim = 768,
             title_boosting_factor = title_boosting_factor)
 
-    retriever = retrievers.bm25(document_store=document_store)
+    retriever = retrievers.bm25(document_store=document_store, top_k = k)
 
     p = Pipeline()
     p.add_node(component=retriever, name="Retriever", inputs=["Query"])
@@ -263,6 +266,8 @@ def retriever_reader_bm25(
         title_boosting_factor,
         reader_model_version,
         gpu_id,
+        k_retriever,
+        k_reader_total,
         k_reader_per_candidate):
 
     document_store = document_stores.elasticsearch(
@@ -270,10 +275,10 @@ def retriever_reader_bm25(
             similarity = "cosine", embedding_dim = 768,
             title_boosting_factor = title_boosting_factor)
 
-    retriever = retrievers.bm25(document_store)
+    retriever = retrievers.bm25(document_store, top_k = k_retriever)
 
-    reader = readers.transformers_reader(reader_model_version, gpu_id,
-            k_reader_per_candidate)
+    reader = readers.transformers_reader(reader_model_version, gpu_id, 
+            k_reader_total, k_reader_per_candidate)
 
     eval_retriever = evals.piaf_eval_retriever()
     eval_reader = evals.piaf_eval_reader()
@@ -386,7 +391,7 @@ def retriever_reader_title_bm25(
     retriever_title = retrievers.title(document_store, retriever_model_version,
             gpu_available)
 
-    retriever_bm25 = retrievers.bm25(document_store)
+    retriever_bm25 = retrievers.bm25(document_store, top_k = k_bm25_retriever)
 
     reader = readers.transformers_reader(reader_model_version, gpu_id, 
             k_reader_per_candidate)
@@ -513,7 +518,7 @@ def hottest_reader_pipeline(
             retriever_model_version = retriever_model_version,
             gpu_available = gpu_id >= 0)
 
-    retriever_bm25 = retrievers.bm25(document_store)
+    retriever_bm25 = retrievers.bm25(document_store, top_k = k_bm25_retriever)
 
     reader = readers.transformers_reader(reader_model_version, gpu_id,
             k_reader_per_candidate)
@@ -554,4 +559,118 @@ def hottest_reader_pipeline(
 
     return pipeline
 
+def cnil(
+        elasticsearch_hostname,
+        elasticsearch_port,
+        title_boosting_factor,
+        retriever_model_version,
+        reader_model_version,
+        gpu_id,
+        k_reader_total,
+        k_reader_per_candidate,
+        k_title_retriever,
+        k_bm25_retriever,
+        k_label_retriever,
+        ks_retriever,
+        weight_when_document_found,
+        threshold_score,
+        context_window_size,
+        is_eval):
 
+    p = Pipeline()
+
+    document_store = document_stores.elasticsearch(
+            elasticsearch_hostname = elasticsearch_hostname,
+            elasticsearch_port = elasticsearch_port,
+            similarity = "cosine",
+            embedding_dim = 768,
+            title_boosting_factor = title_boosting_factor)
+
+
+    title_retriever = retrievers.title(document_store, retriever_model_version, 
+            gpu_available = gpu_id >= 0, top_k = k_title_retriever)
+
+    p.add_node(
+            component=title_retriever,
+            name='TitleEmbRetriever',
+            inputs=['Query'])
+
+    bm25_retriever = retrievers.bm25(document_store, top_k = k_bm25_retriever)
+
+    p.add_node(
+            component=bm25_retriever,
+            name='ESRetriever',
+            inputs=['Query'])
+
+    label_retriever = retrievers.label_elasticsearch_retriever(
+            document_store = document_store,
+            top_k = k_label_retriever,
+            weight_when_document_found = weight_when_document_found)
+
+    if not is_eval:
+        p.add_node(
+                component=label_retriever,
+                name='LabelESRetriever',
+                inputs=['Query'])
+
+    join = utilities.join_document_custom(ks_retriever = ks_retriever)
+
+    # If this pipeline is built for evaluation, the LabelESRetriever should not
+    # be present, because it would always give the pipeline perfect score given
+    # the evaluation data.
+    if not is_eval:
+        p.add_node(
+                component=join,
+                name='Join',
+                inputs=['TitleEmbRetriever', 'ESRetriever', 'LabelESRetriever'])
+    else:
+        p.add_node(
+            component=join,
+            name='Join',
+            inputs=['TitleEmbRetriever', 'ESRetriever'])
+
+        p.add_node(
+            component = evals.piaf_eval_retriever(),
+            name = 'EvalRetriever',
+            inputs = ['Join'])
+
+    reader = readers.transformers_reader(
+            reader_model_version = reader_model_version,
+            gpu_id = gpu_id,
+            k_reader_total = k_reader_total,
+            k_reader_per_candidate = k_reader_per_candidate,
+            context_window_size = context_window_size)
+
+    if not is_eval:
+        p.add_node(
+                component=reader,
+                name='Reader',
+                inputs=['Join'])
+    else:
+        p.add_node(
+                component=reader,
+                name='Reader',
+                inputs=['EvalRetriever'])
+
+    p.add_node(
+            component=utilities.merge_overlapping_answers(),
+            name='MergeOverlappingAnswers',
+            inputs=['Reader'])
+
+    p.add_node(
+            component=utilities.strip_leading_space(),
+            name='StripLeadingSpace',
+            inputs=['MergeOverlappingAnswers'])
+
+    p.add_node(
+            component=utilities.rank_answers_with_weight(),
+            name='RankAnswersWithWeigth',
+            inputs=['StripLeadingSpace'])
+
+    if is_eval:
+        p.add_node(
+                component=evals.piaf_eval_reader(),
+                name="EvalReader",
+                inputs=["RankAnswersWithWeigth"])
+
+    return p

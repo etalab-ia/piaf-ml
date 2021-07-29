@@ -313,6 +313,7 @@ if __name__ == "__main__":
 
     for (run_id, params, results) in runs:
         clean_log()
-        mlflow_log_run(params, results, idx = run_id,
+        mlflow_log_run(parameter_tuning_options["experiment_name"], params, 
+                results, idx = run_id,
                 yaml_dir_prefix = yaml_dir_prefix)
 
