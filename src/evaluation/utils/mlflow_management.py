@@ -17,11 +17,10 @@ def add_extra_params(dict_params: dict):
     extra_parameters = {
         "date": datetime.today().strftime("%Y-%m-%d_%H-%M-%S"),
         "hostname": socket.gethostname(),
+        "experiment_id": hashlib.md5(str(dict_params).encode("utf-8")).hexdigest()[:4]
     }
 
-    dict_params.update(extra_parameters)
-    experiment_id = hashlib.md5(str(dict_params).encode("utf-8")).hexdigest()[:4]
-    dict_params.update({"experiment_id": experiment_id})
+    return {**dict_params, **extra_parameters}
 
 
 def hash_piaf_code():

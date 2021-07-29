@@ -198,7 +198,7 @@ def grid_search(parameters, mlflow_client, experiment_name, use_cache=False,
             desc="GridSearch",
             unit="config",
     ):
-        add_extra_params(param)
+        enriched_param = add_extra_params(param)
         if (
                 idx in list_past_run_names.keys() and use_cache
         ):  # run not done
@@ -218,7 +218,7 @@ def grid_search(parameters, mlflow_client, experiment_name, use_cache=False,
 
             # For debugging purpose, we keep a copy of the results in a csv form
             save_results(result_file_path=result_file_path,
-                         results_list={**run_results, **param})
+                         results_list={**run_results, **enriched_param})
 
             # update list of past experiments
             list_past_run_names = get_list_past_run(mlflow_client, experiment_name)

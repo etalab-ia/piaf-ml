@@ -13,9 +13,10 @@ components used in the pipelines defined in the `custom_pipelines` submodule.
 """
 
 
-from pathlib import Path
-from haystack.pipeline import Pipeline
 import hashlib
+from haystack.pipeline import Pipeline
+import json
+from pathlib import Path
 
 import src.evaluation.utils.pipelines.custom_pipelines as custom_pipelines
 
@@ -172,7 +173,6 @@ def pipeline_to_yaml_and_back(pipeline, parameters, prefix = "./output/pipelines
     return Pipeline.load_from_yaml(yaml_path, overwrite_with_env_variables = False)
 
 def pipeline_dirpath(parameters, prefix = "./output/pipelines/"):
-    params_hash = hashlib.sha1(repr(frozenset(parameters.items())).encode()) \
-        .hexdigest()
+    params_hash = hashlib.sha1(json.dumps(parameters, sort_keys=True).encode()).hexdigest()
     path = Path(parameters["retriever_type"]) / params_hash
     return Path(prefix) / path
