@@ -15,10 +15,7 @@ parameters = {
     "split_by": ["word"],  # Can be "word", "sentence", or "passage"
     "split_length": [1000],
 }
-# rules:
-# corpus and retriever type requires reloading ES indexing
-# filtering requires >v10
-#
+
 
 parameter_tuning_options = {
     # "experiment_name": "DILA_fullspfV1",

@@ -6,7 +6,7 @@ components:    # define all the building-blocks for Pipeline
     params:
       host: elasticsearch
       index: document_elasticsearch
-      embedding_dim: 512
+      embedding_dim: 768
       search_fields: [text, name]
       create_index: False
       embedding_field: emb
@@ -22,7 +22,7 @@ components:    # define all the building-blocks for Pipeline
               path_match: '*'
           properties:
             emb:
-              dims: 512
+              dims: 768
               type: dense_vector
             name:
               boost: 1
@@ -89,8 +89,8 @@ components:    # define all the building-blocks for Pipeline
     params:
       document_store: ElasticsearchDocumentStore    # params can reference other components defined in the YAML
       top_k: 5
-      embedding_model: distiluse-base-multilingual-cased
-      model_format: sentence_transformers
+      embedding_model: sentence-transformers/distiluse-base-multilingual-cased-v2
+      model_format: transformers
       use_gpu: False
       emb_extraction_layer: -1
       pooling_strategy: reduce_max
@@ -147,7 +147,3 @@ pipelines:
         inputs: [Join_retriever]
       - name: JoinResults
         inputs: [Reader, Answerify]
-      - name: MergeOverlappingAnswers
-        inputs: [JoinResults]
-      - name: StripLeadingSpace
-        inputs: [MergeOverlappingAnswers]

@@ -31,7 +31,7 @@ def delete_indices(index="document"):
 
 
 def prepare_mapping(
-    mapping, preprocessing, title_boosting_factor=1, embedding_dimension=512
+    mapping, preprocessing, title_boosting_factor=1, embedding_dimension=768
 ):
     mapping["mappings"]["properties"]["name"]["boost"] = title_boosting_factor
     mapping["mappings"]["properties"]["emb"]["dims"] = embedding_dimension
@@ -91,7 +91,7 @@ SQUAD_MAPPING = {
         "properties": {
             "name": {"type": "text"},
             "text": {"type": "text"},
-            "emb": {"type": "dense_vector", "dims": 512},
+            "emb": {"type": "dense_vector", "dims": 768},
         },
         "dynamic_templates": [
             {
@@ -115,7 +115,7 @@ prepare_mapping(
     mapping=SQUAD_MAPPING,
     preprocessing=preprocessing,
     title_boosting_factor=title_boosting_factor,
-    embedding_dimension=512,
+    embedding_dimension=768,
 )
 
 preprocessor = PreProcessor(
@@ -136,16 +136,17 @@ document_store = ElasticsearchDocumentStore(
     search_fields=["name", "text"],
     create_index=False,
     embedding_field="emb",
-    embedding_dim=512,
+    embedding_dim=768,
     excluded_meta_data=["emb"],
     similarity="cosine",
     custom_mapping=SQUAD_MAPPING,
 )
 retriever = TitleEmbeddingRetriever(
     document_store=document_store,
-    embedding_model="distiluse-base-multilingual-cased",
+    embedding_model="sentence-transformers/distiluse-base-multilingual-cased-v2",
+    model_version="fcd5c2bb3e3aa74cd765d793fb576705e4ea797e",
     use_gpu=False,
-    model_format="sentence_transformers",
+    model_format="transformers",
     pooling_strategy="reduce_max",
     emb_extraction_layer=-1,
 )

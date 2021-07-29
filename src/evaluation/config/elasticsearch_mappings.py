@@ -43,7 +43,7 @@ SBERT_MAPPING = {
             "link": {"type": "keyword"},
             "name": {"type": "keyword"},
             "question_sparse": {"type": "text"},
-            "embedding": {"type": "dense_vector", "dims": 512},
+            "embedding": {"type": "dense_vector", "dims": 768},
             "text": {"type": "text"},
             "theme": {"type": "keyword"},
             "dossier": {"type": "keyword"},
@@ -86,7 +86,7 @@ SQUAD_MAPPING = {
         "properties": {
             "name": {"type": "text"},
             "text": {"type": "text"},
-            "emb": {"type": "dense_vector", "dims": 512},
+            "emb": {"type": "dense_vector", "dims": 768},
         },
         "dynamic_templates": [
             {
