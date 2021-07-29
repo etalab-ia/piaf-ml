@@ -52,6 +52,7 @@ def single_run(
         gpu_id = -1,
         elasticsearch_hostname = "localhost",
         elasticsearch_port = 9200,
+        yaml_dir_prefix = "./output/pipelines/retriever_reader",
         ):
     """
     Perform one run of the pipeline under testing with the parameters given in the config file. The results are
@@ -63,7 +64,8 @@ def single_run(
     p = pipelines.retriever_reader(parameters,
             elasticsearch_hostname = elasticsearch_hostname,
             elasticsearch_port = elasticsearch_port,
-            gpu_id = gpu_id)
+            gpu_id = gpu_id,
+            yaml_dir_prefix = yaml_dir_prefix)
 
     # Get all the retrievers used in the pipelines.
     retrievers = [p.get_node(name)
@@ -145,7 +147,8 @@ def single_run(
 
 def optimize(parameters, n_calls, result_file_path, gpu_id=-1,
              elasticsearch_hostname="localhost",
-             elasticsearch_port=9200):
+             elasticsearch_port=9200,
+             yaml_dir_prefix="./output/pipelines/retriever_reader"):
     """ Returns a list of n_calls tuples [(x1, v1), ...] where the lists xi are
     the parameter values for each evaluation and the dictionaries vi are the run
     results. The parameter values for the successive runs are determined by the
@@ -162,7 +165,8 @@ def optimize(parameters, n_calls, result_file_path, gpu_id=-1,
     def single_run_optimization(params):
         result = single_run(params, gpu_id = gpu_id,
                             elasticsearch_hostname = elasticsearch_hostname, 
-                            elasticsearch_port = elasticsearch_port)
+                            elasticsearch_port = elasticsearch_port,
+                            yaml_dir_prefix = yaml_dir_prefix)
 
         results.append((None, parameters, result))
 
@@ -182,7 +186,8 @@ def optimize(parameters, n_calls, result_file_path, gpu_id=-1,
 
 def grid_search(parameters, mlflow_client, experiment_name, use_cache=False,
                 result_file_path=Path("./output/results_reader.csv"), gpu_id=-1,
-                elasticsearch_hostname="localhost", elasticsearch_port=9200):
+                elasticsearch_hostname="localhost", elasticsearch_port=9200,
+                yaml_dir_prefix="./output/pipelines/retriever_reader"):
     """ Returns a generator of tuples [(id1, x1, v1), ...] where id1 is the run
     id, the lists xi are the parameter values for each evaluation and the
     dictionaries vi are the run results. The parameter values for each
@@ -214,7 +219,8 @@ def grid_search(parameters, mlflow_client, experiment_name, use_cache=False,
             logging.info(f"Doing run with config : {param}")
             run_results = single_run(param, gpu_id = gpu_id,
                                      elasticsearch_hostname = elasticsearch_hostname,
-                                     elasticsearch_port = elasticsearch_port)
+                                     elasticsearch_port = elasticsearch_port,
+                                     yaml_dir_prefix = yaml_dir_prefix)
 
             # For debugging purpose, we keep a copy of the results in a csv form
             save_results(result_file_path=result_file_path,
@@ -232,7 +238,8 @@ def tune_pipeline(
         parameters,
         parameter_tuning_options,
         elasticsearch_hostname,
-        elasticsearch_port):
+        elasticsearch_port,
+        yaml_dir_prefix):
     """
     Run the parameter tuning method for the whole pipeline based on the
     parameters.
@@ -264,7 +271,8 @@ def tune_pipeline(
             result_file_path=Path("./output/optimize_result.z"),
             gpu_id=gpu_id,
             elasticsearch_hostname=elasticsearch_hostname,
-            elasticsearch_port=elasticsearch_port)
+            elasticsearch_port=elasticsearch_port,
+            yaml_dir_prefix=yaml_dir_prefix)
 
     elif parameter_tuning_options["tuning_method"] == "grid_search":
         runs = grid_search(
@@ -275,7 +283,8 @@ def tune_pipeline(
             gpu_id=gpu_id,
             result_file_path=Path("./output/results_reader.csv"),
             elasticsearch_hostname=elasticsearch_hostname,
-            elasticsearch_port=elasticsearch_port)
+            elasticsearch_port=elasticsearch_port,
+            yaml_dir_prefix=yaml_dir_prefix)
 
     else:
         print("Unknown parameter tuning method: ",
@@ -293,13 +302,17 @@ if __name__ == "__main__":
     from src.evaluation.config.retriever_reader_eval_squad_config import \
         parameters, parameter_tuning_options
 
+    yaml_dir_prefix = "./output/pipelines/retriever_reader"
+
     runs = tune_pipeline(
         parameters,
         parameter_tuning_options,
         elasticsearch_hostname=os.getenv("ELASTICSEARCH_HOSTNAME") or "localhost",
-        elasticsearch_port=int((os.getenv("ELASTICSEARCH_PORT")) or 9200))
+        elasticsearch_port=int((os.getenv("ELASTICSEARCH_PORT")) or 9200),
+        yaml_dir_prefix = yaml_dir_prefix)
 
     for (run_id, params, results) in runs:
         clean_log()
-        mlflow_log_run(params, results, idx=run_id)
+        mlflow_log_run(params, results, idx = run_id,
+                yaml_dir_prefix = yaml_dir_prefix)
 

@@ -64,7 +64,7 @@ def retriever(
     # Save the pipeline to yaml and load it back from yaml to make sure the 
     # pipeline being evaluated is build the same way as it is in prod.
     pipeline = pipeline_to_yaml_and_back(pipeline, parameters,
-            prefix = Path(yaml_dir_prefix) / "retriever")
+            prefix = Path(yaml_dir_prefix))
 
     return pipeline
 
@@ -153,7 +153,7 @@ def retriever_reader(
     # Save the pipeline to yaml and load it back from yaml to make sure the 
     # pipeline being evaluated is build the same way as it is in prod.
     pipeline = pipeline_to_yaml_and_back(pipeline, parameters,
-            prefix = Path(yaml_dir_prefix) / "retriever_reader")
+            prefix = Path(yaml_dir_prefix))
 
     return pipeline
 
