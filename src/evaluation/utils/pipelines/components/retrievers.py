@@ -18,24 +18,13 @@ def google(document_store, google_retriever_website):
 def sbert(document_store, retriever_model_version, gpu_available):
     return EmbeddingRetriever(
             document_store=document_store,
-            embedding_model="distilbert-base-multilingual-cased",
+            embedding_model="sentence-transformers/distiluse-base-multilingual-cased-v2",
             model_version=retriever_model_version,
             use_gpu=gpu_available,
             model_format="transformers",
             pooling_strategy="reduce_max",
             emb_extraction_layer=-1,
         )
-
-#def sbert_distiluse(document_store, retriever_model_version, gpu_available)
-#        retriever = EmbeddingRetriever(
-#            document_store=document_store,
-#            embedding_model="distiluse-base-multilingual-cased",
-#            use_gpu=GPU_AVAILABLE,
-#            model_format="sentence_transformers",
-#            pooling_strategy="reduce_max",
-#            emb_extraction_layer=-1,
-#        )
-
 
 def dpr(document_store, dpr_model_version, gpu_available):
     return DensePassageRetriever(
@@ -50,7 +39,7 @@ def dpr(document_store, dpr_model_version, gpu_available):
 def title(document_store, retriever_model_version, gpu_available):
     return TitleEmbeddingRetriever(
             document_store=document_store,
-            embedding_model="distilbert-base-multilingual-cased",
+            embedding_model="sentence-transformers/distiluse-base-multilingual-cased-v2",
             model_version=retriever_model_version,
             use_gpu=gpu_available,
             model_format="transformers",

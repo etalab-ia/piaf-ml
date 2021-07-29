@@ -38,6 +38,6 @@ def delete_indices(hostname = "localhost", port = "9200", index="document"):
     es.indices.delete(index=index, ignore=[400, 404])
 
 
-def prepare_mapping(mapping, title_boosting_factor=1, embedding_dimension=512):
+def prepare_mapping(mapping, title_boosting_factor=1, embedding_dimension=768):
     mapping["mappings"]["properties"]["name"]["boost"] = title_boosting_factor
     mapping["mappings"]["properties"]["emb"]["dims"] = embedding_dimension
