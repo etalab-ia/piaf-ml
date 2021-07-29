@@ -6,9 +6,9 @@ def add_question_to_squad():
     We have a list of question that DILA prodvided for better autocomplete.
     To add them to the dataset, we created this simple script
 
-    Once you are satisfied with your squad.json, simply run 
+    Once you are satisfied with your squad.json, simply run
     add_question_to_squad()
-    and you will add to your squad.json the question manully wirtten in the 
+    and you will add to your squad.json the question manully wirtten in the
     manual_question_autocomplete.csv file
     """
     l = []
@@ -17,22 +17,23 @@ def add_question_to_squad():
         for row in links_file:
             l.append(row)
 
-    with open('squad_only_fiches.json') as f:
+    with open('../squad.json') as f:
         squad = json.load(f)
-        # for each fiche in the squad.json we will look the links   
+        # for each fiche in the squad.json we will look the links
         for fiche in squad["data"]:
             fiche_link = fiche["link"]
             # let's see if any question matches the links bellow
             for question_lien in l:
                 if question_lien["Lien"] == fiche_link:
-                    print('bingo')
+                    a = {}
+                    a["text"] = fiche["paragraphs"][0]["context"]
+                    a["answer_start"] = 0
                     qa = {
                     "question": question_lien["Question"],
-                    "answers": [],
+                    "answers": [a],
                     "is_impossible": False
                     }
                     fiche["paragraphs"][0]["qas"].append(qa)
-
     with open('../squad.json', 'w', encoding='utf-8') as f:
         json.dump(squad, f, ensure_ascii=False, indent=4)
 
@@ -45,9 +46,9 @@ def merge_json_files(squad_file_path,aide_file_path,demarches_file_path):
     - Aide manually extracted
     - demarches manually extracted
 
-    Simply run 
+    Simply run
     merge_json_files('squad_only_fiches.json','manual_dataset_aide.json','manual_dataset_demarches.json')
-    and you will output a new squad.json in the top parent folder (we overwrite the old squad.json)    
+    and you will output a new squad.json in the top parent folder (we overwrite the old squad.json)
     """
     with open(squad_file_path) as f1:
         s = json.load(f1)
