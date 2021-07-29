@@ -5,8 +5,9 @@ from typing import Dict, List, Union
 
 import pandas as pd
 from haystack.document_store.base import BaseDocumentStore
-from haystack.eval import eval_counts_reader, calculate_reader_metrics, _count_no_answer, _calculate_f1, _count_overlap, \
-    _count_exact_match, EvalRetriever, EvalReader
+from haystack.eval import eval_counts_reader, calculate_reader_metrics, \
+    _count_no_answer, _calculate_f1, _count_overlap, _count_exact_match, \
+    EvalDocuments, EvalAnswers
 from haystack.pipeline import Pipeline
 from tqdm import tqdm
 
@@ -200,7 +201,7 @@ def eval_retriever_reader(
     return metrics
 
 
-class PiafEvalRetriever(EvalRetriever):
+class PiafEvalRetriever(EvalDocuments):
     """
     This is a pipeline node that should be placed after a Retriever in order to assess its performance. Performance
     metrics are stored in this class and updated as each sample passes through it.
@@ -318,7 +319,7 @@ class PiafEvalRetriever(EvalRetriever):
         }
 
 
-class PiafEvalReader(EvalReader):
+class PiafEvalReader(EvalAnswers):
     """
     This is a pipeline node that should be placed after a Reader in order to assess the performance of the Reader
     To extract the metrics in a dict form use EvalReader.get_metrics().
@@ -422,7 +423,7 @@ class PiafEvalReader(EvalReader):
                                  "top_k_em": self.metric_counts["exact_matches_topk"] / self.query_count
                                  })
 
-        return {**kwargs}, "output_1"
+        return {"labels": labels, "answers": answers, **kwargs}, "output_1"
 
     def get_metrics(self):
         metrics = calculate_reader_metrics(self.metric_counts, self.query_count)
@@ -459,14 +460,18 @@ def full_eval_retriever_reader(
         } for l in labels
     }
 
+
+    answers = []
     for q, l in q_to_l_dict.items():
-        pipeline.run(
+        ans = pipeline.run(
             query=q,
             top_k_retriever=k_retriever,
             labels=l,
             top_k_reader=k_reader_total,
         )
+        answers.append(ans)
 
+    return answers
 
 def eval_titleQA_pipeline(
         document_store: BaseDocumentStore,

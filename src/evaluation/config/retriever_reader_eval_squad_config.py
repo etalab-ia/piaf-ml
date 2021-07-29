@@ -7,8 +7,8 @@ parameters = {
     "reader_model_version": ["053b085d851196110d7a83d8e0f077d0a18470be"],
     "retriever_model_version": ["1a01b38498875d45f69b2a6721bf6fe87425da39"],
     "dpr_model_version": ["v1.0"],
-    "retriever_type": ["title"], # Can be bm25, sbert, dpr, title or title_bm25
-    "squad_dataset": ["./clients/cnil/knowledge_base/besoindaide_PIAF_V5.json"],
+    "retriever_type": ["dpr"], # Can be bm25, sbert, dpr, title or title_bm25
+    "squad_dataset": ["./clients/cnil/knowledge_base/squad.json"],
     "filter_level": [None],
     "preprocessing": [False],
     "boosting" : [1], #default to 1
