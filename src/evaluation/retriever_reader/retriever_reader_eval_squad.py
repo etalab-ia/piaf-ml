@@ -60,8 +60,10 @@ def single_run(
 
     evaluation_data = Path(parameters["squad_dataset"])
 
-    p = pipelines.retriever_reader(parameters, gpu_id, elasticsearch_hostname,
-            elasticsearch_port)
+    p = pipelines.retriever_reader(parameters,
+            elasticsearch_hostname = elasticsearch_hostname,
+            elasticsearch_port = elasticsearch_port,
+            gpu_id = gpu_id)
 
     # Get all the retrievers used in the pipelines.
     retrievers = [p.get_node(name)

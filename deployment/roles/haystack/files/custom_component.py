@@ -20,6 +20,11 @@ class LabelElasticsearchRetriever(ElasticsearchRetriever):
     def __init__(self, document_store: ElasticsearchDocumentStore, top_k: int = 10, custom_query: str = None,
                  weight_when_document_found: int = 99):
         super().__init__(document_store, top_k, custom_query)
+
+        # save init parameters to enable export of component config as YAML
+        self.set_config(document_store = document_store, top_k = top_k, custom_query = custom_query,
+                 weight_when_document_found = weight_when_document_found)
+
         self.weight_when_document_found = weight_when_document_found
 
     def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[Document]:
@@ -50,6 +55,19 @@ class TitleEmbeddingRetriever(EmbeddingRetriever):
     ):
         super().__init__(document_store, embedding_model, model_version, use_gpu, model_format, pooling_strategy,
                          emb_extraction_layer, top_k)
+
+        # save init parameters to enable export of component config as YAML
+        self.set_config(
+            document_store = document_store,
+            embedding_model = embedding_model,
+            model_version = model_version,
+            use_gpu = use_gpu,
+            model_format = model_format,
+            pooling_strategy = pooling_strategy,
+            emb_extraction_layer = emb_extraction_layer,
+            top_k = top_k,
+            weight_when_document_found = weight_when_document_found)
+
         self.weight_when_document_found = weight_when_document_found
 
     def retrieve(self, query: str, filters: dict = None, top_k: Optional[int] = None, index: str = None) -> List[Document]:
@@ -83,6 +101,10 @@ class JoinDocumentsCustom(BaseComponent):
         :param ks_retriever: A node-wise list(length of list must be equal to the number of input nodes) of k_retriever kept for
                         the concatenation of the retrievers in the nodes. If set to None, the number of documents retrieved will be used
         """
+
+        # save init parameters to enable export of component config as YAML
+        self.set_config(ks_retriever = ks_retriever)
+
         self.ks_retriever = ks_retriever
 
     def run(self, **kwargs):
@@ -112,6 +134,12 @@ class AnswerifyDocuments(BaseComponent):
     This component is used to transform the documents retrieved in a shape that can be used like a Reader answer.
     """
     outgoing_edges = 1
+
+    def __init__(self):
+
+        # save init parameters to enable export of component config as YAML
+        self.set_config()
+
 
     def run(self, **kwargs):
         query = kwargs["query"]
@@ -155,6 +183,11 @@ class JoinAnswers(BaseComponent):
         """
         :param threshold_score: The threshold that will be used for keeping or not the answer from the readers
         """
+
+        # save init parameters to enable export of component config as YAML
+        self.set_config(threshold_score = threshold_score, top_k = top_k,
+                max_reader_answer = max_reader_answer)
+
         self.threshold_score = threshold_score
         self.top_k = top_k
         self.max_reader_answer = max_reader_answer
@@ -199,6 +232,11 @@ class MergeOverlappingAnswers(BaseComponent):
     outgoing_edges = 1
 
     def __init__(self, minimum_overlap_contexts=0.75, minimum_overlap_answers=0.25):
+
+        # save init parameters to enable export of component config as YAML
+        self.set_config(minimum_overlap_contexts = minimum_overlap_contexts, 
+                minimum_overlap_answers = minimum_overlap_answers)
+
         self.minimum_overlap_contexts = minimum_overlap_contexts
         self.minimum_overlap_answers = minimum_overlap_answers
 
@@ -272,6 +310,12 @@ class RankAnswersWithWeigth(BaseComponent):
     """
     outgoing_edges = 1
 
+    def __init__(self):
+
+        # save init parameters to enable export of component config as YAML
+        self.set_config()
+
+
     def run(self, **kwargs):
         answers = kwargs["answers"]
         answers_dict_format = [a if isinstance(a, dict) else a.to_dict() for a in answers]
@@ -287,6 +331,11 @@ class StripLeadingSpace(BaseComponent):
     by a TransformersReader since transformers version 4.3.
     """
     outgoing_edges = 1
+
+    def __init__(self):
+
+        # save init parameters to enable export of component config as YAML
+        self.set_config()
 
     def run(self, **kwargs):
         answers = kwargs["answers"]

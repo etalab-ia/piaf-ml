@@ -32,6 +32,11 @@ class EpitcaRetriever(BaseRetriever):
             documents ids returned by Epitca as well as the document id for the
             expected response.
         """
+
+        # save init parameters to enable export of component config as YAML
+        self.set_config(document_store = document_store, top_k = top_k,
+                epitca_perf_file = epitca_perf_file)
+
         self.document_store = document_store
         self.top_k = top_k
         self.epitca_perf_file = Path(epitca_perf_file)

@@ -33,6 +33,11 @@ class GoogleRetriever(BaseRetriever):
             :param retrieved_search_file: the path to the backup of the links retrieved by google. This must be a json
         """
 
+        # save init parameters to enable export of component config as YAML
+        self.set_config(document_store = document_store, top_k = top_k,
+                website = website,
+                retrieved_search_file = retrieved_search_file)
+
         self.document_store = document_store
         self.top_k = top_k
         self.website = website
