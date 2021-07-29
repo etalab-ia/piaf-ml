@@ -112,6 +112,8 @@ components:    # define all the building-blocks for Pipeline
     type: MergeOverlappingAnswers
   - name: RankAnswersWithWeigth
     type: RankAnswersWithWeigth
+  - name: StripLeadingSpace
+    type: StripLeadingSpace
 
 pipelines:
   - name: query
@@ -129,5 +131,7 @@ pipelines:
         inputs: [Join]
       - name: MergeOverlappingAnswers
         inputs: [Reader]
-      - name: RankAnswersWithWeigth
+      - name: StripLeadingSpace
         inputs: [MergeOverlappingAnswers]
+      - name: RankAnswersWithWeigth
+        inputs: [StripLeadingSpace]

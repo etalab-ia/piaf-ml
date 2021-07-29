@@ -68,7 +68,7 @@ components:    # define all the building-blocks for Pipeline
     params:
       host: elasticsearch
       index: label_elasticsearch
-      embedding_dim: 768
+      embedding_dim: 512
       search_fields: [ question ]
       create_index: False
       embedding_field: emb
@@ -122,6 +122,10 @@ components:    # define all the building-blocks for Pipeline
       top_k: 5
   - name: RankAnswersWithWeigth
     type: RankAnswersWithWeigth
+  - name: MergeOverlappingAnswers
+    type: MergeOverlappingAnswers
+  - name: StripLeadingSpace
+    type: StripLeadingSpace
 
 pipelines:
   - name: query

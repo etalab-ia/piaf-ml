@@ -7,7 +7,8 @@ from haystack.retriever.base import BaseRetriever
 from haystack.schema import BaseComponent
 
 from deployment.roles.haystack.files.custom_component import \
-    MergeOverlappingAnswers, JoinDocumentsCustom, JoinAnswers, AnswerifyDocuments
+    MergeOverlappingAnswers, JoinDocumentsCustom, JoinAnswers, \
+    AnswerifyDocuments, StripLeadingSpace
 
 
 class TitleQAPipeline(BaseStandardPipeline):
@@ -125,7 +126,8 @@ class RetrieverReaderEvaluationPipeline(BaseStandardPipeline):
         self.pipeline.add_node(component=eval_retriever, name="EvalRetriever", inputs=["Retriever"])
         self.pipeline.add_node(component=reader, name="Reader", inputs=["EvalRetriever"])
         self.pipeline.add_node(component=MergeOverlappingAnswers(), name="MergeOverlappingAnswers", inputs=["Reader"])
-        self.pipeline.add_node(component=eval_reader, name="EvalReader", inputs=["Reader"])
+        self.pipeline.add_node(component=StripLeadingSpace(), name="StripLeadingSpace", inputs=["MergeOverlappingAnswers"])
+        self.pipeline.add_node(component=eval_reader, name="EvalReader", inputs=["StripLeadingSpace"])
 
 
     def run(self, query, top_k_retriever, top_k_reader, labels):
