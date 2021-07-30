@@ -63,11 +63,27 @@ components:    # define all the building-blocks for Pipeline
               french_stop:
                 stopwords: _french_
                 type: stop
+  - name: LabelElasticsearchDocumentStore
+    type: ElasticsearchDocumentStore
+    params:
+      host: elasticsearch
+      index: label_elasticsearch
+      embedding_dim: 768
+      search_fields: [ question ]
+      create_index: False
+      embedding_field: emb
+      similarity: cosine
   - name: ESRetriever
     type: ElasticsearchRetriever
     params:
       document_store: ElasticsearchDocumentStore    # params can reference other components defined in the YAML
       top_k: 1
+  - name: LabelESRetriever
+    type: LabelElasticsearchRetriever
+    params:
+      document_store: LabelElasticsearchDocumentStore    # params can reference other components defined in the YAML
+      top_k: 1
+      weight_when_document_found: 99
   - name: TitleEmbRetriever
     type: TitleEmbeddingRetriever
     params:
@@ -78,22 +94,25 @@ components:    # define all the building-blocks for Pipeline
       use_gpu: False
       emb_extraction_layer: -1
       pooling_strategy: reduce_max
+      weight_when_document_found: 10
   - name: Join
     type: JoinDocumentsCustom
     params:
-      ks_retriever: [1, 1]
+      ks_retriever: [1, 1, 1]
   - name: Reader       # custom-name for the component; helpful for visualization & debugging
     type: TransformersReader    # Haystack Class name for the component
     params:
       model_name_or_path: etalab-ia/camembert-base-squadFR-fquad-piaf
       tokenizer: etalab-ia/camembert-base-squadFR-fquad-piaf
-      top_k_per_candidate: 10
+      top_k_per_candidate: 2
       context_window_size: 2000
       return_no_answers: False
       use_gpu: -1
       top_k: 5
   - name: MergeOverlappingAnswers
     type: MergeOverlappingAnswers
+  - name: RankAnswersWithWeigth
+    type: RankAnswersWithWeigth
   - name: StripLeadingSpace
     type: StripLeadingSpace
 
@@ -105,11 +124,15 @@ pipelines:
         inputs: [Query]
       - name: ESRetriever
         inputs: [Query]
+      - name: LabelESRetriever
+        inputs: [Query]
       - name: Join
-        inputs: [TitleEmbRetriever,ESRetriever]
+        inputs: [TitleEmbRetriever,ESRetriever,LabelESRetriever]
       - name: Reader
         inputs: [Join]
       - name: MergeOverlappingAnswers
         inputs: [Reader]
       - name: StripLeadingSpace
         inputs: [MergeOverlappingAnswers]
+      - name: RankAnswersWithWeigth
+        inputs: [StripLeadingSpace]
