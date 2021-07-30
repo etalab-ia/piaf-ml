@@ -6,7 +6,7 @@ def test_retriever_build():
     parameters = {
         "k": 1,
         "retriever_type": "bm25",
-        "retriever_model_version": "1a01b38498875d45f69b2a6721bf6fe87425da39",
+        "retriever_model_version": "fcd5c2bb3e3aa74cd765d793fb576705e4ea797e",
         "google_retriever_website": 'service-public.fr',
         "squad_dataset": "./test/samples/squad/tiny.json",
         # Path to the Epitca performance file or None. Needed when using the
@@ -47,7 +47,7 @@ def test_retriever_reader_build():
         "k_reader_total": 5,
         "threshold_score": 1.00,# must be present, but only used when retriever_type == hot_reader
         "reader_model_version": "053b085d851196110d7a83d8e0f077d0a18470be",
-        "retriever_model_version": "1a01b38498875d45f69b2a6721bf6fe87425da39",
+        "retriever_model_version": "fcd5c2bb3e3aa74cd765d793fb576705e4ea797e",
         "dpr_model_version": "v1.0",
         "retriever_type": "bm25", # Can be bm25, sbert, dpr, title or title_bm25
         "squad_dataset": "./test/samples/squad/tiny.json",
