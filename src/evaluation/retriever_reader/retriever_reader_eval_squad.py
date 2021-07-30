@@ -5,15 +5,15 @@ from pathlib import Path
 
 import torch
 
+from deployment.roles.haystack.files.custom_component import \
+        TitleEmbeddingRetriever
+
+from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
+
 from src.evaluation.utils.logging_management import clean_log
 import mlflow
 from dotenv import load_dotenv
 from farm.utils import BaseMLLogger, initialize_device_settings
-from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
-from haystack.preprocessor.preprocessor import PreProcessor
-from haystack.reader.transformers import TransformersReader
-from haystack.retriever.dense import EmbeddingRetriever, DensePassageRetriever
-from haystack.retriever.sparse import ElasticsearchRetriever
 from mlflow.tracking import MlflowClient
 import pprint
 from sklearn.model_selection import ParameterGrid
@@ -23,17 +23,16 @@ import sys
 from tqdm import tqdm
 
 from src.evaluation.utils.utils_eval import save_results, \
-    full_eval_retriever_reader, PiafEvalRetriever, PiafEvalReader
-from src.evaluation.utils.custom_pipelines import \
-    RetrieverReaderEvaluationPipeline, TitleBM25QAEvaluationPipeline, HottestReaderPipeline
+    full_eval_retriever_reader
 from src.evaluation.config.elasticsearch_mappings import SQUAD_MAPPING
 from src.evaluation.utils.elasticsearch_management import delete_indices, \
     launch_ES, prepare_mapping
 from src.evaluation.utils.mlflow_management import add_extra_params, \
     create_run_ids, get_list_past_run, prepare_mlflow_server, mlflow_log_run
-from src.evaluation.utils.TitleEmbeddingRetriever import TitleEmbeddingRetriever
 from src.evaluation.utils.utils_optimizer import LoggingCallback, \
     create_dimensions_from_parameters
+
+import src.evaluation.utils.pipelines as pipelines
 
 BaseMLLogger.disable_logging = True
 load_dotenv()
@@ -48,275 +47,64 @@ else:
 
 
 def single_run(
+        parameters,
         idx=None,
-        gpu_id=-1,
-        elasticsearch_hostname="localhost",
-        elasticsearch_port=9200,
-        **kwargs):
+        gpu_id = -1,
+        elasticsearch_hostname = "localhost",
+        elasticsearch_port = 9200,
+        ):
     """
     Perform one run of the pipeline under testing with the parameters given in the config file. The results are
     saved in the mlflow instance.
     """
 
-    # Gather parameters
-    evaluation_data = Path(kwargs["squad_dataset"])
-    retriever_type = kwargs["retriever_type"]
-    k_retriever = kwargs["k_retriever"]
-    k_title_retriever = kwargs["k_title_retriever"]
-    k_reader_per_candidate = kwargs["k_reader_per_candidate"]
-    k_reader_total = kwargs["k_reader_total"]
-    threshold_score = kwargs["threshold_score"]
-    preprocessing = kwargs["preprocessing"]
-    reader_model_version = kwargs["reader_model_version"]
-    retriever_model_version = kwargs["retriever_model_version"]
-    dpr_model_version = kwargs["dpr_model_version"]
-    split_by = kwargs["split_by"]
-    split_length = int(kwargs["split_length"])  # this is intended to convert numpy.int64 to int
-    title_boosting_factor = kwargs["boosting"]
+    evaluation_data = Path(parameters["squad_dataset"])
 
-    # indexes for the elastic search
-    doc_index = "document_xp"
-    label_index = "label_xp"
+    p = pipelines.retriever_reader(parameters, gpu_id, elasticsearch_hostname,
+            elasticsearch_port)
 
-    # deleted indice for elastic search to make sure mappings are properly passed
-    delete_indices(elasticsearch_hostname, elasticsearch_port, index=doc_index)
-    delete_indices(elasticsearch_hostname, elasticsearch_port, index=label_index)
+    # Get all the retrievers used in the pipelines.
+    retrievers = [p.get_node(name)
+            for name in ["Retriever", "Retriever_bm25", "Retriever_title"] 
+            if p.get_node(name)]
 
-    prepare_mapping(
-        mapping=SQUAD_MAPPING,
-        title_boosting_factor=title_boosting_factor,
-        embedding_dimension=768,
-    )
+    # When there are multiple retrievers, the same document_store is attached
+    # to all of them. Take the first one.
+    document_store = retrievers[0].document_store
 
+    preprocessing = parameters["preprocessing"]
+    split_by = parameters["split_by"]
+    split_length = int(parameters["split_length"])  # this is intended to convert numpy.int64 to int
     if preprocessing:
-        preprocessor = PreProcessor(
-            clean_empty_lines=False,
-            clean_whitespace=False,
-            clean_header_footer=False,
-            split_by=split_by,
-            split_length=split_length,
-            split_overlap=0,  # this must be set to 0 at the date of writting this: 22 01 2021
-            split_respect_sentence_boundary=False,  # the support for this will soon be removed : 29 01 2021
-        )
+        preprocessor = pipelines.components.preprocessors.preprocessor(split_by, split_length)
     else:
         preprocessor = None
 
-    reader = TransformersReader(
-        model_name_or_path="etalab-ia/camembert-base-squadFR-fquad-piaf",
-        tokenizer="etalab-ia/camembert-base-squadFR-fquad-piaf",
-        model_version=reader_model_version,
-        use_gpu=gpu_id,
-        top_k_per_candidate=k_reader_per_candidate,
-    )
-
-    eval_retriever = PiafEvalRetriever()
-    eval_reader = PiafEvalReader()
-
-    if retriever_type == "bm25":
-        document_store = ElasticsearchDocumentStore(
-            host=elasticsearch_hostname,
-            port=elasticsearch_port,
-            username="",
-            password="",
-            index=doc_index,
-            search_fields=["name", "text"],
-            create_index=False,
-            embedding_field="emb",
-            scheme="",
-            embedding_dim=768,
-            excluded_meta_data=["emb"],
-            similarity="cosine",
-            custom_mapping=SQUAD_MAPPING,
-        )
-        retriever = ElasticsearchRetriever(document_store=document_store)
-        p = RetrieverReaderEvaluationPipeline(
-            reader=reader,
-            retriever=retriever,
-            eval_retriever=eval_retriever,
-            eval_reader=eval_reader
-        )
-
-    elif retriever_type == "sbert":
-        document_store = ElasticsearchDocumentStore(
-            host=elasticsearch_hostname,
-            port=elasticsearch_port,
-            username="",
-            password="",
-            index=doc_index,
-            search_fields=["name", "text"],
-            create_index=False,
-            embedding_field="emb",
-            embedding_dim=768,
-            excluded_meta_data=["emb"],
-            similarity="cosine",
-            custom_mapping=SQUAD_MAPPING,
-        )
-        retriever = EmbeddingRetriever(
-            document_store=document_store,
-            embedding_model="sentence-transformers/distiluse-base-multilingual-cased-v2",
-            model_version=retriever_model_version,
-            use_gpu=GPU_AVAILABLE,
-            model_format="transformers",
-            pooling_strategy="reduce_max",
-            emb_extraction_layer=-1,
-        )
-        p = RetrieverReaderEvaluationPipeline(
-            reader=reader,
-            retriever=retriever,
-            eval_retriever=eval_retriever,
-            eval_reader=eval_reader
-        )
-
-    elif retriever_type == "dpr":
-        document_store = ElasticsearchDocumentStore(
-            host=elasticsearch_hostname,
-            port=elasticsearch_port,
-            username="",
-            password="",
-            index=doc_index,
-            search_fields=["name", "text"],
-            create_index=False,
-            embedding_field="emb",
-            embedding_dim=768,
-            excluded_meta_data=["emb"],
-            similarity='dot_product',
-            custom_mapping=SQUAD_MAPPING,
-        )
-        retriever = DensePassageRetriever(
-            document_store=document_store,
-            query_embedding_model="etalab-ia/dpr-question_encoder-fr_qa-camembert",
-            passage_embedding_model="etalab-ia/dpr-ctx_encoder-fr_qa-camembert",
-            model_version=dpr_model_version,
-            infer_tokenizer_classes=True,
-            use_gpu=GPU_AVAILABLE,
-        )
-        p = RetrieverReaderEvaluationPipeline(
-            reader=reader,
-            retriever=retriever,
-            eval_retriever=eval_retriever,
-            eval_reader=eval_reader
-        )
-
-    elif retriever_type == "title_bm25":
-        document_store = ElasticsearchDocumentStore(
-            host=elasticsearch_hostname,
-            port=elasticsearch_port,
-            username="",
-            password="",
-            index=doc_index,
-            search_fields=["name", "text"],
-            create_index=False,
-            embedding_field="emb",
-            embedding_dim=768,
-            excluded_meta_data=["emb"],
-            similarity="cosine",
-            custom_mapping=SQUAD_MAPPING,
-        )
-        retriever = TitleEmbeddingRetriever(
-            document_store=document_store,
-            embedding_model="sentence-transformers/distiluse-base-multilingual-cased-v2",
-            model_version=retriever_model_version,
-            use_gpu=GPU_AVAILABLE,
-            model_format="transformers",
-            pooling_strategy="reduce_max",
-            emb_extraction_layer=-1,
-        )
-        retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
-        p = TitleBM25QAEvaluationPipeline(reader=reader,
-                                          retriever_title=retriever,
-                                          retriever_bm25=retriever_bm25,
-                                          k_title_retriever=k_title_retriever,
-                                          k_bm25_retriever=k_retriever,
-                                          eval_retriever=eval_retriever,
-                                          eval_reader=eval_reader)
-
-        # used to make sure the p.run method returns enough candidates
-        k_retriever = max(k_retriever, k_title_retriever)
-
-    elif retriever_type == "title":
-        document_store = ElasticsearchDocumentStore(
-            host=elasticsearch_hostname,
-            port=elasticsearch_port,
-            username="",
-            password="",
-            index=doc_index,
-            search_fields=["name", "text"],
-            create_index=False,
-            embedding_field="emb",
-            embedding_dim=768,
-            excluded_meta_data=["emb"],
-            similarity="cosine",
-            custom_mapping=SQUAD_MAPPING,
-        )
-        retriever = TitleEmbeddingRetriever(
-            document_store=document_store,
-            embedding_model="sentence-transformers/distiluse-base-multilingual-cased-v2",
-            model_version=retriever_model_version,
-            use_gpu=GPU_AVAILABLE,
-            model_format="transformers",
-            pooling_strategy="reduce_max",
-            emb_extraction_layer=-1,
-        )
-        p = RetrieverReaderEvaluationPipeline(
-            reader=reader,
-            retriever=retriever,
-            eval_retriever=eval_retriever,
-            eval_reader=eval_reader
-        )
-
-    elif retriever_type == "hot_reader":
-        document_store = ElasticsearchDocumentStore(
-            host="localhost",
-            username="",
-            password="",
-            index=doc_index,
-            search_fields=["name", "text"],
-            create_index=False,
-            embedding_field="emb",
-            embedding_dim=768,
-            excluded_meta_data=["emb"],
-            similarity="cosine",
-            custom_mapping=SQUAD_MAPPING,
-        )
-        retriever = TitleEmbeddingRetriever(
-            document_store=document_store,
-            embedding_model="sentence-transformers/distiluse-base-multilingual-cased-v2",
-            model_version="fcd5c2bb3e3aa74cd765d793fb576705e4ea797e",
-            use_gpu=GPU_AVAILABLE,
-            model_format="transformers",
-            pooling_strategy="reduce_max",
-            emb_extraction_layer=-1,
-        )
-        retriever_bm25 = ElasticsearchRetriever(document_store=document_store)
-        p = HottestReaderPipeline(
-            reader=reader,
-            retriever_title=retriever,
-            retriever_bm25=retriever_bm25,
-            k_title_retriever=k_title_retriever,
-            k_bm25_retriever=k_retriever,
-            threshold_score=threshold_score,
-        )
-
-        # used to make sure the p.run method returns enough candidates
-        k_retriever = max(k_retriever, k_title_retriever)
-
-
-    else:
-        logging.error(
-            f"You chose {retriever_type}. Choose one from bm25, sbert, dpr, title_bm25 or title."
-        )
-        raise Exception(f"Wrong retriever type for {retriever_type}.")
+    # deleted indice for elastic search to make sure mappings are properly passed
+    delete_indices(elasticsearch_hostname, elasticsearch_port, index="document_elasticsearch")
+    delete_indices(elasticsearch_hostname, elasticsearch_port, index="label_elasticsearch")
 
     # Add evaluation data to Elasticsearch document store
     document_store.add_eval_data(
         evaluation_data.as_posix(),
-        doc_index=doc_index,
-        label_index=label_index,
+        doc_index="document_elasticsearch",
+        label_index="label_elasticsearch",
         preprocessor=preprocessor,
     )
 
-    if retriever_type in ["sbert", "dpr", "title_bm25", "title", "hot_reader"]:
-        document_store.update_embeddings(retriever, index=doc_index)
+    for retriever in retrievers:
+        if type(retriever) in [DensePassageRetriever, TitleEmbeddingRetriever, 
+                EmbeddingRetriever]:
+            document_store.update_embeddings(retriever, index="document_elasticsearch")
+
+    if parameters["retriever_type"] in ["title_bm25", "hot_reader"]:
+        # used to make sure the p.run method returns enough candidates
+        k_retriever = max(parameters["k_retriever"], parameters["k_title_retriever"])
+
+    else:
+        k_retriever = parameters["k_retriever"]
+
+    k_reader_total = parameters["k_reader_total"]
 
     retriever_reader_eval_results = {}
     try:
@@ -325,13 +113,15 @@ def single_run(
                                    pipeline=p,
                                    k_retriever=k_retriever,
                                    k_reader_total=k_reader_total,
-                                   label_index=label_index)
+                                   label_index="label_elasticsearch")
+
+        eval_retriever = p.get_node("EvalRetriever")
+        eval_reader = p.get_node("EvalReader")
 
         retriever_reader_eval_results.update(eval_retriever.get_metrics())
         retriever_reader_eval_results.update(eval_reader.get_metrics())
 
         end = time.time()
-
 
         logging.info(f"Retriever Recall: {retriever_reader_eval_results['recall']}")
         logging.info(f"Retriever Mean Avg Precision: {retriever_reader_eval_results['map']}")
@@ -341,12 +131,12 @@ def single_run(
 
         # Log time per label in metrics
         time_per_label = (end - start) / document_store.get_label_count(
-            index=label_index
+            index="label_elasticsearch"
         )
         retriever_reader_eval_results.update({"time_per_label": time_per_label})
 
     except Exception as e:
-        logging.error(f"Could not run this config: {kwargs}. Error {e}.")
+        logging.error(f"Could not run this config: {parameters}. Error {e}.")
 
     return retriever_reader_eval_results
 
@@ -367,12 +157,12 @@ def optimize(parameters, n_calls, result_file_path, gpu_id=-1,
     results = []
 
     @use_named_args(dimensions=dimensions)
-    def single_run_optimization(**kwargs):
-        result = single_run(gpu_id=gpu_id,
-                            elasticsearch_hostname=elasticsearch_hostname,
-                            elasticsearch_port=elasticsearch_port, **kwargs)
+    def single_run_optimization(params):
+        result = single_run(params, gpu_id = gpu_id,
+                            elasticsearch_hostname = elasticsearch_hostname, 
+                            elasticsearch_port = elasticsearch_port)
 
-        results.append((None, kwargs, result))
+        results.append((None, parameters, result))
 
         return 1 - result["reader_topk_accuracy_has_answer"]
 
@@ -420,9 +210,9 @@ def grid_search(parameters, mlflow_client, experiment_name, use_cache=False,
 
         else:  # run notalready done or USE_CACHE set to False or not set
             logging.info(f"Doing run with config : {param}")
-            run_results = single_run(idx=idx, gpu_id=gpu_id,
-                                     elasticsearch_hostname=elasticsearch_hostname,
-                                     elasticsearch_port=elasticsearch_port, **param)
+            run_results = single_run(param, gpu_id = gpu_id,
+                                     elasticsearch_hostname = elasticsearch_hostname,
+                                     elasticsearch_port = elasticsearch_port)
 
             # For debugging purpose, we keep a copy of the results in a csv form
             save_results(result_file_path=result_file_path,

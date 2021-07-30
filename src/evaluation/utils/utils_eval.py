@@ -460,7 +460,6 @@ def full_eval_retriever_reader(
         } for l in labels
     }
 
-
     answers = []
     for q, l in q_to_l_dict.items():
         ans = pipeline.run(
