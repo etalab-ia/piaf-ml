@@ -151,8 +151,8 @@ retriever = TitleEmbeddingRetriever(
     emb_extraction_layer=-1,
 )
 
-document_store.delete_all_documents(index=doc_index)
-document_store.delete_all_documents(index=label_index)
+document_store.delete_documents(index=doc_index)
+document_store.delete_documents(index=label_index)
 document_store.add_eval_data(
     evaluation_data.as_posix(),
     doc_index=doc_index,
