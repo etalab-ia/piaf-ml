@@ -4,18 +4,17 @@
 
 from pathlib import Path
 
-from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
+from rest_api.config import PIPELINE_YAML_PATH, QUERY_PIPELINE_NAME
+from haystack import Pipeline
 from haystack.preprocessor.preprocessor import PreProcessor
+# THIS IMPORT IS NEEDED: the Pipeline.load_from_yaml will not see the TitleEmbeddingRetriever
+from rest_api.pipeline.custom_component import TitleEmbeddingRetriever
 
 evaluation_data = Path("./data/squad.json")
-preprocessing = True
 split_by = "word"
 split_length = 1000
-title_boosting_factor = 1
 
 ES_host = "elasticsearch"
-
-from rest_api.pipeline.custom_component import TitleEmbeddingRetriever
 
 import logging
 
@@ -30,93 +29,10 @@ def delete_indices(index="document"):
     es.indices.delete(index=index, ignore=[400, 404])
 
 
-def prepare_mapping(
-    mapping, preprocessing, title_boosting_factor=1, embedding_dimension=768
-):
-    mapping["mappings"]["properties"]["name"]["boost"] = title_boosting_factor
-    mapping["mappings"]["properties"]["emb"]["dims"] = embedding_dimension
-    if not preprocessing:
-        mapping["settings"] = {
-            "analysis": {
-                "analyzer": {
-                    "default": {
-                        "type": "standard",
-                    }
-                }
-            }
-        }
-
-
-ANALYZER_DEFAULT = {
-    "analysis": {
-        "filter": {
-            "french_elision": {
-                "type": "elision",
-                "articles_case": True,
-                "articles": [
-                    "l",
-                    "m",
-                    "t",
-                    "qu",
-                    "n",
-                    "s",
-                    "j",
-                    "d",
-                    "c",
-                    "jusqu",
-                    "quoiqu",
-                    "lorsqu",
-                    "puisqu",
-                ],
-            },
-            "french_stop": {"type": "stop", "stopwords": "_french_"},
-            "french_stemmer": {"type": "stemmer", "language": "light_french"},
-        },
-        "analyzer": {
-            "default": {
-                "tokenizer": "standard",
-                "filter": [
-                    "french_elision",
-                    "lowercase",
-                    "french_stop",
-                    "french_stemmer",
-                ],
-            }
-        },
-    }
-}
-
-SQUAD_MAPPING = {
-    "mappings": {
-        "properties": {
-            "name": {"type": "text"},
-            "text": {"type": "text"},
-            "emb": {"type": "dense_vector", "dims": 768},
-        },
-        "dynamic_templates": [
-            {
-                "strings": {
-                    "path_match": "*",
-                    "match_mapping_type": "string",
-                    "mapping": {"type": "keyword"},
-                }
-            }
-        ],
-    },
-    "settings": ANALYZER_DEFAULT,
-}
-
-
 doc_index = "document_elasticsearch"
 label_index = "label_elasticsearch"
 
-delete_indices(index=doc_index)
-prepare_mapping(
-    mapping=SQUAD_MAPPING,
-    preprocessing=preprocessing,
-    title_boosting_factor=title_boosting_factor,
-    embedding_dimension=768,
-)
+PIPELINE = Pipeline.load_from_yaml(Path(PIPELINE_YAML_PATH), pipeline_name=QUERY_PIPELINE_NAME)
 
 preprocessor = PreProcessor(
     clean_empty_lines=False,
@@ -128,29 +44,10 @@ preprocessor = PreProcessor(
     split_respect_sentence_boundary=False,
 )
 
-document_store = ElasticsearchDocumentStore(
-    host="elasticsearch",
-    username="",
-    password="",
-    index=doc_index,
-    search_fields=["name", "text"],
-    create_index=False,
-    embedding_field="emb",
-    embedding_dim=768,
-    excluded_meta_data=["emb"],
-    similarity="cosine",
-    custom_mapping=SQUAD_MAPPING,
-)
-retriever = TitleEmbeddingRetriever(
-    document_store=document_store,
-    embedding_model="sentence-transformers/distiluse-base-multilingual-cased-v2",
-    model_version="fcd5c2bb3e3aa74cd765d793fb576705e4ea797e",
-    use_gpu=False,
-    model_format="transformers",
-    pooling_strategy="reduce_max",
-    emb_extraction_layer=-1,
-)
-
+es_retriever = PIPELINE.get_node("ESRetriever")
+title_emb_retriever = PIPELINE.get_node("TitleEmbRetriever")
+document_store = es_retriever.document_store
+delete_indices(index=doc_index)
 document_store.delete_documents(index=doc_index)
 document_store.delete_documents(index=label_index)
 document_store.add_eval_data(
@@ -159,4 +56,4 @@ document_store.add_eval_data(
     label_index=label_index,
     preprocessor=preprocessor,
 )
-document_store.update_embeddings(retriever, index=doc_index)
+document_store.update_embeddings(title_emb_retriever, index=doc_index)
