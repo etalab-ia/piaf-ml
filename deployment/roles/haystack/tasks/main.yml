@@ -24,7 +24,7 @@
   file:
     path: "{{ client_installation_directory }}"
     group: "piaf-deployment"
-    mode: u=rwx,g=rwx,o=rx
+    mode: g=rwx,o=rx
     state: directory
     recurse: yes
 - name: "{{ client }} | copy custom_component.py"
@@ -77,3 +77,10 @@
   community.docker.docker_compose:
     project_src: "{{ client_installation_directory }}/"
     build: yes
+- name: "{{ client }} | change group ownership (https://github.com/ansible/ansible/issues/51601)"
+  file:
+    path: "{{ client_installation_directory }}"
+    group: "piaf-deployment"
+    mode: g=rwx,o=rx
+    state: directory
+    recurse: yes
