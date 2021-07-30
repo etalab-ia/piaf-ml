@@ -9,6 +9,7 @@ import mlflow
 from dotenv import load_dotenv
 from tqdm import tqdm
 from src.evaluation.utils.logging_management import logger
+import src.evaluation.utils.pipelines as pipelines
 
 load_dotenv()
 
@@ -17,11 +18,10 @@ def add_extra_params(dict_params: dict):
     extra_parameters = {
         "date": datetime.today().strftime("%Y-%m-%d_%H-%M-%S"),
         "hostname": socket.gethostname(),
+        "experiment_id": hashlib.md5(str(dict_params).encode("utf-8")).hexdigest()[:4]
     }
 
-    dict_params.update(extra_parameters)
-    experiment_id = hashlib.md5(str(dict_params).encode("utf-8")).hexdigest()[:4]
-    dict_params.update({"experiment_id": experiment_id})
+    return {**dict_params, **extra_parameters}
 
 
 def hash_piaf_code():
@@ -130,12 +130,19 @@ def mlflow_log_run(
         idx=None,
         root_log_path="./logs/root.log",
         pass_criteria=None,
+        yaml_dir_prefix="./output/pipelines"
         ):
     with mlflow.start_run(run_name=idx) as run:
         mlflow.log_params(params)
         mlflow.log_metrics(
             {k: v for k, v in retriever_reader_eval_results.items() if v is not None}
         )
+        yaml_path = pipelines.pipeline_dirpath(params, yaml_dir_prefix) \
+                / "pipelines.yaml"
+        try:
+            mlflow.log_artifact(yaml_path)
+        except Exception:
+            logger.error(f"Could not upload {yaml_path} to mlflow server.")
         if pass_criteria != None:
             mlflow.set_tag("pass_criteria", pass_criteria)
         logger.info(f"Run finished successfully")

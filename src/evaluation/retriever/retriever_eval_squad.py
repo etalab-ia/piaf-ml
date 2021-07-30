@@ -36,7 +36,8 @@ if GPU_AVAILABLE:
 else:
     gpu_id = -1
 
-def single_run(parameters, elasticsearch_hostname, elasticsearch_port):
+def single_run(parameters, elasticsearch_hostname, elasticsearch_port,
+        yaml_dir_prefix = "./output/pipelines/retriever"):
     """
     Runs a grid search config 
 
@@ -54,9 +55,11 @@ def single_run(parameters, elasticsearch_hostname, elasticsearch_port):
     delete_indices(index="document_elasticsearch")
     delete_indices(index="label_elasticsearch")
 
-    p = pipelines.retriever(parameters, elasticsearch_hostname, 
-            elasticsearch_port,
-            gpu_id = gpu_id)
+    p = pipelines.retriever(parameters,
+            elasticsearch_hostname = elasticsearch_hostname, 
+            elasticsearch_port = elasticsearch_port,
+            gpu_id = gpu_id,
+            yaml_dir_prefix = yaml_dir_prefix)
 
     document_store = p.get_node("Retriever").document_store
 
@@ -135,6 +138,7 @@ if __name__ == "__main__":
     for param in tqdm(parameters_grid, desc="GridSearch"):
         # START XP
         run_results = single_run(param, elasticsearch_hostname,
-                elasticsearch_port)
+                elasticsearch_port,
+                yaml_dir_prefix = "./output/pipelines/retriever")
         # all_results.append(run_results)
         save_results(result_file_path=result_file_path, results_list=run_results)
