@@ -68,7 +68,7 @@ components:    # define all the building-blocks for Pipeline
     params:
       host: elasticsearch
       index: label_elasticsearch
-      embedding_dim: 512
+      embedding_dim: 768
       search_fields: [ question ]
       create_index: False
       embedding_field: emb
