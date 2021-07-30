@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Dict, List, Union
 
 import pandas as pd
+from haystack.schema import BaseComponent
 from haystack.document_store.base import BaseDocumentStore
 from haystack.eval import eval_counts_reader, calculate_reader_metrics, \
     _count_no_answer, _calculate_f1, _count_overlap, _count_exact_match, \
@@ -201,7 +202,7 @@ def eval_retriever_reader(
     return metrics
 
 
-class PiafEvalRetriever(EvalDocuments):
+class PiafEvalRetriever(EvalDocuments, BaseComponent):
     """
     This is a pipeline node that should be placed after a Retriever in order to assess its performance. Performance
     metrics are stored in this class and updated as each sample passes through it.
@@ -210,6 +211,9 @@ class PiafEvalRetriever(EvalDocuments):
 
     def __init__(self, debug: bool = False, open_domain: bool = False):
         super().__init__(debug, open_domain)
+
+        # save init parameters to enable export of component config as YAML
+        self.set_config(debug = debug, open_domain = open_domain)
 
         self.summed_avg_precision = 0.0
         self.summed_reciprocal_rank = 0.0
@@ -319,7 +323,7 @@ class PiafEvalRetriever(EvalDocuments):
         }
 
 
-class PiafEvalReader(EvalAnswers):
+class PiafEvalReader(EvalAnswers, BaseComponent):
     """
     This is a pipeline node that should be placed after a Reader in order to assess the performance of the Reader
     To extract the metrics in a dict form use EvalReader.get_metrics().
@@ -328,6 +332,9 @@ class PiafEvalReader(EvalAnswers):
     def __init__(self):
 
         super().__init__(debug=True, open_domain=False)
+
+        # save init parameters to enable export of component config as YAML
+        self.set_config()
 
         self.metric_counts = {
             "correct_no_answers_top1": 0,

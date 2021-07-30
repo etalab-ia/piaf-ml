@@ -12,8 +12,11 @@ The `components` submodule contains functions that create the custom
 components used in the pipelines defined in the `custom_pipelines` submodule.
 """
 
-from pathlib import Path
+
+import hashlib
 from haystack.pipeline import Pipeline
+import json
+from pathlib import Path
 
 import src.evaluation.utils.pipelines.custom_pipelines as custom_pipelines
 
@@ -21,18 +24,19 @@ def retriever(
         parameters,
         elasticsearch_hostname,
         elasticsearch_port,
-        gpu_id = -1):
+        gpu_id = -1,
+        yaml_dir_prefix = "./output/pipelines/"):
 
     retriever_type = parameters["retriever_type"]
 
     if retriever_type == "bm25":
-        return custom_pipelines.retriever_bm25(
+        pipeline =  custom_pipelines.retriever_bm25(
             elasticsearch_hostname = elasticsearch_hostname,
             elasticsearch_port = elasticsearch_port,
             title_boosting_factor = parameters["boosting"])
 
     elif retriever_type == "sbert":
-        return custom_pipelines.retriever_sbert(
+        pipeline = custom_pipelines.retriever_sbert(
             elasticsearch_hostname = elasticsearch_hostname,
             elasticsearch_port = elasticsearch_port,
             title_boosting_factor = parameters["boosting"],
@@ -40,14 +44,14 @@ def retriever(
             gpu_available = gpu_id >= 0)
 
     elif retriever_type == "google":
-        return custom_pipelines.retriever_google(
+        pipeline = custom_pipelines.retriever_google(
             elasticsearch_hostname = elasticsearch_hostname,
             elasticsearch_port = elasticsearch_port,
             title_boosting_factor = parameters["boosting"],
             google_retriever_website = parameters["google_retriever_website"])
 
     elif retriever_type == "epitca":
-        return custom_pipelines.retriever_epitca(
+        pipeline = custom_pipelines.retriever_epitca(
             elasticsearch_hostname = elasticsearch_hostname,
             elasticsearch_port = elasticsearch_port,
             title_boosting_factor = parameters["boosting"])
@@ -57,19 +61,27 @@ def retriever(
             f"You chose {retriever_type}. Choose one from bm25, sbert, google or dpr"
         )
 
+    # Save the pipeline to yaml and load it back from yaml to make sure the 
+    # pipeline being evaluated is build the same way as it is in prod.
+    pipeline = pipeline_to_yaml_and_back(pipeline, parameters,
+            prefix = Path(yaml_dir_prefix))
+
+    return pipeline
+
 
 def retriever_reader(
         parameters,
-        gpu_id = -1,
         elasticsearch_hostname = "localhost",
         elasticsearch_port = 9200,
+        gpu_id = -1,
+        yaml_dir_prefix = "./output/pipelines",
         ):
 
     # Gather parameters
     retriever_type = parameters["retriever_type"]
 
     if retriever_type == "bm25":
-        return custom_pipelines.retriever_reader_bm25(
+        pipeline = custom_pipelines.retriever_reader_bm25(
             elasticsearch_hostname = elasticsearch_hostname,
             elasticsearch_port = elasticsearch_port,
             title_boosting_factor = parameters["boosting"],
@@ -78,7 +90,7 @@ def retriever_reader(
             k_reader_per_candidate = parameters["k_reader_per_candidate"])
 
     elif retriever_type == "sbert":
-        return custom_pipelines.retriever_reader_sbert(
+        pipeline = custom_pipelines.retriever_reader_sbert(
             elasticsearch_hostname = elasticsearch_hostname,
             elasticsearch_port = elasticsearch_port,
             title_boosting_factor = parameters["boosting"],
@@ -88,7 +100,7 @@ def retriever_reader(
             k_reader_per_candidate = parameters["k_reader_per_candidate"])
 
     elif retriever_type == "dpr":
-        return custom_pipelines.retriever_reader_dpr(
+        pipeline = custom_pipelines.retriever_reader_dpr(
             elasticsearch_hostname = elasticsearch_hostname,
             elasticsearch_port = elasticsearch_port,
             title_boosting_factor = parameters["boosting"],
@@ -98,7 +110,7 @@ def retriever_reader(
             k_reader_per_candidate = parameters["k_reader_per_candidate"])
 
     elif retriever_type == "title_bm25":
-        return custom_pipelines.retriever_reader_title_bm25(
+        pipeline = custom_pipelines.retriever_reader_title_bm25(
             elasticsearch_hostname = elasticsearch_hostname,
             elasticsearch_port = elasticsearch_port,
             title_boosting_factor = parameters["boosting"],
@@ -110,7 +122,7 @@ def retriever_reader(
             k_bm25_retriever = parameters["k_retriever"])
 
     elif retriever_type == "title":
-        return custom_pipelines.retriever_reader_title(
+        pipeline = custom_pipelines.retriever_reader_title(
             elasticsearch_hostname = elasticsearch_hostname,
             elasticsearch_port = elasticsearch_port,
             title_boosting_factor = parameters["boosting"],
@@ -120,7 +132,7 @@ def retriever_reader(
             k_reader_per_candidate = parameters["k_reader_per_candidate"])
 
     elif retriever_type == "hot_reader":
-        return custom_pipelines.hottest_reader_pipeline(
+        pipeline = custom_pipelines.hottest_reader_pipeline(
             elasticsearch_hostname = elasticsearch_hostname,
             elasticsearch_port = elasticsearch_port,
             title_boosting_factor = parameters["boosting"],
@@ -137,3 +149,30 @@ def retriever_reader(
             f"You chose {retriever_type}. Choose one from bm25, sbert, dpr, title_bm25 or title."
         )
         raise Exception(f"Wrong retriever type for {retriever_type}.")
+
+    # Save the pipeline to yaml and load it back from yaml to make sure the 
+    # pipeline being evaluated is build the same way as it is in prod.
+    pipeline = pipeline_to_yaml_and_back(pipeline, parameters,
+            prefix = Path(yaml_dir_prefix))
+
+    return pipeline
+
+def pipeline_to_yaml_and_back(pipeline, parameters, prefix = "./output/pipelines/"):
+    dirname = pipeline_dirpath(parameters, prefix)
+    dirname.mkdir(parents = True, exist_ok = True)
+
+    yaml_path = dirname / "pipelines.yaml"
+    pipeline.save_to_yaml(yaml_path, return_defaults = True)
+
+    params_path = dirname / "params.py"
+    with open(params_path, "w") as f:
+        f.write(repr(parameters))
+
+    # Turn off overwriting with env variable to avoid accidentally constructing
+    # a different pipeline that the one defined in the yaml.
+    return Pipeline.load_from_yaml(yaml_path, overwrite_with_env_variables = False)
+
+def pipeline_dirpath(parameters, prefix = "./output/pipelines/"):
+    params_hash = hashlib.sha1(json.dumps(parameters, sort_keys=True).encode()).hexdigest()
+    path = Path(parameters["retriever_type"]) / params_hash
+    return Path(prefix) / path
