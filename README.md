@@ -27,7 +27,7 @@ The objective of this repository is to give tools for the following tasks:
 ## Project Description 
 ### Project architecture 
 The PIAF solution is using the following architecture : 
-[Mettre le dessin archiitecture ici]
+[Mettre le dessin architecture ici]
 
 The code for PIAF Agent and PIAF bot are hosted on the following repositories: 
 * [PiafAgent](https://github.com/etalab-ia/piaf_agent)
