@@ -184,12 +184,14 @@ Follow README.md on the [PiafAgent repo](https://github.com/etalab-ia/piaf_agent
 
 ## Contributing Lab IA Members 
 **Team Contacts :** 
+* [PA. Chevalier](https://github.com/pachevalier)
+* [PE. Devineau](https://github.com/pedevineau)
+
+**Past Members :**
 * [G. Lancrenon](https://github.com/guillim)
 * [R. Reynaud](https://github.com/rob192)
 * [G. Santarsieri](https://github.com/giuliasantarsieri)
 * [P. Soriano](https://github.com/psorianom)
-
-**Past Members :**
 * [J. Denes](https://github.com/jdenes)
 
 ## How to contribute to this project 
