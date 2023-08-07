@@ -33,7 +33,8 @@ def retriever(
         pipeline =  custom_pipelines.retriever_bm25(
             elasticsearch_hostname = elasticsearch_hostname,
             elasticsearch_port = elasticsearch_port,
-            title_boosting_factor = parameters["boosting"])
+            title_boosting_factor = parameters["boosting"],
+            k = parameters["k"])
 
     elif retriever_type == "sbert":
         pipeline = custom_pipelines.retriever_sbert(
@@ -87,6 +88,8 @@ def retriever_reader(
             title_boosting_factor = parameters["boosting"],
             reader_model_version = parameters["reader_model_version"],
             gpu_id = gpu_id,
+            k_retriever = parameters["k_retriever"],
+            k_reader_total = parameters["k_reader_total"],
             k_reader_per_candidate = parameters["k_reader_per_candidate"])
 
     elif retriever_type == "sbert":
@@ -157,6 +160,45 @@ def retriever_reader(
 
     return pipeline
 
+def client(
+        client,
+        parameters,
+        elasticsearch_hostname = "localhost",
+        elasticsearch_port = 9200,
+        gpu_id = -1,
+        yaml_dir_prefix = "./output/pipelines",
+        is_eval = False,
+        ):
+
+    if client == "cnil":
+        pipeline = custom_pipelines.cnil(
+            elasticsearch_hostname = elasticsearch_hostname,
+            elasticsearch_port = elasticsearch_port,
+            title_boosting_factor = parameters["boosting"],
+            retriever_model_version = parameters["retriever_model_version"],
+            reader_model_version = parameters["reader_model_version"],
+            gpu_id = gpu_id,
+            k_reader_total = parameters["k_reader_total"],
+            k_reader_per_candidate = parameters["k_reader_per_candidate"],
+            k_title_retriever = parameters["k_title_retriever"],
+            k_bm25_retriever = parameters["k_bm25_retriever"],
+            k_label_retriever = parameters["k_label_retriever"],
+            ks_retriever = parameters["ks_retriever"],
+            weight_when_document_found = parameters["weight_when_document_found"],
+            threshold_score = parameters["threshold_score"],
+            context_window_size = parameters["context_window_size"],
+            is_eval = is_eval)
+
+    else:
+        raise Exception(f"Unknown client {client}")
+
+    # Save the pipeline to yaml and load it back from yaml to make sure the 
+    # pipeline being evaluated is build the same way as it is in prod.
+    pipeline = pipeline_to_yaml_and_back(pipeline, parameters,
+            prefix = Path(yaml_dir_prefix))
+
+    return pipeline
+
 def pipeline_to_yaml_and_back(pipeline, parameters, prefix = "./output/pipelines/"):
     dirname = pipeline_dirpath(parameters, prefix)
     dirname.mkdir(parents = True, exist_ok = True)
@@ -174,5 +216,5 @@ def pipeline_to_yaml_and_back(pipeline, parameters, prefix = "./output/pipelines
 
 def pipeline_dirpath(parameters, prefix = "./output/pipelines/"):
     params_hash = hashlib.sha1(json.dumps(parameters, sort_keys=True).encode()).hexdigest()
-    path = Path(parameters["retriever_type"]) / params_hash
+    path = params_hash
     return Path(prefix) / path

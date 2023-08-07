@@ -1,7 +1,7 @@
 parameters = {
     "k": [1, 3],
     # "retriever_type": ["bm25", "sbert", "google", "epitca"],
-    "retriever_type": ["bm25"],
+    "retriever_type": ["bm25", "sbert"],
     "retriever_model_version": ["1a01b38498875d45f69b2a6721bf6fe87425da39"],
     "google_retriever_website": ['service-public.fr'],
     # "squad_dataset": ["./clients/cnil/knowledge_base/squad.json"],
